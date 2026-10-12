@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import type { Configuration } from '../config/config';
 import type { Failure } from '../jev/client';
 import { type Provider, providerFor } from '../jev/provider';
+import { DEFAULT_MODEL } from '../jev/review';
 import type { Resolved } from '../services/projectConfigs';
 import type { Reviewer, ReviewOutcome, ReviewPlan } from '../services/reviewer';
 import { blocked, caution, offer, result } from '../ui/notifier';
@@ -306,7 +307,7 @@ export function registerJevCommands(
 			checkWithJev(deps),
 		),
 		vscode.commands.registerCommand(JEV_COMMANDS.setApiKey, () =>
-			setApiKey(deps, providerFor('jev-1.13.0')),
+			setApiKey(deps, providerFor(DEFAULT_MODEL)),
 		),
 		vscode.commands.registerCommand(JEV_COMMANDS.setOpenAIApiKey, () =>
 			setApiKey(deps, providerFor('gpt-6-luna')),

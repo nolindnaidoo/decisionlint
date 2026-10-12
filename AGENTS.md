@@ -438,6 +438,16 @@ family's files, copied unchanged from `regex-le`.
 - **File size is counted in bytes in both places.**
 - **The pinned model and the call limit are defined once,** in
   `jev/review.ts`. The editor's defaults and the command line's read them.
+  `jev/pin.test.ts` holds the copies TypeScript cannot import to
+  `DEFAULT_MODEL`: the setting's default in `package.json`, both readmes and
+  the two lines of `SPEC.md` that state the default.
+- **`KNOWN_VERSION` and `DEFAULT_MODEL` are two facts.** The first, in
+  `lint/limits.ts`, is what `jev-latest` points to and what the JEV001 fix
+  writes. The second is what the cutoffs were set on. They differ from a Jev
+  release until the checks are calibrated again, so no test holds them equal.
+  The `Jev release` workflow runs `bun run check:jev-release` weekly and fails
+  when `jev-latest` has moved off `KNOWN_VERSION`, or when the models page no
+  longer says where it points.
 - **A Jev check's cutoff is read from `fixtures/validation/calibration.json`,**
   never guessed. `reviews.test.ts` fails if a cutoff would flag a good corpus
   question. Rerun `scripts/calibrate-reviews.ts` when the model changes.
@@ -561,6 +571,7 @@ difference matters when the family changes one.
 | `.github/workflows/ci.yml` | Cut down: no second extension toolchain, no generated README check, no bundle gate. Adds `test:cli` |
 | `.github/workflows/release.yml` | Changed: publishes `npm/` with the `NPM_TOKEN` secret where the family uses trusted publishing. The MCP registry step is the family's, in a job of its own that first waits for npm to serve the version, so a listing that fails is re-run alone |
 | `.github/dependabot.yml` | Cut down: no `cargo` entry |
+| `.github/workflows/jev-release.yml`, `scripts/check-jev-release.ts` | This repo's own. The family declares no vendor's model version |
 
 - **`letools-site`'s fleet check names this repo and does not compare it.** It
   is listed in `OUTSIDE_FLEET` in `letools-site/scripts/check-fleet.ts`. The
@@ -569,8 +580,8 @@ difference matters when the family changes one.
   decided against. When a copied file changes in the family, copy it here by
   hand.
 - **CI pins Bun to the version that wrote `bun.lock`**, 1.3.14. Upgrading is
-  one change: upgrade locally, regenerate the lockfile, and move both pins in
-  `ci.yml` and the two in `release.yml`.
+  one change: upgrade locally, regenerate the lockfile, and move the pin in
+  `ci.yml`, the two in `release.yml` and the one in `jev-release.yml`.
 - **The commit hook is installed by `bun install`** through `prepare`. It
   rejects a message that is not a conventional commit or that holds an
   absolute local path. CI runs the same check on every pushed commit.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MEASURED_ON } from '../lint/limits';
 import { ask, type Fetch, isFailure } from './client';
 import { forProvider, isCalibrated, providerFor } from './provider';
 import { buildRequest } from './reviews';
@@ -43,8 +44,10 @@ describe('which vendor a model belongs to', () => {
 		expect(providerFor(model).id).toBe(id);
 	});
 
-	it('counts only Jev as calibrated, since the cutoffs were set there', () => {
-		expect(isCalibrated('jev-1.13.0')).toBe(true);
+	it('counts only the version the cutoffs were set on as calibrated', () => {
+		expect(isCalibrated(MEASURED_ON)).toBe(true);
+		expect(isCalibrated('jev-99.0.0')).toBe(false);
+		expect(isCalibrated('jev-latest')).toBe(false);
 		expect(isCalibrated('gpt-6-luna')).toBe(false);
 	});
 

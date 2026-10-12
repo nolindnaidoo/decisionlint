@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LintOptions, ReportedFinding } from '../types';
+import { MEASURED_ON } from './limits';
 import { DEFAULT_OPTIONS, lintText } from './lint';
 
 function codes(
@@ -116,6 +117,43 @@ describe('JEV001 unpinned-model', () => {
 		expect(
 			codes(`const client = new TypeSafeClient({ model: 'jev-latest' });`),
 		).toEqual(['JEV001']);
+	});
+});
+
+describe('JEV013 newer-model', () => {
+	it.each(['jev-1.13.1', 'jev-1.14.0', 'jev-2.0.0', 'jev-1.100.0'])(
+		'fires on %s, a version above the measured one',
+		(model) => {
+			expect(codes(request(CLEAN_NOUL, model))).toEqual(['JEV013']);
+		},
+	);
+
+	it('names both versions and offers no fix', () => {
+		const found = finding(request(CLEAN_NOUL, 'jev-2.0.0'), 'JEV013');
+		expect(found.message).toContain(
+			`'jev-2.0.0' is newer than ${MEASURED_ON}, the version these rules were measured on.`,
+		);
+		expect(found.severity).toBe('info');
+		expect(found.fix).toBeUndefined();
+	});
+
+	it.each([
+		MEASURED_ON,
+		'jev-1.12.9',
+		'jev-0.99.0',
+		'jev-latest-2.0.0',
+		'jev-2.0.0-preview',
+		'gpt-6-luna',
+	])('does not fire on %s', (model) => {
+		expect(codes(request(CLEAN_NOUL, model))).not.toContain('JEV013');
+	});
+
+	it('does not fire when the model is a runtime value', () => {
+		expect(
+			codes(
+				`const r = { model: MODEL, questions: { a: { type: 'noul', instructions: 'Is it so?' } } };`,
+			),
+		).toEqual([]);
 	});
 });
 

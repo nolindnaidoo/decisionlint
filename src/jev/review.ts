@@ -1,3 +1,4 @@
+import { MEASURED_ON } from '../lint/limits';
 import { readQuestions } from '../lint/lint';
 import { RULES } from '../lint/rules';
 import { suppressor } from '../lint/suppress';
@@ -31,7 +32,7 @@ import {
 } from './reviews';
 
 /** Pinned, because the cutoffs of the Jev-backed checks were set on this version. */
-export const DEFAULT_MODEL = 'jev-1.13.0';
+export const DEFAULT_MODEL = MEASURED_ON;
 export const DEFAULT_MAX_CALLS = 25;
 
 /** What a run needs to know, wherever it is run from. */
@@ -132,11 +133,13 @@ function entryOf(
 }
 
 // The number behind a finding, and, from a model the cutoffs were not set on, that fact.
-function rated(probability: number, provider: Provider): string {
+function rated(probability: number, request: ReviewRequest): string {
+	const provider = providerFor(request.model);
 	const number = `(${provider.model} put this at ${probability.toFixed(2)}.)`;
-	return isCalibrated(DEFAULT_MODEL) && provider.id !== 'typesafe'
-		? `${number} The cutoff was set on ${DEFAULT_MODEL}, not on ${provider.model}.`
-		: number;
+	if (isCalibrated(request.model)) return number;
+	// Another Jev is still Jev by name, so only its version tells the two apart.
+	const asked = provider.id === 'typesafe' ? request.model : provider.model;
+	return `${number} The cutoff was set on ${DEFAULT_MODEL}, not on ${asked}.`;
 }
 
 function questionJob(
@@ -155,7 +158,7 @@ function questionJob(
 				report(
 					found.code,
 					forProvider(
-						`${found.message}${named ? ` Jev points at ${named}.` : ''} ${rated(found.probability, provider)}`,
+						`${found.message}${named ? ` Jev points at ${named}.` : ''} ${rated(found.probability, request)}`,
 						provider,
 					),
 					places[0]?.span ?? question.anchor,
@@ -189,7 +192,7 @@ function mapJob(
 				report(
 					found.code,
 					forProvider(
-						`${message} ${rated(found.probability, provider)}`,
+						`${message} ${rated(found.probability, request)}`,
 						provider,
 					),
 					span,

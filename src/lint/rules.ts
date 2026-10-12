@@ -134,6 +134,14 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: DOCS.primitives,
 	},
+	JEV013: {
+		code: 'JEV013',
+		name: 'newer-model',
+		meaning:
+			'`model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for',
+		severity: 'info',
+		docs: DOCS.currentModels,
+	},
 	JEV101: {
 		code: 'JEV101',
 		name: 'double-negative',

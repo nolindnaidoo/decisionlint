@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.8.0 — 2026-10-12
+
+The linter says when it is behind the Jev you are using.
+
+- **`JEV013 newer-model`**, new, informational. Fires when `model` is a
+  versioned Jev id above the version the rules were measured on, which is
+  `jev-1.13.0`. A wording rule is on because the defect cost that version
+  answers, so on a later one a finding may cost nothing and a new weakness is
+  not looked for. Nothing is fetched to find this out: it reads the id in
+  your code. An alias such as `jev-latest` is not reported by this rule,
+  since where it points cannot be known offline, and `JEV001` already asks
+  you to pin it.
+- **A check with another Jev version says so.** With `--jev-model`, or
+  `jevlint-le.jev.model`, set to a Jev version other than `jev-1.13.0`, every
+  finding from the check now ends "The cutoff was set on jev-1.13.0, not on"
+  that version, as findings from Luna already did. Before, any Jev version
+  was treated as the one the cutoffs were set on.
+
 ## 0.7.0 — 2026-10-10
 
 The MCP server gets a package of its own, `jevlint-le-mcp`, as every sibling

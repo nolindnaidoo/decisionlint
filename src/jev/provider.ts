@@ -1,3 +1,4 @@
+import { MEASURED_ON } from '../lint/limits';
 import type { Failure, Reply } from './client';
 import type { ReviewRequest } from './reviews';
 
@@ -6,7 +7,7 @@ import type { ReviewRequest } from './reviews';
  * and answer with probabilities, so one review runs on either; the shape on
  * the wire and the key differ, and this is the only file that knows how.
  *
- * The cutoffs in `reviews.ts` were set on `jev-1.13.0`. A finding from any
+ * The cutoffs in `reviews.ts` were set on `MEASURED_ON`. A finding from any
  * other model says so, until that model is calibrated the same way.
  */
 export type Provider = Readonly<{
@@ -119,9 +120,9 @@ export function providerFor(model: string): Provider {
 	return /^gpt-6-luna/.test(model) ? OPENAI : TYPESAFE;
 }
 
-/** True where the cutoffs were set: a Jev version. A finding from any other model carries a caveat. */
+/** True for the one version the cutoffs were set on. A finding from any other model, another Jev included, carries a caveat. */
 export function isCalibrated(model: string): boolean {
-	return providerFor(model).id === 'typesafe';
+	return model === MEASURED_ON;
 }
 
 /** A message written for Jev, reworded for the model that answered. */

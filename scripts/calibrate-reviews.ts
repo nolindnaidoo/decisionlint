@@ -16,6 +16,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { ask, type Fetch, isFailure } from '../src/jev/client';
 import type { QuestionLiteral } from '../src/jev/literal';
+import { DEFAULT_MODEL } from '../src/jev/review';
 import {
 	buildRequest,
 	buildRequestReview,
@@ -45,7 +46,7 @@ type Reading = { id: string; p: number };
 
 // The wording defect each check is the meaning-reading version of. Others are labeled by their own code.
 const LABEL: Record<string, string> = { JEV301: 'JEV102', JEV302: 'JEV112' };
-const MODEL = 'jev-1.13.0';
+const MODEL = DEFAULT_MODEL;
 const MAX_CALLS = 400;
 
 const load = <T>(name: string): T =>

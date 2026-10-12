@@ -17,6 +17,7 @@
  * answered, because a result is only true of that version.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { DEFAULT_MODEL } from '../src/jev/review';
 
 type Question = Record<string, unknown>;
 type Arm = {
@@ -46,7 +47,7 @@ type Tally = { right: number; asked: number; sure: number[] };
 
 const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 // Pinned, because a result under an alias would silently change meaning.
-const MODEL = 'jev-1.13.0';
+const MODEL = DEFAULT_MODEL;
 const MAX_CALLS = 250;
 const RETRIES = 3;
 const YES = 0.5;

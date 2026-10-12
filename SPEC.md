@@ -117,6 +117,7 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | JEV010 | unused-disable | warning | A `jevlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
 | JEV011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
 | JEV012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
+| JEV013 | newer-model | info | `model` is a versioned Jev id, three numbers and nothing after them, above the version the rules were measured on |
 
 **JEV001 has no automatic fix.** Pinning needs the current version id, and the
 extension cannot fetch it. A hard-coded id would be wrong after the next

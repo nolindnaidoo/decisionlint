@@ -161,6 +161,7 @@ export type RuleCode =
 	| 'JEV010'
 	| 'JEV011'
 	| 'JEV012'
+	| 'JEV013'
 	| 'JEV101'
 	| 'JEV102'
 	| 'JEV103'

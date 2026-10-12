@@ -1639,6 +1639,27 @@ describe('checking with Jev', () => {
 		);
 	});
 
+	it('says the cutoff was set on another version when a different Jev is asked', async () => {
+		const result = await cli(
+			['--jev', '--jev-model', 'jev-99.0.0', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ JEV302: { noul: 0.91 } })),
+		);
+		expect(result.out).toContain(
+			'(Jev put this at 0.91.) The cutoff was set on jev-1.13.0, not on jev-99.0.0.',
+		);
+
+		const pinned = await cli(
+			['--jev', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ JEV302: { noul: 0.91 } })),
+		);
+		expect(pinned.out).toContain('(Jev put this at 0.91.)');
+		expect(pinned.out).not.toContain('The cutoff was set on');
+	});
+
 	it('sends the key as a header and prints it nowhere', async () => {
 		const fetch = jevSays({ JEV302: { noul: 0.91 } });
 		const text = await cli(

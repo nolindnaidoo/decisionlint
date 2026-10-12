@@ -17,6 +17,7 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 | [JEV010](JEV010.md) | unused-disable | warning | A `jevlint-le-disable` comment silences nothing, so it can only hide a finding added later |
 | [JEV011](JEV011.md) | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
 | [JEV012](JEV012.md) | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
+| [JEV013](JEV013.md) | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
 | [JEV101](JEV101.md) | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | [JEV102](JEV102.md) | arithmetic | warning | The question asks Jev to count or compare numbers |
 | [JEV103](JEV103.md) | date-comparison | info | The question asks Jev to order two times or measure the gap between them |

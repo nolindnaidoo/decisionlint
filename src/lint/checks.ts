@@ -21,7 +21,7 @@ import {
 	renameKeyFix,
 	scoreArrayFix,
 } from './fix';
-import { MODEL_ALIASES, NOUL_CRITERIA_KEYS } from './limits';
+import { MEASURED_ON, MODEL_ALIASES, NOUL_CRITERIA_KEYS } from './limits';
 import { OPTION_CHECKS, wrapsList } from './optionChecks';
 import { isEnglish, WORDING_CHECKS } from './wordingChecks';
 
@@ -395,6 +395,31 @@ function checkModels(
 		}));
 }
 
+/** The numbers of a versioned id, or nothing for an alias, a suffixed build or another vendor's model. */
+function versionOf(model: string): ReadonlyArray<number> | undefined {
+	const parts = /^jev-(\d+)\.(\d+)\.(\d+)$/.exec(model);
+	return parts?.slice(1).map(Number);
+}
+
+function isNewer(model: string, than: string): boolean {
+	const [ours, theirs] = [versionOf(model), versionOf(than)];
+	if (!ours || !theirs) return false;
+	const differs = ours.findIndex((part, index) => part !== theirs[index]);
+	return differs !== -1 && (ours[differs] ?? 0) > (theirs[differs] ?? 0);
+}
+
+function checkNewerModels(extraction: Extraction): ReadonlyArray<Finding> {
+	return extraction.models
+		.filter((model) => isNewer(model.value, MEASURED_ON))
+		.map((model) => ({
+			code: 'JEV013' as const,
+			message: `'${model.value}' is newer than ${MEASURED_ON}, the version these rules were measured on. A finding may cost no answers on it, and a weakness new to it is not looked for. A later JevLint-LE may have measured it.`,
+			span: model.span,
+			questionId: undefined,
+			fix: undefined,
+		}));
+}
+
 /** Runs every rule. Severity, suppression and rule switches are applied by the caller. */
 export function check(
 	extraction: Extraction,
@@ -409,5 +434,6 @@ export function check(
 		),
 		...checkDuplicateIds(extraction),
 		...checkModels(extraction, context.text),
+		...checkNewerModels(extraction),
 	];
 }

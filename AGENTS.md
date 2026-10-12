@@ -438,6 +438,8 @@ family's files, copied unchanged from `regex-le`.
 - **File size is counted in bytes in both places.**
 - **The pinned model and the call limit are defined once,** in
   `jev/review.ts`. The editor's defaults and the command line's read them.
+  The model is `MEASURED_ON` from `lint/limits.ts`, where the offline rules
+  can read it too.
   `jev/pin.test.ts` holds the copies TypeScript cannot import to
   `DEFAULT_MODEL`: the setting's default in `package.json`, both readmes and
   the two lines of `SPEC.md` that state the default.
@@ -445,6 +447,11 @@ family's files, copied unchanged from `regex-le`.
   `lint/limits.ts`, is what `jev-latest` points to and what the JEV001 fix
   writes. The second is what the cutoffs were set on. They differ from a Jev
   release until the checks are calibrated again, so no test holds them equal.
+- **A user ahead of the measured version is told, offline and in a check.**
+  `JEV013` fires on a versioned id above `MEASURED_ON`, and a Jev check asked
+  of any model but `MEASURED_ON` ends its findings with where the cutoff was
+  set. Both compare with the measured version and not `KNOWN_VERSION`: moving
+  `KNOWN_VERSION` alone measures nothing, so it must not quiet either.
   The `Jev release` workflow runs `bun run check:jev-release` weekly and fails
   when `jev-latest` has moved off `KNOWN_VERSION`, or when the models page no
   longer says where it points.

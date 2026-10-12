@@ -17,6 +17,13 @@ export const LIMITS = Object.freeze({
 export const KNOWN_VERSION = 'jev-1.13.0';
 
 /**
+ * The version the wording rules' costs and the Jev checks' cutoffs were
+ * measured on. Behind `KNOWN_VERSION` from a Jev release until both are
+ * measured again.
+ */
+export const MEASURED_ON = 'jev-1.13.0';
+
+/**
  * https://docs.typesafe.ai/models#aliases: an alias "moves when a new release
  * ships, so the answers behind it can change without a change on your side".
  */
@@ -34,6 +41,7 @@ export const NOUL_CRITERIA_KEYS: ReadonlySet<string> = new Set([
 export const DOCS = Object.freeze({
 	api: 'https://docs.typesafe.ai/api',
 	models: 'https://docs.typesafe.ai/models#aliases',
+	currentModels: 'https://docs.typesafe.ai/models#current-models',
 	choice: 'https://docs.typesafe.ai/primitives/choice',
 	scoreLevels: 'https://docs.typesafe.ai/primitives/score#writing-good-levels',
 	jaggedness: 'https://docs.typesafe.ai/model-jaggedness/jev-1.13',

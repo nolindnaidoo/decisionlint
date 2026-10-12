@@ -78,6 +78,7 @@ the mistakes that can be read from the text.
 | JEV010 | unused-disable | warning | A `jevlint-le-disable` comment silences nothing, so it can only hide a finding added later |
 | JEV011 | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
 | JEV012 | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
+| JEV013 | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
 | JEV101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | JEV102 | arithmetic | warning | The question asks Jev to count or compare numbers |
 | JEV103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |

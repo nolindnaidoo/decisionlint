@@ -183,6 +183,11 @@ family's files, copied unchanged from `regex-le`.
   `showDocumentError` and `cancel` exist because a path the mock cannot fail
   is a path no test has run. Five defects were found the day they were added.
   A new call into the editor that can fail gets its switch and its test.
+- **A command that throws says so.** Every command body runs under
+  `commands/guard.ts`, which turns a throw into a `blocked` message naming
+  the command and the reason. Left to the editor, the rejection goes to a log
+  no user reads and the command looks broken. `extension.test.ts` makes the
+  document throw under three commands.
 - **One paid run per file, one probe at a time.** A second Check with Jev on
   a file that is being checked, or a second probe while one runs, is refused
   with `blocked` and sends nothing: it would pay for the same answers and

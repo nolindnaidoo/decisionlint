@@ -11,6 +11,7 @@ import type {
 	ReviewSettings,
 } from '../services/reviewer';
 import { blocked, caution, offer, result } from '../ui/notifier';
+import { guarded } from './guard';
 
 /** Where a key can come from. */
 export type KeySource = Readonly<{
@@ -317,17 +318,25 @@ export function registerJevCommands(
 	deps: Deps,
 ): ReadonlyArray<vscode.Disposable> {
 	return [
-		vscode.commands.registerCommand(JEV_COMMANDS.checkWithJev, () =>
-			checkWithJev(deps),
+		vscode.commands.registerCommand(
+			JEV_COMMANDS.checkWithJev,
+			guarded('The check with Jev', () => checkWithJev(deps)),
 		),
-		vscode.commands.registerCommand(JEV_COMMANDS.setApiKey, () =>
-			setApiKey(deps, providerFor(DEFAULT_MODEL)),
+		vscode.commands.registerCommand(
+			JEV_COMMANDS.setApiKey,
+			guarded('Setting the API key', () =>
+				setApiKey(deps, providerFor(DEFAULT_MODEL)),
+			),
 		),
-		vscode.commands.registerCommand(JEV_COMMANDS.setOpenAIApiKey, () =>
-			setApiKey(deps, providerFor('gpt-6-luna')),
+		vscode.commands.registerCommand(
+			JEV_COMMANDS.setOpenAIApiKey,
+			guarded('Setting the API key', () =>
+				setApiKey(deps, providerFor('gpt-6-luna')),
+			),
 		),
-		vscode.commands.registerCommand(JEV_COMMANDS.clearApiKey, () =>
-			clearApiKey(deps),
+		vscode.commands.registerCommand(
+			JEV_COMMANDS.clearApiKey,
+			guarded('Clearing the API keys', () => clearApiKey(deps)),
 		),
 	];
 }

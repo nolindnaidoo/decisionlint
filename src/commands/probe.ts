@@ -11,6 +11,7 @@ import { providerFor } from '../jev/provider';
 import { DEFAULT_MODEL } from '../jev/review';
 import { readQuestions, syntaxFor } from '../lint/lint';
 import { blocked, caution } from '../ui/notifier';
+import { guarded } from './guard';
 import {
 	failureMessage,
 	findKey,
@@ -233,7 +234,7 @@ export function registerProbeCommand(
 	};
 	// A second probe would pay for a second set of answers and race the first for the page.
 	let probing = false;
-	const guarded = async (): Promise<void> => {
+	const oneAtATime = async (): Promise<void> => {
 		if (probing) {
 			blocked('A probe is already running. Wait for its report.');
 			return;
@@ -248,7 +249,10 @@ export function registerProbeCommand(
 		}
 	};
 	return [
-		vscode.commands.registerCommand(PROBE_COMMAND, guarded),
+		vscode.commands.registerCommand(
+			PROBE_COMMAND,
+			guarded('The probe', oneAtATime),
+		),
 		vscode.workspace.registerTextDocumentContentProvider(REPORT_SCHEME, {
 			onDidChange: pages.changed.event,
 			provideTextDocumentContent: (uri: vscode.Uri) =>

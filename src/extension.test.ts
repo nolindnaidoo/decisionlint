@@ -1147,6 +1147,32 @@ describe('probe a question', () => {
 	});
 });
 
+describe('a command whose body throws', () => {
+	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
+
+	it.each([
+		[COMMANDS.lintFile, 'Linting this file'],
+		[JEV_COMMANDS.checkWithJev, 'The check with Jev'],
+		[PROBE_COMMAND, 'The probe'],
+	])('%s says so, instead of doing nothing', async (command, what) => {
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		_state.activeTextEditor = {
+			document,
+			selection: { active: new vscode.Position(0, 0) },
+		};
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		// After activation, so the first lint of the open file is not what throws.
+		(document as { getText: () => string }).getText = () => {
+			throw new Error('the document is gone');
+		};
+		await run(command);
+		expect(_state.messages.at(-1)).toBe(
+			`JevLint-LE: ${what} could not finish: the document is gone`,
+		);
+	});
+});
+
 describe('how much it says', () => {
 	const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 	const reply = (cancel = false) =>

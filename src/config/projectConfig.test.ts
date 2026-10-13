@@ -58,7 +58,7 @@ describe('a project settings file', () => {
 		expect(Object.keys(schema.properties)).toEqual(CONFIG_KEYS);
 		expect(schema.properties.rules.additionalProperties.enum).toEqual([
 			...LEVELS,
-			...Object.keys(LEVEL_ALIASES),
+			...LEVEL_ALIASES.keys(),
 		]);
 		const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
 		const matched = manifest.contributes.jsonValidation.flatMap(

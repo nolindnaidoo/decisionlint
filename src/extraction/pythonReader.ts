@@ -32,21 +32,22 @@ type Source = Readonly<{
 	calls: ReadonlySet<string>;
 }>;
 
-const CLASS_TYPES: Readonly<Record<string, QuestionType>> = Object.freeze({
-	Noul: 'noul',
-	Choice: 'choice',
-	Score: 'score',
-});
+// Maps, not objects: the keys are names from the file, and a plain object
+// would answer `constructor` or `valueOf` with a function.
+const CLASS_TYPES: ReadonlyMap<string, QuestionType> = new Map([
+	['Noul', 'noul'],
+	['Choice', 'choice'],
+	['Score', 'score'],
+]);
 const REQUEST_METHOD = 'system_one';
 // `system_one(state, questions, *, model=...)`: the two it takes by position.
 const REQUEST_POSITIONS: ReadonlyArray<string> = ['state', 'questions'];
 const DECLARATORS = new Set(['def', 'class']);
-const KEYWORD_LITERALS: Readonly<Record<string, (span: Span) => Node>> =
-	Object.freeze({
-		True: (span: Span): Node => ({ kind: 'boolean', value: true, span }),
-		False: (span: Span): Node => ({ kind: 'boolean', value: false, span }),
-		None: (span: Span): Node => ({ kind: 'null', span }),
-	});
+const KEYWORD_LITERALS: ReadonlyMap<string, (span: Span) => Node> = new Map([
+	['True', (span: Span): Node => ({ kind: 'boolean', value: true, span })],
+	['False', (span: Span): Node => ({ kind: 'boolean', value: false, span })],
+	['None', (span: Span): Node => ({ kind: 'null', span })],
+]);
 
 const FROM_IMPORT =
 	/^[ \t]*from[ \t]+typesafe_(?:sdk|ai)[\w.]*[ \t]+import[ \t]+(\([^)]*\)|[^\n]*)/gm;
@@ -59,7 +60,7 @@ function importedNames(text: string): Names {
 		const list = (match[1] ?? '').replace(/#[^\n]*/g, '').replace(/[()]/g, '');
 		for (const entry of list.split(',')) {
 			const [name, , alias] = entry.trim().split(/\s+/);
-			const type = CLASS_TYPES[name ?? ''];
+			const type = CLASS_TYPES.get(name ?? '');
 			if (type) classes.set(alias ?? (name as string), type);
 		}
 	}
@@ -92,7 +93,7 @@ function calleeAt(source: Source, at: number): Callee | undefined {
 		return undefined;
 	const prev = tokens[at - 1];
 	if (prev?.kind === 'ident' && DECLARATORS.has(prev.text)) return undefined;
-	const builtIn = CLASS_TYPES[token.text];
+	const builtIn = CLASS_TYPES.get(token.text);
 	if (!isPunct(prev, '.')) {
 		const type = names.classes.get(token.text);
 		if (type) return { type, imported: true };
@@ -320,7 +321,7 @@ function readPrimary(source: Source, at: number): Parsed | undefined {
 	if (isPunct(token, '[')) return readArray(source, at);
 	if (isPunct(token, '(')) return readParenthesized(source, at);
 	if (token.kind !== 'ident') return readNumber(tokens, at);
-	const keyword = KEYWORD_LITERALS[token.text];
+	const keyword = KEYWORD_LITERALS.get(token.text);
 	if (keyword) return { node: keyword(spanOf(token)), next: at + 1 };
 	return readCallAt(source, at);
 }

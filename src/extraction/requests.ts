@@ -28,10 +28,12 @@ type Named = Readonly<{ id: string; span: Span }> | undefined;
 
 const TYPES: ReadonlySet<string> = new Set(['noul', 'choice', 'score']);
 // The Vercel AI SDK names the yes/no type `boolean`, OpenAI's Decisions API `predicate`.
-const TYPE_ALIASES: Readonly<Record<string, QuestionType>> = Object.freeze({
-	boolean: 'noul',
-	predicate: 'noul',
-});
+// A Map: the key is the document's `type` value, and `{ type: "constructor" }` on a
+// plain object would answer with a function and read as a question.
+const TYPE_ALIASES: ReadonlyMap<string, QuestionType> = new Map([
+	['boolean', 'noul'],
+	['predicate', 'noul'],
+]);
 // Field names older payloads and clients this reader does not know use for the same things.
 const FOREIGN_FIELDS: ReadonlySet<string> = new Set([
 	'prompt',
@@ -69,7 +71,7 @@ function typeName(node: ObjectNode): string | undefined {
 function typeOf(node: ObjectNode): QuestionType | undefined {
 	const type = typeName(node);
 	if (type === undefined) return undefined;
-	const alias = TYPE_ALIASES[type];
+	const alias = TYPE_ALIASES.get(type);
 	if (alias) return alias;
 	return TYPES.has(type) ? (type as QuestionType) : undefined;
 }
@@ -355,7 +357,7 @@ function isBrokenQuestion(value: Node): boolean {
 	const type = prop(value, 'type')?.value;
 	if (!type) return value.props.some((entry) => CRITERIA_FIELDS.has(entry.key));
 	if (type.kind !== 'string') return false;
-	const real = [...TYPES, ...Object.keys(TYPE_ALIASES)];
+	const real = [...TYPES, ...TYPE_ALIASES.keys()];
 	return real.filter((name) => oneSlipFrom(type.value, name)).length === 1;
 }
 

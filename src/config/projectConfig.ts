@@ -22,10 +22,10 @@ export const LEVELS: ReadonlyArray<string> = [
 	'error',
 ];
 
-/** Spellings other linters use, taken as the level they mean. */
-export const LEVEL_ALIASES: Readonly<Record<string, string>> = Object.freeze({
-	warn: 'warning',
-});
+/** Spellings other linters use, taken as the level they mean. A Map, because the key is typed by the user. */
+export const LEVEL_ALIASES: ReadonlyMap<string, string> = new Map([
+	['warn', 'warning'],
+]);
 
 type Level = Severity | 'off';
 const CODES: ReadonlySet<string> = new Set(RULE_CODES);
@@ -38,7 +38,7 @@ export function readRule(text: string): readonly [RuleCode, Level] | string {
 	const [rule = '', given = ''] = text.split('=');
 	const code = CODES.has(rule) ? (rule as RuleCode) : BY_NAME.get(rule);
 	if (!code) return `'${rule}' is not a rule code or a rule name.`;
-	const level = LEVEL_ALIASES[given] ?? given;
+	const level = LEVEL_ALIASES.get(given) ?? given;
 	if (!LEVELS.includes(level))
 		return `'${given}' is not a level. Use one of ${LEVELS.join(', ')}.`;
 	return [code, level as Level];

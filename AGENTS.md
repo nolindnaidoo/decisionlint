@@ -118,6 +118,13 @@ family's files, copied unchanged from `regex-le`.
 
 ## Invariants
 
+- **Text from a document, a setting or an argument never indexes a plain
+  object.** A frozen object literal answers `constructor`, `toString`,
+  `valueOf`, `hasOwnProperty` and `__proto__` with Object.prototype's member,
+  and that member is truthy: the Noul key fix once renamed a `constructor`
+  key to `function Object() { [native code] }`, and a question typed
+  `valueOf` threw inside the reader. Every table keyed by such text is a
+  `Map`. `lint.test.ts` drives each prototype name through each position.
 - **The reader refuses rather than guesses.** A value that is not a literal is
   `unreadable`. An object with a spread, a computed key or a method is
   `partial`. A rule that needs such a value does not run, and `JEV000` says so.

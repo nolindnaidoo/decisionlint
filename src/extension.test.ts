@@ -684,6 +684,29 @@ describe('check with Jev', () => {
 		);
 	});
 
+	it('keeps to the vendor and model it started with when the setting changes mid-run', async () => {
+		const fetch = jevSays({});
+		vi.stubGlobal('fetch', fetch);
+		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
+		start(doc(VAGUE));
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		// The user switches the model while the confirmation is on screen. The
+		// run was planned, priced and keyed for Jev, so that is what it asks.
+		_state.onModal = () => {
+			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
+		};
+		await run(JEV_COMMANDS.checkWithJev);
+		expect(_state.modals[0]).toContain('to TypeSafe?');
+		expect(fetch).toHaveBeenCalledTimes(1);
+		const [url, init] = fetch.mock.calls[0] as unknown as [
+			string,
+			{ body: string; headers: Record<string, string> },
+		];
+		expect(url).toContain('api.typesafe.ai');
+		expect(JSON.parse(init.body).model).toBe('jev-1.13.0');
+		expect(init.headers.Authorization).toBe('Bearer k');
+	});
+
 	it('does not ask unless the user has switched the question on', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
@@ -1018,6 +1041,28 @@ describe('probe a question', () => {
 		await run(PROBE_COMMAND);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain(reason);
+	});
+
+	it('keeps to the model it started with when the setting changes mid-run', async () => {
+		const fetch = answering(Array(5).fill('damaged'));
+		vi.stubGlobal('fetch', fetch);
+		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		cursorIn(document, 'What went wrong');
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.onModal = () => {
+			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
+		};
+		await run(PROBE_COMMAND);
+		expect(fetch).toHaveBeenCalledTimes(5);
+		for (const sent of fetch.mock.calls as unknown as [
+			string,
+			{ body: string },
+		][]) {
+			expect(sent[0]).toContain('api.typesafe.ai');
+			expect(JSON.parse(sent[1].body).model).toBe('jev-1.13.0');
+		}
 	});
 
 	it('asks first when the question is switched on, and sends nothing on no', async () => {

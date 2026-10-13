@@ -74,8 +74,8 @@ async function runProbe(
 	target: Target,
 	key: string,
 	signal: AbortSignal,
+	model: string,
 ): Promise<Probed> {
-	const model = deps.getConfiguration().jev.model;
 	const variants = buildProbe(target.state, target.question, model);
 	const results: ProbeResult[] = [];
 	const cancelled = (): Probed => ({
@@ -109,8 +109,11 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		refuseUntrusted('A probe sends a question and its state to TypeSafe');
 		return;
 	}
+	// Read once, before the first await, so the key, the count the user agrees
+	// to and the requests all name the same model.
+	const config = deps.getConfiguration();
 	// The variants are built and read in Jev's shape. Luna's reply for a Choice or a Score is not read yet.
-	const provider = providerFor(deps.getConfiguration().jev.model);
+	const provider = providerFor(config.jev.model);
 	if (provider.id !== 'typesafe') {
 		blocked(
 			`The probe asks Jev only. Set jevlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
@@ -125,13 +128,12 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		blocked(target);
 		return;
 	}
-	const found = await findKey(deps, provider);
+	const found = await findKey(deps, provider, config);
 	if ('missing' in found) {
 		reportNoKey(found.missing, provider);
 		return;
 	}
 	const { key } = found;
-	const config = deps.getConfiguration();
 	const count = buildProbe(
 		target.state,
 		target.question,
@@ -154,7 +156,7 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		(_progress, token) => {
 			const abort = new AbortController();
 			token.onCancellationRequested(() => abort.abort());
-			return runProbe(deps, target, key, abort.signal);
+			return runProbe(deps, target, key, abort.signal, config.jev.model);
 		},
 	);
 	if (probed.kind === 'failed') {

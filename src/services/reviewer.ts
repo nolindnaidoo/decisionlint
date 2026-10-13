@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import type { Configuration } from '../config/config';
 import type { Failure, Fetch } from '../jev/client';
 import {
 	planReview,
@@ -8,10 +7,9 @@ import {
 	runReview,
 } from '../jev/review';
 import { syntaxFor } from '../lint/lint';
-import type { LintOptions } from '../types';
 import { toDiagnostic } from '../ui/diagnostics';
 
-export type { ReviewPlan };
+export type { ReviewPlan, ReviewSettings };
 
 export type ReviewOutcome =
 	| Readonly<{
@@ -29,13 +27,17 @@ export type ReviewOutcome =
 	| Readonly<{ kind: 'stale'; asked: number }>;
 
 export type Reviewer = Readonly<{
-	/** `lint` is the settings that apply to the document: its rule levels and what it ignores. */
-	plan: (document: vscode.TextDocument, lint: LintOptions) => ReviewPlan;
+	/**
+	 * `settings` is the caller's one reading of the configuration, taken before
+	 * its first await. Read here instead, the model could change between the
+	 * plan the user agreed to and the run, and the key would go to the wrong vendor.
+	 */
+	plan: (document: vscode.TextDocument, settings: ReviewSettings) => ReviewPlan;
 	review: (
 		document: vscode.TextDocument,
 		key: string,
 		signal: AbortSignal,
-		lint: LintOptions,
+		settings: ReviewSettings,
 	) => Promise<ReviewOutcome>;
 	/** True while a run on this document is still sending. */
 	running: (document: vscode.TextDocument) => boolean;
@@ -45,7 +47,6 @@ export type Reviewer = Readonly<{
 }>;
 
 type Deps = Readonly<{
-	getConfiguration: () => Configuration;
 	fetch: Fetch;
 	wait: (ms: number) => Promise<void>;
 }>;
@@ -63,23 +64,17 @@ export function createReviewer(deps: Deps): Reviewer {
 		{ stop: AbortController; overtaken: boolean }
 	>();
 
-	const settings = (lint: LintOptions): ReviewSettings => {
-		const { model, sendState, maxCalls } = deps.getConfiguration().jev;
-		return { lint, model, sendState, maxCalls };
-	};
-
-	const plan = (document: vscode.TextDocument, lint: LintOptions): ReviewPlan =>
-		planReview(
-			document.getText(),
-			syntaxFor(document.languageId),
-			settings(lint),
-		);
+	const plan = (
+		document: vscode.TextDocument,
+		settings: ReviewSettings,
+	): ReviewPlan =>
+		planReview(document.getText(), syntaxFor(document.languageId), settings);
 
 	const review = async (
 		document: vscode.TextDocument,
 		key: string,
 		signal: AbortSignal,
-		lint: LintOptions,
+		settings: ReviewSettings,
 	): Promise<ReviewOutcome> => {
 		const id = document.uri.toString();
 		const flight = { stop: new AbortController(), overtaken: false };
@@ -90,7 +85,7 @@ export function createReviewer(deps: Deps): Reviewer {
 		const run = await runReview(
 			document.getText(),
 			syntaxFor(document.languageId),
-			settings(lint),
+			settings,
 			{ fetch: deps.fetch, wait: deps.wait, key, signal: flight.stop.signal },
 		).finally(() => {
 			flights.delete(id);

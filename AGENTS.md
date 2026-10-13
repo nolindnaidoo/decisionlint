@@ -392,7 +392,12 @@ family's files, copied unchanged from `regex-le`.
   request.
 - **What the user agrees to is what is sent.** `reviewer.plan` and
   `reviewer.review` both come from one `prepare`, so the request count in the
-  confirmation cannot drift from the run.
+  confirmation cannot drift from the run. A paid command reads the
+  configuration once, before its first await, and hands that one reading to
+  the key lookup, the plan, the confirmation and the run. Read again after
+  the modal, a model switched while it was on screen would send the Jev key
+  to OpenAI. `extension.test.ts` switches the model from inside the modal for
+  both commands.
 - **A probe changes layout, never wording.** A reworded question changes its
   meaning too, and then a moved answer proves nothing.
 - **State is sent only when the user turns `jev.sendState` on,** and only a

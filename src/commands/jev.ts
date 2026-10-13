@@ -4,7 +4,12 @@ import type { Failure } from '../jev/client';
 import { type Provider, providerFor } from '../jev/provider';
 import { DEFAULT_MODEL } from '../jev/review';
 import type { Resolved } from '../services/projectConfigs';
-import type { Reviewer, ReviewOutcome, ReviewPlan } from '../services/reviewer';
+import type {
+	Reviewer,
+	ReviewOutcome,
+	ReviewPlan,
+	ReviewSettings,
+} from '../services/reviewer';
 import { blocked, caution, offer, result } from '../ui/notifier';
 
 /** Where a key can come from. */
@@ -166,17 +171,19 @@ function typedKey(configuration: Configuration, provider: Provider): string {
 }
 
 /**
- * The key for the vendor the configured model belongs to, or the sentence
- * that says why there is none. One typed into the user's settings comes
- * first, because it is the one the user can see. Then the keychain, then the
- * environment. A keychain that cannot be read is not the same as one with no
- * key in it.
+ * The key for the vendor the model belongs to, or the sentence that says why
+ * there is none. One typed into the user's settings comes first, because it
+ * is the one the user can see. Then the keychain, then the environment. A
+ * keychain that cannot be read is not the same as one with no key in it.
+ * `configuration` is the caller's one reading, so the key and the vendor it
+ * is sent to come from the same moment.
  */
 export async function findKey(
 	deps: KeySource,
-	provider: Provider = providerFor(deps.getConfiguration().jev.model),
+	provider: Provider,
+	configuration: Configuration,
 ): Promise<Readonly<{ key: string } | { missing: string }>> {
-	const typed = typedKey(deps.getConfiguration(), provider);
+	const typed = typedKey(configuration, provider);
 	if (typed) return { key: typed };
 	const stored = await deps.secrets.get(SECRETS[provider.id]).then(
 		(key) => ({ key }),
@@ -193,7 +200,10 @@ async function checkWithJev(deps: Deps): Promise<void> {
 		blocked('No file is open.');
 		return;
 	}
-	const provider = providerFor(deps.getConfiguration().jev.model);
+	// Read once, before the first await. The user can change the model while the
+	// confirmation is on screen, and the key, the plan and the run must agree.
+	const config = deps.getConfiguration();
+	const provider = providerFor(config.jev.model);
 	if (!vscode.workspace.isTrusted) {
 		refuseUntrusted(
 			`Checking with ${provider.model} sends the questions in this file to ${provider.vendor}`,
@@ -205,7 +215,7 @@ async function checkWithJev(deps: Deps): Promise<void> {
 		blocked(`${provider.model} is already checking this file.`);
 		return;
 	}
-	const found = await findKey(deps, provider);
+	const found = await findKey(deps, provider, config);
 	if ('missing' in found) {
 		reportNoKey(found.missing, provider);
 		return;
@@ -216,8 +226,13 @@ async function checkWithJev(deps: Deps): Promise<void> {
 		blocked(resolved.problem);
 		return;
 	}
-	const lint = resolved.options;
-	const plan = deps.reviewer.plan(document, lint);
+	const settings: ReviewSettings = {
+		lint: resolved.options,
+		model: config.jev.model,
+		sendState: config.jev.sendState,
+		maxCalls: config.jev.maxCalls,
+	};
+	const plan = deps.reviewer.plan(document, settings);
 	if (!plan.requests) {
 		const why = heldBack(plan).join(', ');
 		result(
@@ -225,7 +240,6 @@ async function checkWithJev(deps: Deps): Promise<void> {
 		);
 		return;
 	}
-	const config = deps.getConfiguration();
 	if (config.jev.confirm) {
 		// A modal settles only when the user answers, so this one is awaited.
 		const prompt = ask(plan, provider);
@@ -245,7 +259,7 @@ async function checkWithJev(deps: Deps): Promise<void> {
 		(_progress, token) => {
 			const abort = new AbortController();
 			token.onCancellationRequested(() => abort.abort());
-			return deps.reviewer.review(document, key, abort.signal, lint);
+			return deps.reviewer.review(document, key, abort.signal, settings);
 		},
 	);
 	const message = describe(outcome, plan, provider);

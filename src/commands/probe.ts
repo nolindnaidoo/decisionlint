@@ -99,7 +99,9 @@ async function runProbe(
 	return { kind: 'done', results };
 }
 
-async function probeQuestion(deps: Deps): Promise<void> {
+type ShowReport = (id: string, markdown: string) => Promise<boolean>;
+
+async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) {
 		blocked('No file is open.');
@@ -173,23 +175,31 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		return;
 	}
 	const report = summarize(target.id, target.question.type, probed.results);
-	const opened = await showReport(target.id, report.markdown);
+	const opened = await show(target.id, report.markdown);
 	// The requests are already paid for, so the answer is given whatever happens to the page.
 	if (!opened)
 		blocked(`${report.verdict} The full report could not be opened.`);
 }
 
 const REPORT_SCHEME = 'jevlint-le-probe';
-const reports = new Map<string, string>();
 const KEPT_REPORTS = 20;
-const changed = new vscode.EventEmitter<vscode.Uri>();
+
+/** The report pages, served from memory, and the event that tells an open one to reload. */
+type Pages = Readonly<{
+	reports: Map<string, string>;
+	changed: vscode.EventEmitter<vscode.Uri>;
+}>;
 
 /**
  * Shows the report as a rendered page. It is served from memory under its own
  * scheme, so it is read-only and closing it never asks to save, which an
  * untitled document full of Markdown source did.
  */
-async function showReport(id: string, markdown: string): Promise<boolean> {
+async function showReport(
+	{ reports, changed }: Pages,
+	id: string,
+	markdown: string,
+): Promise<boolean> {
 	const uri = vscode.Uri.parse(`${REPORT_SCHEME}:Probe of ${id}.md`);
 	// A page is read when it is opened, so only the latest few need keeping.
 	reports.delete(uri.toString());
@@ -215,6 +225,12 @@ async function showReport(id: string, markdown: string): Promise<boolean> {
 export function registerProbeCommand(
 	deps: Deps,
 ): ReadonlyArray<vscode.Disposable> {
+	// Made here and disposed with the command, not at import: an emitter made
+	// at import outlives a deactivation and is shared with the next activation.
+	const pages: Pages = {
+		reports: new Map(),
+		changed: new vscode.EventEmitter<vscode.Uri>(),
+	};
 	// A second probe would pay for a second set of answers and race the first for the page.
 	let probing = false;
 	const guarded = async (): Promise<void> => {
@@ -224,7 +240,9 @@ export function registerProbeCommand(
 		}
 		probing = true;
 		try {
-			await probeQuestion(deps);
+			await probeQuestion(deps, (id, markdown) =>
+				showReport(pages, id, markdown),
+			);
 		} finally {
 			probing = false;
 		}
@@ -232,9 +250,10 @@ export function registerProbeCommand(
 	return [
 		vscode.commands.registerCommand(PROBE_COMMAND, guarded),
 		vscode.workspace.registerTextDocumentContentProvider(REPORT_SCHEME, {
-			onDidChange: changed.event,
+			onDidChange: pages.changed.event,
 			provideTextDocumentContent: (uri: vscode.Uri) =>
-				reports.get(uri.toString()) ?? '',
+				pages.reports.get(uri.toString()) ?? '',
 		}),
+		pages.changed,
 	];
 }

@@ -36,17 +36,19 @@ function doc(
 	return self as unknown as Doc;
 }
 
-function start(...documents: Doc[]): void {
+function start(...documents: Doc[]): vscode.ExtensionContext {
 	_state.textDocuments = documents;
 	_state.activeTextEditor = documents[0]
 		? { document: documents[0] }
 		: undefined;
-	activate({
+	const context = {
 		subscriptions: [],
 		secrets: _secrets,
 		asAbsolutePath: (relative: string) => `/ext/${relative}`,
 		extension: { packageJSON: { version: manifest.version } },
-	} as unknown as vscode.ExtensionContext);
+	} as unknown as vscode.ExtensionContext;
+	activate(context);
+	return context;
 }
 
 function diagnostics(name = 'file:///a.ts'): vscode.Diagnostic[] {
@@ -1104,6 +1106,15 @@ describe('probe a question', () => {
 		await first;
 		expect(fetch).toHaveBeenCalledTimes(5);
 		expect(_state.shown).toHaveLength(1);
+	});
+
+	it('is made with the extension and disposed with it, report page included', () => {
+		const context = start(doc(REQUEST, 'file:///a.ts', 'json'));
+		// The page's change event is the one emitter the extension owns. Made at
+		// import, it would outlive a deactivation and be shared by the next one.
+		expect(_state.emitters).toHaveLength(1);
+		for (const subscription of context.subscriptions) subscription.dispose();
+		expect(_state.emitters.map((emitter) => emitter.disposed)).toEqual([true]);
 	});
 
 	it('asks first when the question is switched on, and sends nothing on no', async () => {

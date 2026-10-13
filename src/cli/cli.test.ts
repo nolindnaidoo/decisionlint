@@ -2116,3 +2116,31 @@ describe('a file whose extension names a property of Object.prototype', () => {
 		);
 	});
 });
+
+describe('text handed to the server', () => {
+	const over = `{ "questions": { "q": { "type": "noul", "instructions": "${'a'.repeat(1_000_001)}" } } }`;
+
+	it.each(['lint_text', 'fix_text', 'plan_jev', 'probe_question'])(
+		'is held to the size limit files are held to, by %s',
+		async (name) => {
+			const result = await cli(
+				['--mcp'],
+				{},
+				JSON.stringify({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'tools/call',
+					params: { name, arguments: { text: over } },
+				}),
+			);
+			const [reply] = result.out
+				.trim()
+				.split('\n')
+				.map((line) => JSON.parse(line));
+			expect(reply.result.isError).toBe(true);
+			expect(reply.result.content[0].text).toBe(
+				"'text' is over the size limit of 1000000 bytes.",
+			);
+		},
+	);
+});

@@ -446,7 +446,9 @@ family's files, copied unchanged from `regex-le`.
   found it and must not index `RULES` with a foreign code.
 - **Check with Jev and the probe never use a project's copy.** They spend the
   user's key, so they run the code the user installed as an extension.
-- **File size is counted in bytes in both places.**
+- **File size is counted in bytes in every place.** The editor, the command
+  line's files and standard input, and the server's `text` argument are all
+  held to `MAX_FILE_SIZE_BYTES`, so no entry point is the way around another.
 - **The pinned model and the call limit are defined once,** in
   `jev/review.ts`. The editor's defaults and the command line's read them.
   The model is `MEASURED_ON` from `lint/limits.ts`, where the offline rules

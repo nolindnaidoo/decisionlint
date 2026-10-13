@@ -11,7 +11,11 @@ import {
 import { providerFor } from '../jev/provider';
 import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
 import { fixText } from '../lint/fixAll';
-import { readQuestions, syntaxForPath } from '../lint/lint';
+import {
+	MAX_FILE_SIZE_BYTES,
+	readQuestions,
+	syntaxForPath,
+} from '../lint/lint';
 import { pageFor, RULE_CODES, RULES } from '../lint/rules';
 import type { RuleCode, Syntax } from '../types';
 import { keyFrom, keyPlaces } from './dotenv';
@@ -415,6 +419,9 @@ type Named = Readonly<{ text: string; filename: string; syntax: Syntax }>;
 function named(input: Json): Named | string {
 	const { text, filename = DEFAULT_NAME } = input;
 	if (typeof text !== 'string') return "'text' must be a string.";
+	// The limit a file is held to, as standard input is, so an argument cannot be the way around it.
+	if (Buffer.byteLength(text, 'utf8') > MAX_FILE_SIZE_BYTES)
+		return `'text' is over the size limit of ${MAX_FILE_SIZE_BYTES} bytes.`;
 	if (typeof filename !== 'string') return "'filename' must be a string.";
 	const syntax = syntaxForPath(filename);
 	if (!syntax) return `Not a file type jevlint-le reads: ${filename}`;

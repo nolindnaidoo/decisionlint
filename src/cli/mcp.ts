@@ -40,11 +40,28 @@ const ERRORS = Object.freeze({
 	parse: -32700,
 	request: -32600,
 	method: -32601,
+	params: -32602,
 	internal: -32603,
 });
 const DEFAULT_NAME = 'request.jev.json';
 
 type Json = Readonly<Record<string, unknown>>;
+
+const isRecord = (value: unknown): value is Json =>
+	typeof value === 'object' && value !== null && !Array.isArray(value);
+
+// A method's answer that is a JSON-RPC error and not a result. Marked with a
+// symbol, which no result built from JSON can carry.
+const REFUSED = Symbol('refused');
+type Refusal = Readonly<{ [REFUSED]: true; code: number; message: string }>;
+type Reply = Json | Refusal;
+const refuse = (code: number, message: string): Refusal => ({
+	[REFUSED]: true,
+	code,
+	message,
+});
+const isRefusal = (reply: Reply): reply is Refusal => REFUSED in reply;
+
 type Outcome = Readonly<{
 	text: string;
 	failed: boolean;
@@ -889,6 +906,73 @@ function initialize(params: Json, version: string): Json {
 const reason = (error: unknown): string =>
 	error instanceof Error ? error.message : String(error);
 
+// The parts of a tool's input schema that are checked before the tool runs.
+type Property = Readonly<{
+	type?: string;
+	items?: Readonly<{ type?: string }>;
+	minItems?: number;
+	minimum?: number;
+}>;
+type InputSchema = Readonly<{
+	properties?: Readonly<Record<string, Property>>;
+	required?: ReadonlyArray<string>;
+}>;
+
+const FITS: ReadonlyMap<string, (value: unknown) => boolean> = new Map([
+	['string', (value) => typeof value === 'string'],
+	['boolean', (value) => typeof value === 'boolean'],
+	['integer', (value) => Number.isInteger(value)],
+	['array', (value) => Array.isArray(value)],
+	['object', isRecord],
+]);
+const SAID: ReadonlyMap<string, string> = new Map([
+	['string', 'a string'],
+	['boolean', 'true or false'],
+	['integer', 'an integer'],
+	['array', 'an array'],
+	['object', 'an object'],
+]);
+
+function misfit(
+	key: string,
+	property: Property,
+	value: unknown,
+): string | undefined {
+	const type = property.type;
+	if (type !== undefined && !FITS.get(type)?.(value))
+		return `'${key}' must be ${SAID.get(type) ?? type}.`;
+	if (Array.isArray(value)) {
+		const item = property.items?.type;
+		if (item !== undefined && !value.every((entry) => FITS.get(item)?.(entry)))
+			return `'${key}' must hold only ${item}s.`;
+		const least = property.minItems;
+		if (least !== undefined && value.length < least)
+			return `'${key}' must have at least ${least} ${least === 1 ? 'entry' : 'entries'}.`;
+	}
+	if (typeof value === 'number' && property.minimum !== undefined)
+		return value < property.minimum
+			? `'${key}' must be at least ${property.minimum}.`
+			: undefined;
+	return undefined;
+}
+
+/**
+ * Why the arguments do not fit the tool's input schema, or undefined when they
+ * do. The protocol makes this the server's refusal, -32602, not the tool's:
+ * a call shaped wrongly never runs, and the tools check meaning, not shape.
+ */
+function mismatch(schema: InputSchema, input: Json): string | undefined {
+	for (const key of schema.required ?? [])
+		if (input[key] === undefined) return `'${key}' is required.`;
+	for (const [key, property] of Object.entries(schema.properties ?? {})) {
+		const value = input[key];
+		if (value === undefined) continue;
+		const wrong = misfit(key, property, value);
+		if (wrong) return wrong;
+	}
+	return undefined;
+}
+
 // A tool that throws, on a folder it may not list or a file that vanished, is
 // a failed call. Left uncaught it ends the server, and the agent loses every tool.
 async function attempt(
@@ -901,12 +985,19 @@ async function attempt(
 	}
 }
 
-async function callTool(params: Json, io: Io): Promise<Json> {
-	const tool = TOOLS.find((candidate) => candidate.name === params.name);
-	const input = (params.arguments ?? {}) as Json;
-	const outcome = tool
-		? await attempt(() => tool.call(input, io))
-		: fail(`Unknown tool: ${String(params.name)}`);
+async function callTool(params: Json, io: Io): Promise<Reply> {
+	const { name } = params;
+	const input = params.arguments ?? {};
+	if (typeof name !== 'string')
+		return refuse(ERRORS.params, "'name' must be a string.");
+	const tool = TOOLS.find((candidate) => candidate.name === name);
+	if (!tool) return refuse(ERRORS.params, `Unknown tool: ${name}`);
+	if (!isRecord(input))
+		return refuse(ERRORS.params, "'arguments' must be an object.");
+	// The schemas are this file's own literals, so the cast names their shape and nothing is assumed of the input.
+	const wrong = mismatch(tool.inputSchema as InputSchema, input);
+	if (wrong) return refuse(ERRORS.params, wrong);
+	const outcome = await attempt(() => tool.call(input, io));
 	return {
 		content: [{ type: 'text', text: outcome.text }],
 		...(outcome.structured ? { structuredContent: outcome.structured } : {}),
@@ -916,7 +1007,7 @@ async function callTool(params: Json, io: Io): Promise<Json> {
 
 // A Map, because the key is the method name a client sends: a plain object
 // answered `constructor` with Object itself, which echoed the params as a result.
-type Method = (params: Json, io: Io) => Json | Promise<Json>;
+type Method = (params: Json, io: Io) => Reply | Promise<Reply>;
 const METHODS: ReadonlyMap<string, Method> = new Map<string, Method>([
 	['initialize', (params, io) => initialize(params, io.version)],
 	['ping', () => ({})],
@@ -973,6 +1064,7 @@ export async function answer(
 		typeof params === 'object' && params !== null ? (params as Json) : {};
 	try {
 		const result = await handler(asked, io);
+		if (isRefusal(result)) return error(id, result.code, result.message);
 		return JSON.stringify({ jsonrpc: '2.0', id, result });
 	} catch (thrown) {
 		return error(id, ERRORS.internal, reason(thrown));

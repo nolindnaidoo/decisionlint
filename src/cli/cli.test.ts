@@ -1358,24 +1358,9 @@ describe('the MCP server', () => {
 
 	it.each([
 		[
-			'an unknown tool',
-			call(1, 'lint_everything', {}),
-			'Unknown tool: lint_everything',
-		],
-		[
-			'text that is not a string',
-			call(1, 'lint_text', { text: 5 }),
-			"'text' must be a string",
-		],
-		[
 			'a file type it does not read',
 			call(1, 'lint_text', { text: 'x', filename: 'a.md' }),
 			'Not a file type',
-		],
-		[
-			'no paths',
-			call(1, 'lint_paths', { paths: [] }),
-			"'paths' must be a list",
 		],
 		[
 			'a path that is not there',
@@ -1393,11 +1378,6 @@ describe('the MCP server', () => {
 			'Unknown rule: JEV999',
 		],
 		[
-			'a rule code that is not a string',
-			call(1, 'explain_rule', { code: 4 }),
-			"'code' must be a string",
-		],
-		[
 			'text to fix in a file type it does not read',
 			call(1, 'fix_text', { text: BAD, filename: 'q.toml' }),
 			'Not a file type',
@@ -1406,16 +1386,6 @@ describe('the MCP server', () => {
 			'a check given text and paths together',
 			call(1, 'check_with_jev', { text: BAD, paths: ['.'] }),
 			"Pass 'text' or 'paths', not both",
-		],
-		[
-			'a check with a limit of zero',
-			call(1, 'check_with_jev', { text: BAD, maxCalls: 0 }),
-			"'maxCalls' must be a whole number above zero",
-		],
-		[
-			'a plan with a model that is not a string',
-			call(1, 'plan_jev', { text: BAD, model: 7 }),
-			"'model' must be a model id",
 		],
 		[
 			'a probe of a question with no state beside it',
@@ -1446,6 +1416,100 @@ describe('the MCP server', () => {
 		expect(reply.result.isError).toBe(true);
 		expect(reply.result.content[0].text).toContain(reason);
 	});
+
+	// The spec draws the line here: a call the server cannot even route is a
+	// protocol error, and a tool that ran and could not do what it was asked is a
+	// failed call. An agent reads both, but a host counts only the first against the server.
+	it.each([
+		[
+			'an unknown tool',
+			call(1, 'lint_everything', {}),
+			'Unknown tool: lint_everything',
+		],
+		[
+			'a call with no tool name',
+			{ jsonrpc: '2.0', id: 1, method: 'tools/call', params: {} },
+			"'name' must be a string",
+		],
+		[
+			'arguments that are not an object',
+			{
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'tools/call',
+				params: { name: 'lint_text', arguments: 'x' },
+			},
+			"'arguments' must be an object",
+		],
+		[
+			'a required argument left out',
+			call(1, 'lint_text', {}),
+			"'text' is required",
+		],
+		[
+			'text that is not a string',
+			call(1, 'lint_text', { text: 5 }),
+			"'text' must be a string",
+		],
+		[
+			'paths that are not a list',
+			call(1, 'lint_paths', { paths: 'samples' }),
+			"'paths' must be an array",
+		],
+		[
+			'no paths',
+			call(1, 'lint_paths', { paths: [] }),
+			"'paths' must have at least 1 entry",
+		],
+		[
+			'a path that is not a string',
+			call(1, 'lint_paths', { paths: [3] }),
+			"'paths' must hold only strings",
+		],
+		[
+			'rules that are not an object',
+			call(1, 'lint_text', { text: BAD, rules: 'off' }),
+			"'rules' must be an object",
+		],
+		[
+			'a rule code that is not a string',
+			call(1, 'explain_rule', { code: 4 }),
+			"'code' must be a string",
+		],
+		[
+			'a check with a limit of zero',
+			call(1, 'check_with_jev', { text: BAD, maxCalls: 0 }),
+			"'maxCalls' must be at least 1",
+		],
+		[
+			'a check with a limit that is not whole',
+			call(1, 'check_with_jev', { text: BAD, maxCalls: 1.5 }),
+			"'maxCalls' must be an integer",
+		],
+		[
+			'a plan with a model that is not a string',
+			call(1, 'plan_jev', { text: BAD, model: 7 }),
+			"'model' must be a string",
+		],
+		[
+			'a plan with sendState that is not a boolean',
+			call(1, 'plan_jev', { text: BAD, sendState: 'yes' }),
+			"'sendState' must be true or false",
+		],
+	])(
+		'refuses %s as invalid params, before any tool runs',
+		async (_name, message, reason) => {
+			const [reply, pinged] = await talk([
+				message,
+				{ jsonrpc: '2.0', id: 2, method: 'ping' },
+			]);
+			expect(reply.result).toBeUndefined();
+			expect(reply.id).toBe(1);
+			expect(reply.error.code).toBe(-32602);
+			expect(reply.error.message).toContain(reason);
+			expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
+		},
+	);
 
 	it('answers JSON that is not a request, and goes on serving', async () => {
 		const result = await cli(

@@ -413,7 +413,11 @@ family's files, copied unchanged from `regex-le`.
   One run per document at a time.
 - **The MCP server answers everything and exits only when its input closes.**
   A tool that throws is a failed call. A line that is not a request is a
-  protocol error.
+  protocol error. So is a call the server cannot route: an unknown tool, or
+  arguments that do not fit the tool's input schema, are refused with
+  `-32602` before any tool runs, and a tool that ran and could not do what
+  it was asked is a failed call with `isError`. `cli.test.ts` holds one table
+  of each.
 - **What the command line could not read is named, never passed over.** An
   unreadable folder or file and a file the reader failed on go in
   `totals.unread`. A linked folder is not followed, because it can lead back

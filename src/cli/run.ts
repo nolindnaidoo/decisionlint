@@ -391,6 +391,11 @@ export async function run(
 		options.quiet,
 	);
 	if (typeof linted === 'string') return unusable(linted);
+	// Every file failed in the reader: nothing was checked, and the run must not pass.
+	if (!linted.reports.length && linted.failed.length)
+		return unusable(
+			`No files could be linted. Not readable: ${linted.failed.join(', ')}.`,
+		);
 	const fixed = mended ? { fixed: mended.fixed } : {};
 	const { reports } = linted;
 	const left: Left = {

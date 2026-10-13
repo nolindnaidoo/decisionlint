@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Fetch } from '../jev/client';
-import { type Io, run } from './run';
+import { EXIT, type Io, run } from './run';
 
 // No real text is known to make a reader throw, so one is made to here. The
 // guard exists for the one nobody has found yet.
@@ -17,8 +17,9 @@ vi.mock('../lint/lint', async (original) => {
 
 const BAD = `{ "questions": { "team": { "type": "choice", "instructions": "Which team takes it?", "criteria": { "billing": "Charges", "technical": "Faults" } } } }`;
 
-async function cli(args: string[], tree: Record<string, string>) {
+async function cli(args: string[], tree: Record<string, string>, stdin = '') {
 	const out: string[] = [];
+	const err: string[] = [];
 	const io: Io = {
 		files: {
 			stat: (path) =>
@@ -32,9 +33,11 @@ async function cli(args: string[], tree: Record<string, string>) {
 			write: () => {},
 		},
 		stdin: async () => '',
-		lines: async function* () {},
+		lines: async function* () {
+			yield* stdin.split('\n');
+		},
 		out: (text) => out.push(text),
-		err: () => {},
+		err: (text) => err.push(text),
 		version: '0',
 		env: {},
 		terminal: false,
@@ -44,8 +47,8 @@ async function cli(args: string[], tree: Record<string, string>) {
 		wait: async () => {},
 		stopSignal: () => new AbortController().signal,
 	};
-	await run(args, io);
-	return { out: out.join('') };
+	const status = await run(args, io);
+	return { status, out: out.join(''), err: err.join('') };
 }
 
 describe('a file the reader fails on', () => {
@@ -53,5 +56,36 @@ describe('a file the reader fails on', () => {
 		const result = await cli(['.'], { 'a.json': BAD, 'b.json': 'POISON' });
 		expect(result.out).toContain('JEV004');
 		expect(result.out).toContain('1 path could not be read: b.json.');
+		expect(result.status).toBe(EXIT.passed);
+	});
+
+	it('fails the run when it was the only file, because nothing was linted', async () => {
+		const result = await cli(['.'], { 'b.json': 'POISON' });
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toBe(
+			'jevlint-le: No files could be linted. Not readable: b.json.\n',
+		);
+		expect(result.out).toBe('');
+	});
+
+	it('is a failed call on the server when it was the only file', async () => {
+		const result = await cli(
+			['--mcp'],
+			{ 'b.json': 'POISON' },
+			JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'tools/call',
+				params: { name: 'lint_paths', arguments: { paths: ['.'] } },
+			}),
+		);
+		const [reply] = result.out
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(reply.result.isError).toBe(true);
+		expect(reply.result.content[0].text).toBe(
+			'No files could be linted. Not readable: b.json.',
+		);
 	});
 });

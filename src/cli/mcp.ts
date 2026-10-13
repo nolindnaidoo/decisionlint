@@ -465,6 +465,9 @@ function lint(pick: Picked, settings: Settings): Linted | string {
 		: { sources: pick.sources, excluded: 0 };
 	const linted = lintSources(kept.sources, settings.optionsFor, false);
 	if (typeof linted === 'string') return linted;
+	// Every file failed in the reader: nothing was checked, so this is not a report.
+	if (!linted.reports.length && linted.failed.length)
+		return `No files could be linted. Not readable: ${linted.failed.join(', ')}.`;
 	return {
 		reports: linted.reports,
 		left: {

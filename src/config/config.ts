@@ -36,7 +36,7 @@ export const CONFIG_DEFAULTS = Object.freeze({
 	rules: Object.freeze({}),
 	fallbackOptions: DEFAULT_FALLBACK_OPTIONS,
 	ignore: Object.freeze([] as string[]),
-	include: `**/*.{${Object.keys(EXTENSIONS).join(',')}}`,
+	include: `**/*.{${[...EXTENSIONS.keys()].join(',')}}`,
 	exclude: '**/{node_modules,dist,out,build,coverage,.git}/**',
 	maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
 	notificationsLevel: 'important' as NotificationsLevel,

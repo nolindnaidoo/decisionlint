@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { LintOptions, ReportedFinding } from '../types';
 import { fixText } from './fixAll';
 import { MEASURED_ON } from './limits';
-import { DEFAULT_OPTIONS, lintText } from './lint';
+import { DEFAULT_OPTIONS, lintText, syntaxFor, syntaxForPath } from './lint';
 
 function codes(
 	text: string,
@@ -1074,4 +1074,30 @@ describe('text that names a property of Object.prototype', () => {
 			}
 		},
 	);
+});
+
+describe('the file types the tool reads', () => {
+	it('are resolved from the extension alone, and from no inherited name', () => {
+		expect(syntaxForPath('request.jev.json')).toBe('js');
+		expect(syntaxForPath('A.JSON')).toBe('js');
+		expect(syntaxForPath('triage.py')).toBe('python');
+		expect(syntaxForPath('noext')).toBeUndefined();
+		expect(syntaxForPath('.env')).toBeUndefined();
+		for (const name of ['constructor', '__proto__', 'hasOwnProperty'])
+			expect(syntaxForPath(`a.${name}`), name).toBeUndefined();
+	});
+
+	it('read an editor language id that is not theirs as JavaScript', () => {
+		expect(syntaxFor('python')).toBe('python');
+		expect(syntaxFor('json')).toBe('js');
+		expect(syntaxFor('constructor')).toBe('js');
+	});
+
+	it('refuse a syntax named for a property of Object.prototype', () => {
+		expect(() =>
+			lintText('{}', DEFAULT_OPTIONS, 'constructor' as never),
+		).toThrow(
+			'Unknown syntax "constructor". Use one of: js, python, rust, go.',
+		);
+	});
 });

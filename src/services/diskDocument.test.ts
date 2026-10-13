@@ -6,10 +6,10 @@ import { LANGUAGES } from './linter';
 
 describe('a file read from disk', () => {
 	it('has an editor language for every file type the tool reads, and no other', () => {
-		expect(Object.keys(LANGUAGE_BY_EXTENSION).sort()).toEqual(
-			Object.keys(EXTENSIONS).sort(),
+		expect([...LANGUAGE_BY_EXTENSION.keys()].sort()).toEqual(
+			[...EXTENSIONS.keys()].sort(),
 		);
-		for (const id of Object.values(LANGUAGE_BY_EXTENSION))
+		for (const id of LANGUAGE_BY_EXTENSION.values())
 			expect(LANGUAGES, id).toContain(id);
 	});
 
@@ -19,6 +19,7 @@ describe('a file read from disk', () => {
 		expect(at('/work/a.py')).toBe('python');
 		expect(at('/work/A.TSX')).toBe('typescriptreact');
 		expect(at('/work/notes.md')).toBe('plaintext');
+		expect(at('/work/a.constructor')).toBe('plaintext');
 	});
 
 	it('places an offset on its line and column', () => {

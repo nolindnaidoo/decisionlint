@@ -1896,7 +1896,7 @@ describe('the files other tools run this through', () => {
 		expect(hook).toContain(`entry: npx --yes jevlint-le@${version} `);
 		expect(hook).toContain(`rev: v${version}`);
 		const listed = /files: \\\.\(([^)]+)\)\$/.exec(hook)?.[1]?.split('|');
-		expect(listed?.sort()).toEqual(Object.keys(EXTENSIONS).sort());
+		expect(listed?.sort()).toEqual([...EXTENSIONS.keys()].sort());
 		// A named file of another type exits 2, so the hook must never be handed one.
 		expect(hook).toContain('--no-error-on-unmatched-pattern');
 	});
@@ -1912,5 +1912,51 @@ describe('the files other tools run this through', () => {
 		// An input spliced into the script could be read as a command.
 		const script = action.slice(action.indexOf('      run: |'));
 		expect(script).not.toContain('${{');
+	});
+});
+
+describe('a file whose extension names a property of Object.prototype', () => {
+	const NOUL = `{ "questions": { "q": { "type": "noul", "instructions": "Has it shipped?" } } }`;
+
+	it('is refused by name, as any other file type the tool does not read', async () => {
+		const result = await cli(['a.constructor'], { 'a.constructor': NOUL });
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain(
+			'Not a file type jevlint-le reads: a.constructor',
+		);
+	});
+
+	it('is passed over in a directory, as any other file type is', async () => {
+		const result = await cli(['.'], {
+			'a.constructor': NOUL,
+			'b.json': NOUL,
+		});
+		expect(result.status).toBe(EXIT.passed);
+		expect(result.out).not.toContain('a.constructor');
+		expect(result.out).not.toContain('could not be read');
+	});
+
+	it('is refused by the server, with the reason', async () => {
+		const result = await cli(
+			['--mcp'],
+			{},
+			JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'tools/call',
+				params: {
+					name: 'lint_text',
+					arguments: { text: NOUL, filename: 'x.constructor' },
+				},
+			}),
+		);
+		const [reply] = result.out
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(reply.result.isError).toBe(true);
+		expect(reply.result.content[0].text).toBe(
+			'Not a file type jevlint-le reads: x.constructor',
+		);
 	});
 });

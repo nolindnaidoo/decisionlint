@@ -3,24 +3,24 @@ import * as vscode from 'vscode';
 /**
  * The editor's language for each file type the tool reads. The editor decides
  * this itself for a file it opens. A file read from disk was never opened, so
- * it is decided here. `diskDocument.test.ts` holds this to `EXTENSIONS`.
+ * it is decided here. `diskDocument.test.ts` holds this to `EXTENSIONS`. A
+ * Map, as `EXTENSIONS` is, because the key comes from a file name.
  */
-export const LANGUAGE_BY_EXTENSION: Readonly<Record<string, string>> =
-	Object.freeze({
-		json: 'json',
-		jsonc: 'jsonc',
-		js: 'javascript',
-		jsx: 'javascriptreact',
-		mjs: 'javascript',
-		cjs: 'javascript',
-		ts: 'typescript',
-		tsx: 'typescriptreact',
-		mts: 'typescript',
-		cts: 'typescript',
-		py: 'python',
-		rs: 'rust',
-		go: 'go',
-	});
+export const LANGUAGE_BY_EXTENSION: ReadonlyMap<string, string> = new Map([
+	['json', 'json'],
+	['jsonc', 'jsonc'],
+	['js', 'javascript'],
+	['jsx', 'javascriptreact'],
+	['mjs', 'javascript'],
+	['cjs', 'javascript'],
+	['ts', 'typescript'],
+	['tsx', 'typescriptreact'],
+	['mts', 'typescript'],
+	['cts', 'typescript'],
+	['py', 'python'],
+	['rs', 'rust'],
+	['go', 'go'],
+]);
 
 function lineStarts(text: string): ReadonlyArray<number> {
 	const starts = [0];
@@ -49,7 +49,7 @@ export function diskDocument(
 	};
 	return {
 		uri,
-		languageId: LANGUAGE_BY_EXTENSION[extension] ?? 'plaintext',
+		languageId: LANGUAGE_BY_EXTENSION.get(extension) ?? 'plaintext',
 		getText: () => text,
 		positionAt,
 	} as unknown as vscode.TextDocument;

@@ -26,13 +26,14 @@ import {
 	type Totals,
 } from './format';
 import { failureMessage, planJev, runJev } from './jev';
+import type { Line } from './lines';
 import { serve } from './mcp';
 
 export type Io = Readonly<{
 	files: Files;
 	stdin: () => Promise<string>;
-	/** Standard input a line at a time, for the MCP server. */
-	lines: () => AsyncIterable<string>;
+	/** Standard input a line at a time, for the MCP server. A line past the size limit arrives as its length. */
+	lines: () => AsyncIterable<Line>;
 	out: (text: string) => void;
 	err: (text: string) => void;
 	version: string;

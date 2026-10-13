@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createInterface } from 'node:readline';
 import type { Fetch } from '../jev/client';
+import { lines } from './lines';
 import { stat } from './process';
 import { EXIT, run } from './run';
 
@@ -44,7 +44,7 @@ run(process.argv.slice(2), {
 		write: (path, text) => writeFileSync(path, text),
 	},
 	stdin,
-	lines: () => createInterface({ input: process.stdin }),
+	lines: () => lines(process.stdin),
 	out: (text) => process.stdout.write(text),
 	err: (text) => process.stderr.write(text),
 	version: version(),

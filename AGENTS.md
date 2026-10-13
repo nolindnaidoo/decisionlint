@@ -413,7 +413,9 @@ family's files, copied unchanged from `regex-le`.
   One run per document at a time.
 - **The MCP server answers everything and exits only when its input closes.**
   A tool that throws is a failed call. A line that is not a request is a
-  protocol error. So is a call the server cannot route: an unknown tool, or
+  protocol error. A line over `MAX_LINE_BYTES` in `cli/lines.ts` is dropped as
+  it arrives and answered by its length, so one frame with no newline cannot
+  grow until the process dies; `lines.test.ts` drives the limit from each side. So is a call the server cannot route: an unknown tool, or
   arguments that do not fit the tool's input schema, are refused with
   `-32602` before any tool runs, and a tool that ran and could not do what
   it was asked is a failed call with `isError`. `cli.test.ts` holds one table

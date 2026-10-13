@@ -1652,6 +1652,41 @@ describe('the MCP server', () => {
 		},
 	);
 
+	it('refuses a request line over the size limit and goes on serving', async () => {
+		const out: string[] = [];
+		const io: Io = {
+			files: disk({}),
+			stdin: async () => '',
+			lines: async function* () {
+				yield { oversized: true, bytes: 20_000_000 };
+				yield JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'ping' });
+			},
+			out: (text) => out.push(text),
+			err: () => {},
+			version: '9.9.9',
+			env: {},
+			terminal: false,
+			fetch: offline(),
+			wait: async () => {},
+			stopSignal: () => new AbortController().signal,
+		};
+		expect(await run(['--mcp'], io)).toBe(EXIT.passed);
+		const [refused, pinged] = out
+			.join('')
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(refused).toEqual({
+			jsonrpc: '2.0',
+			id: null,
+			error: {
+				code: -32600,
+				message: 'Request too large: 20000000 bytes, the limit is 16777216.',
+			},
+		});
+		expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
+	});
+
 	it('answers bad JSON and an unknown method with protocol errors', async () => {
 		const result = await cli(
 			['--mcp'],

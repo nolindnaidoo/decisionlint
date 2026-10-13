@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createInterface } from 'node:readline';
 import type { Fetch } from '../jev/client';
+import { lines } from './lines';
 import { serve } from './mcp';
 import { stat } from './process';
 import { EXIT } from './run';
@@ -47,7 +47,7 @@ serve({
 		write: never('writes nothing'),
 	},
 	stdin: never('reads standard input as requests only'),
-	lines: () => createInterface({ input: process.stdin }),
+	lines: () => lines(process.stdin),
 	out: (text) => process.stdout.write(text),
 	err: (text) => process.stderr.write(text),
 	version: version(),

@@ -21,6 +21,7 @@ import type { RuleCode, Syntax } from '../types';
 import { keyFrom, keyPlaces } from './dotenv';
 import { type FileReport, type JevTotals, plural, toReport } from './format';
 import { failureMessage, planJev, runJev } from './jev';
+import { MAX_LINE_BYTES } from './lines';
 import {
 	createSettings,
 	gatherPaths,
@@ -1087,6 +1088,13 @@ export async function answer(
 /** Answers MCP requests, one JSON message per line, until the input closes. */
 export async function serve(io: Io): Promise<void> {
 	for await (const line of io.lines()) {
+		// A frame too long to hold is refused by its length. Nothing of it was kept.
+		if (typeof line !== 'string') {
+			io.out(
+				`${error(null, ERRORS.request, `Request too large: ${line.bytes} bytes, the limit is ${MAX_LINE_BYTES}.`)}\n`,
+			);
+			continue;
+		}
 		if (!line.trim()) continue;
 		const reply = await answer(line, io);
 		if (reply !== undefined) io.out(`${reply}\n`);

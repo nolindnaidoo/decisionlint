@@ -1,9 +1,9 @@
-import { lstatSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import type { Fetch } from '../jev/client';
-import type { Entry } from './files';
 import { serve } from './mcp';
+import { stat } from './process';
 import { EXIT } from './run';
 
 /**
@@ -14,16 +14,6 @@ import { EXIT } from './run';
  * handed in for check_with_jev and probe_question, which are the only tools
  * that use them; the rest never touch either.
  */
-
-function stat(path: string): Entry | undefined {
-	const found = statSync(path, { throwIfNoEntry: false });
-	if (!found) return undefined;
-	return {
-		kind: found.isDirectory() ? 'dir' : 'file',
-		size: found.size,
-		link: lstatSync(path).isSymbolicLink(),
-	};
-}
 
 // The manifest sits beside the bundle in the package.
 function version(): string {

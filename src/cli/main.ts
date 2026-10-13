@@ -1,26 +1,9 @@
-import {
-	existsSync,
-	lstatSync,
-	readdirSync,
-	readFileSync,
-	statSync,
-	writeFileSync,
-} from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import type { Fetch } from '../jev/client';
-import type { Entry } from './files';
+import { stat } from './process';
 import { EXIT, run } from './run';
-
-function stat(path: string): Entry | undefined {
-	const found = statSync(path, { throwIfNoEntry: false });
-	if (!found) return undefined;
-	return {
-		kind: found.isDirectory() ? 'dir' : 'file',
-		size: found.size,
-		link: lstatSync(path).isSymbolicLink(),
-	};
-}
 
 async function stdin(): Promise<string> {
 	const chunks: Buffer[] = [];

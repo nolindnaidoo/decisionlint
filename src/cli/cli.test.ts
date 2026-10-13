@@ -676,6 +676,43 @@ describe('a disk that fails', () => {
 		expect(result.status).toBe(EXIT.passed);
 	});
 
+	it('names a path that is not a regular file, and never opens it', async () => {
+		// A named pipe with a .json name would block the read for as long as nobody writes to it.
+		const opened: string[] = [];
+		const result = await cli(
+			['.'],
+			{ 'src/q.json': CLEAN, 'src/pipe.json': '' },
+			'',
+			{
+				files: (files) => ({
+					...files,
+					stat: (path) =>
+						path === 'src/pipe.json'
+							? { kind: 'other', size: 0 }
+							: files.stat(path),
+					read: (path) => {
+						opened.push(path);
+						return files.read(path);
+					},
+				}),
+			},
+		);
+		expect(opened).not.toContain('src/pipe.json');
+		expect(result.status).toBe(EXIT.passed);
+		expect(result.out).toContain('1 path could not be read: src/pipe.json.');
+	});
+
+	it('refuses a named path that is not a regular file', async () => {
+		const result = await cli(['src/pipe.json'], { 'src/pipe.json': '' }, '', {
+			files: (files) => ({
+				...files,
+				stat: () => ({ kind: 'other', size: 0 }),
+			}),
+		});
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain('Not a regular file: src/pipe.json');
+	});
+
 	it('still reads a linked folder that is named outright', async () => {
 		const result = await cli(['up'], { 'up/q.json': BAD }, '', {
 			files: (files) => ({

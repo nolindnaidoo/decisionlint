@@ -21,10 +21,53 @@ const NEGATIVE_WORDS =
 /** A word that carries its own negation, so "not ineligible" negates twice. */
 export const NEGATIVE_WORD = new RegExp(`\\b(?:${NEGATIVE_WORDS})\\b`, 'gi');
 
+/**
+ * `opener`, then `closer`, inside one stretch of text with none of `stops`
+ * between them. Written as one pattern, `opener\b[^stops]*\bcloser`, the
+ * engine scans from every opener to the end of its stretch, which is the
+ * square of the stretch's length and took minutes on a long instruction.
+ * Here the closers are found once over the whole text, so a closer's
+ * boundaries and lookahead see exactly what the one pattern saw, and each
+ * stretch is read once for its first opener. `opener` and `closer` carry no
+ * `g` flag; `stops` must.
+ */
+function reaches(
+	opener: RegExp,
+	closer: RegExp,
+	stops: RegExp,
+): (text: string) => boolean {
+	const every = new RegExp(closer.source, `${closer.flags}g`);
+	return (text) => {
+		const closes = [...text.matchAll(every)].map((match) => match.index);
+		if (!closes.length) return false;
+		const ends = [...text.matchAll(stops)].map((match) => match.index);
+		let start = 0;
+		let next = 0;
+		for (const end of [...ends, text.length]) {
+			const opened = opener.exec(text.slice(start, end));
+			if (opened) {
+				const from = start + opened.index + opened[0].length;
+				while (next < closes.length && (closes[next] ?? 0) < from) next += 1;
+				if (next < closes.length && (closes[next] ?? 0) < end) return true;
+			}
+			start = end + 1;
+		}
+		return false;
+	};
+}
+
 /** Phrasing where a yes means something is missing. */
 const ABSENCE_SOURCE =
-	'\\b(?:free (?:of|from)|devoid of|lack(?:s|ed|ing)?|absence of|absent from|without any|fail(?:s|ed)? to|(?:is|are|was|were)\\b[^,;:()]*\\bmissing(?= (?:a|an|the|any|its|their|some)\\b|\\s*\\?|\\s*$)|omit(?:s|ted)?|(?:leaves?|left) out)\\b';
-export const ABSENCE = new RegExp(ABSENCE_SOURCE, 'i');
+	'\\b(?:free (?:of|from)|devoid of|lack(?:s|ed|ing)?|absence of|absent from|without any|fail(?:s|ed)? to|omit(?:s|ted)?|(?:leaves?|left) out)\\b';
+const ABSENCE = new RegExp(ABSENCE_SOURCE, 'i');
+// "is ... missing", with the two in one clause.
+const IS_MISSING = reaches(
+	/(?:is|are|was|were)\b/i,
+	/\bmissing(?= (?:a|an|the|any|its|their|some)\b|\s*\?|\s*$)/i,
+	/[,;:()]/g,
+);
+export const absent = (text: string): boolean =>
+	ABSENCE.test(text) || IS_MISSING(text);
 
 /** Verbs that negate what follows them, so "not fail to" and "not lack" negate twice. */
 export const NEGATING_VERB = /\b(?:fail(?:s|ed)? to|lack(?:s|ed)?)\b/gi;
@@ -77,17 +120,34 @@ const TIME_ANCHOR =
 	'(?:date|deadline|cut-?off|window|period|started|ended|closed|opened|passed|expired|began|finished|arrived|(?:was|were) \\w+ed)';
 const UNIT = '(?:minutes?|hours?|days?|weeks?|months?|years?)';
 
-export const DATE_COMPARISON: ReadonlyArray<RegExp> = Object.freeze([
-	new RegExp(`\\b(?:before|after)\\b[^.?!,]*\\b${TIME_ANCHOR}\\b`, 'i'),
-	/\b(?:prior to|earlier than|later than|sooner than)\b/i,
-	// "The latest check after the most recent repair": which of two events came last.
-	/\b(?:before|after)\s+the\s+(?:most recent|latest|last|first|previous|earliest)\b/i,
-	/\b(?:inside|within|outside)\b[^.?!]*\b(?:window|period|quarter|deadline|term)\b/i,
-	new RegExp(`\\b${UNIT} (?:late|early|ago|old|overdue)\\b`, 'i'),
-	// "How long a session does the learner want?" asks for a length, not a comparison.
-	/\bhow (?:long (?:ago|since|until|before|after)|old|recent)\b/i,
-	/\b(?:older|newer|younger|more recent) than\b/i,
-]);
+const matches =
+	(pattern: RegExp) =>
+	(text: string): boolean =>
+		pattern.test(text);
+
+export const DATE_COMPARISON: ReadonlyArray<(text: string) => boolean> =
+	Object.freeze([
+		// "before" and a time word in one clause: compared, not a turn of phrase.
+		reaches(
+			/\b(?:before|after)\b/i,
+			new RegExp(`\\b${TIME_ANCHOR}\\b`, 'i'),
+			/[.?!,]/g,
+		),
+		matches(/\b(?:prior to|earlier than|later than|sooner than)\b/i),
+		// "The latest check after the most recent repair": which of two events came last.
+		matches(
+			/\b(?:before|after)\s+the\s+(?:most recent|latest|last|first|previous|earliest)\b/i,
+		),
+		reaches(
+			/\b(?:inside|within|outside)\b/i,
+			/\b(?:window|period|quarter|deadline|term)\b/i,
+			/[.?!]/g,
+		),
+		matches(new RegExp(`\\b${UNIT} (?:late|early|ago|old|overdue)\\b`, 'i')),
+		// "How long a session does the learner want?" asks for a length, not a comparison.
+		matches(/\bhow (?:long (?:ago|since|until|before|after)|old|recent)\b/i),
+		matches(/\b(?:older|newer|younger|more recent) than\b/i),
+	]);
 
 /** A Noul that opens like this cannot be answered yes or no. */
 export const OPEN_QUESTION =

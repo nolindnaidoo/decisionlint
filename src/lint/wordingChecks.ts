@@ -1,8 +1,8 @@
 import type { Finding, Node, Question, RuleCode, StringNode } from '../types';
 import { type Check, NONE, PLACEHOLDER, report } from './finding';
 import {
-	ABSENCE,
 	ARITHMETIC,
+	absent,
 	COMPARISON_SYMBOL,
 	DATE_COMPARISON,
 	DEGREE_WORDS,
@@ -44,12 +44,28 @@ function sentences(text: string): ReadonlyArray<string> {
 	return text.split(/[.?!]+\s+/);
 }
 
+/**
+ * The sentences that end in a question mark, each with its mark. One pass:
+ * as the pattern `[^.?!]*\?` it was scanned again from every character of a
+ * sentence with no question mark, the square of the sentence's length.
+ */
+function questionsIn(text: string): ReadonlyArray<string> {
+	const found: string[] = [];
+	let start = 0;
+	for (let i = 0; i < text.length; i += 1) {
+		const char = text[i];
+		if (char === '?') found.push(text.slice(start, i + 1));
+		if (char === '?' || char === '.' || char === '!') start = i + 1;
+	}
+	return found;
+}
+
 // A long instruction often sets the scene before it asks. Only the asking
 // sentences can join two judgments, so context is left out when there is one.
 // Statement-form instructions put the claim first and the guidance after.
 function asked(text: string): string {
-	const questions = text.match(/[^.?!]*\?/g);
-	return questions ? questions.join(' ') : (sentences(text)[0] ?? text);
+	const questions = questionsIn(text);
+	return questions.length ? questions.join(' ') : (sentences(text)[0] ?? text);
 }
 
 /** Wording rules read English. Text in another script is left alone. */
@@ -83,8 +99,7 @@ function negatesTwice(text: string): boolean {
 	}
 	// Outside a question, "do not infer facts not stated" is a clear order and
 	// not a puzzle, so only questions are read clause by clause.
-	const questions = text.match(/[^.?!]*\?/g) ?? [];
-	return questions.some((sentence) =>
+	return questionsIn(text).some((sentence) =>
 		clauses(sentence).some((clause) => negations(clause) >= 2),
 	);
 }
@@ -107,7 +122,7 @@ function opensOrHandsOver(text: string): boolean {
 }
 
 function isNegative(text: string): boolean {
-	return LEADS_NEGATIVE.test(text) || ABSENCE.test(text);
+	return LEADS_NEGATIVE.test(text) || absent(text);
 }
 
 function wording(
@@ -141,7 +156,7 @@ const checkArithmetic = wording(
 const checkDateComparison = wording(
 	'JEV103',
 	'This question asks Jev to order or measure dates, which it reads as text and not as quantities. Have it extract the parts of each date and compare them in code.',
-	(text) => DATE_COMPARISON.some((pattern) => pattern.test(asked(text))),
+	(text) => DATE_COMPARISON.some((compares) => compares(asked(text))),
 );
 
 const checkCompound = wording(
@@ -164,7 +179,7 @@ const checkNegatedNoul = wording(
 	'This yes/no question is phrased so that yes means something is absent. Jev reads that less reliably. Ask whether the thing is present and invert the answer in code.',
 	// With criteria the author has said what a yes means, which is the cure.
 	(text, question) =>
-		question.type === 'noul' && !question.criteria && ABSENCE.test(asked(text)),
+		question.type === 'noul' && !question.criteria && absent(asked(text)),
 );
 
 const checkUndefinedBoundary = wording(

@@ -345,3 +345,26 @@ describe('defaults', () => {
 		).toEqual(['JEV101 info', 'JEV102 warning', 'JEV112 info']);
 	});
 });
+
+describe('a long instruction', () => {
+	const long = (text: string) =>
+		JSON.stringify({ questions: { q: noul(text) } });
+
+	// Each is one sentence or one clause, the shape that once took minutes:
+	// a pattern that scanned from every opening word to the end of the stretch.
+	it.each([
+		['a sentence with no question mark', 'a '.repeat(60_000)],
+		['a sentence that is all before', 'before '.repeat(30_000)],
+		['a sentence that is all within', 'within '.repeat(30_000)],
+		['a clause that is all is', 'is '.repeat(30_000)],
+	])(
+		'is read in one pass: %s',
+		(_name, text) => {
+			const started = performance.now();
+			const result = lintText(long(text), ALL_ON);
+			expect(performance.now() - started).toBeLessThan(2_000);
+			expect(result.questionCount).toBe(1);
+		},
+		30_000,
+	);
+});

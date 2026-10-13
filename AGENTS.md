@@ -183,6 +183,11 @@ family's files, copied unchanged from `regex-le`.
   `showDocumentError` and `cancel` exist because a path the mock cannot fail
   is a path no test has run. Five defects were found the day they were added.
   A new call into the editor that can fail gets its switch and its test.
+- **One paid run per file, one probe at a time.** A second Check with Jev on
+  a file that is being checked, or a second probe while one runs, is refused
+  with `blocked` and sends nothing: it would pay for the same answers and
+  race the first to show them. `extension.test.ts` starts the second from
+  inside the first's network wait, for both commands.
 - **A run the user stopped never reads as one that finished.** The Jev check
   says how many requests were answered of how many planned. A cancelled probe
   makes no report. A request cut off by a cancel is not a network failure.

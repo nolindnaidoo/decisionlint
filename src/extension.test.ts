@@ -1065,6 +1065,47 @@ describe('probe a question', () => {
 		}
 	});
 
+	it('runs one probe at a time', async () => {
+		let answer: (() => void) | undefined;
+		const fetch = vi.fn(
+			() =>
+				new Promise((resolve) => {
+					answer = () =>
+						resolve({
+							ok: true,
+							status: 200,
+							json: async () => ({
+								model: 'jev-1.13.0',
+								answers: {
+									q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
+								},
+								usage: { input_tokens: 300 },
+							}),
+							text: async () => '',
+						});
+				}),
+		);
+		vi.stubGlobal('fetch', fetch);
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		cursorIn(document, 'What went wrong');
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		const first = run(PROBE_COMMAND);
+		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+		await run(PROBE_COMMAND);
+		expect(_state.messages.at(-1)).toContain('A probe is already running');
+		expect(fetch).toHaveBeenCalledTimes(1);
+		for (let i = 0; i < 5; i += 1) {
+			await vi.waitFor(() => expect(answer).toBeDefined());
+			const settle = answer;
+			answer = undefined;
+			settle?.();
+		}
+		await first;
+		expect(fetch).toHaveBeenCalledTimes(5);
+		expect(_state.shown).toHaveLength(1);
+	});
+
 	it('asks first when the question is switched on, and sends nothing on no', async () => {
 		const fetch = answering([]);
 		vi.stubGlobal('fetch', fetch);

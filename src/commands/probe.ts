@@ -215,8 +215,22 @@ async function showReport(id: string, markdown: string): Promise<boolean> {
 export function registerProbeCommand(
 	deps: Deps,
 ): ReadonlyArray<vscode.Disposable> {
+	// A second probe would pay for a second set of answers and race the first for the page.
+	let probing = false;
+	const guarded = async (): Promise<void> => {
+		if (probing) {
+			blocked('A probe is already running. Wait for its report.');
+			return;
+		}
+		probing = true;
+		try {
+			await probeQuestion(deps);
+		} finally {
+			probing = false;
+		}
+	};
 	return [
-		vscode.commands.registerCommand(PROBE_COMMAND, () => probeQuestion(deps)),
+		vscode.commands.registerCommand(PROBE_COMMAND, guarded),
 		vscode.workspace.registerTextDocumentContentProvider(REPORT_SCHEME, {
 			onDidChange: changed.event,
 			provideTextDocumentContent: (uri: vscode.Uri) =>

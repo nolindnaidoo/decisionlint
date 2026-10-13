@@ -123,6 +123,15 @@ export const EXTENSIONS: ReadonlyMap<string, Syntax> = new Map([
 	['go', 'go'],
 ]);
 
+/**
+ * The byte order mark. Node keeps it as the first character of a UTF-8 file
+ * and an editor never shows it, so a reader from disk drops it before linting
+ * or every column on the first line is one too many.
+ */
+export const BOM = '\uFEFF';
+export const withoutBom = (text: string): string =>
+	text.startsWith(BOM) ? text.slice(1) : text;
+
 /** The reader for a file path, or undefined when the tool does not read that type. */
 export function syntaxForPath(path: string): Syntax | undefined {
 	const dot = path.lastIndexOf('.');

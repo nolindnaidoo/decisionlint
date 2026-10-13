@@ -9,6 +9,7 @@ import { providerFor } from '../jev/provider';
 import { DEFAULT_MODEL } from '../jev/review';
 import { fixText } from '../lint/fixAll';
 import {
+	BOM,
 	DEFAULT_FALLBACK_OPTIONS,
 	lintText,
 	MAX_FILE_SIZE_BYTES,
@@ -161,7 +162,19 @@ function readOrNothing(files: Files, path: string): string | undefined {
 	}
 }
 
-export type Source = Readonly<{ path: string; text: string }>;
+export type Source = Readonly<{
+	path: string;
+	/** Without the byte order mark the file may begin with, which columns must not count. */
+	text: string;
+	/** The file began with a byte order mark, which `--fix` writes back. */
+	bom?: true;
+}>;
+
+function sourceOf(path: string, raw: string): Source {
+	return raw.startsWith(BOM)
+		? { path, text: raw.slice(1), bom: true }
+		: { path, text: raw };
+}
 /** What a run did not read, and so cannot speak for. */
 export type Left = Readonly<{
 	/** Files a settings file leaves out. */
@@ -190,7 +203,7 @@ export function gatherPaths(
 	for (const path of found.paths.filter(small)) {
 		// A file that vanished or may not be read is named and the run goes on.
 		try {
-			sources.push({ path, text: files.read(path) });
+			sources.push(sourceOf(path, files.read(path)));
 		} catch {
 			unread.push(path);
 		}
@@ -222,7 +235,7 @@ async function gather(options: CliOptions, io: Io): Promise<Gathered> {
 	if (Buffer.byteLength(text, 'utf8') > MAX_FILE_SIZE_BYTES)
 		return `Standard input is over the size limit of ${MAX_FILE_SIZE_BYTES} bytes.`;
 	return {
-		sources: [{ path: name, text }],
+		sources: [sourceOf(name, text)],
 		left: { skipped: [], unread: [] },
 	};
 }
@@ -250,7 +263,7 @@ function fixSources(
 			continue;
 		}
 		try {
-			files.write(source.path, result.text);
+			files.write(source.path, source.bom ? BOM + result.text : result.text);
 		} catch {
 			// Files before this one are already written, so the run says where it stopped.
 			return `Could not write ${source.path}. Files before it were fixed.`;

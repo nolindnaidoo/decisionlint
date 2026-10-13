@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { withoutBom } from '../lint/lint';
 
 /**
  * The editor's language for each file type the tool reads. The editor decides
@@ -37,8 +38,10 @@ function lineStarts(text: string): ReadonlyArray<number> {
  */
 export function diskDocument(
 	uri: vscode.Uri,
-	text: string,
+	raw: string,
 ): vscode.TextDocument {
+	// As the editor would hold it, so a finding lands on the same column either way.
+	const text = withoutBom(raw);
 	const path = uri.path;
 	const extension = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
 	const starts = lineStarts(text);

@@ -409,6 +409,19 @@ describe('commands', () => {
 		expect(found?.range.start.line).toBe(1);
 	});
 
+	it('reads a file from disk at the columns the editor shows, byte order mark or not', async () => {
+		start();
+		const plain = doc(BARE_CHOICE, 'file:///plain.ts');
+		// Node keeps the mark as the first character; the editor never shows it.
+		const marked = doc(`\uFEFF${BARE_CHOICE}`, 'file:///marked.ts');
+		for (const document of [plain, marked])
+			_state.documents.set(document.uri.toString(), document);
+		_state.files = [plain.uri, marked.uri];
+		await run(COMMANDS.lintWorkspace);
+		const [found] = diagnostics('file:///marked.ts');
+		expect(found?.range).toEqual(diagnostics('file:///plain.ts')[0]?.range);
+	});
+
 	it('lints the unsaved text of a file that is open, not what is on disk', async () => {
 		const open = doc(BARE_CHOICE, 'file:///good.ts');
 		start(open);

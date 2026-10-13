@@ -727,6 +727,44 @@ describe('a disk that fails', () => {
 	});
 });
 
+describe('a file that begins with a byte order mark', () => {
+	const YES_NO = `{ "questions": { "q": { "type": "noul", "instructions": "Has it shipped?", "criteria": { "yes": "Gone.", "no": "Here." } } } }`;
+
+	it('is reported at the columns an editor shows, which do not count the mark', async () => {
+		const plain = await cli(['--format', 'compact', 'a.json'], {
+			'a.json': YES_NO,
+		});
+		const marked = await cli(['--format', 'compact', 'a.json'], {
+			'a.json': `\uFEFF${YES_NO}`,
+		});
+		expect(plain.out).toContain('a.json:1:');
+		expect(marked.out).toBe(plain.out);
+	});
+
+	it('keeps its mark when --fix writes it back', async () => {
+		const tree = { 'a.json': `\uFEFF${YES_NO}` };
+		const result = await cli(['--fix', 'a.json'], tree);
+		expect(result.status).toBe(EXIT.passed);
+		expect(tree['a.json']).toBe(
+			`\uFEFF${YES_NO.replace('"yes"', '"true"').replace('"no"', '"false"')}`,
+		);
+	});
+
+	it('is read from standard input without the mark', async () => {
+		const plain = await cli(
+			['--format', 'compact', '--stdin-filename', 'a.json'],
+			{},
+			YES_NO,
+		);
+		const marked = await cli(
+			['--format', 'compact', '--stdin-filename', 'a.json'],
+			{},
+			`\uFEFF${YES_NO}`,
+		);
+		expect(marked.out).toBe(plain.out);
+	});
+});
+
 describe('the default format', () => {
 	const tree = { 'src/a.json': `\n${BAD}`, 'src/ok.json': CLEAN };
 

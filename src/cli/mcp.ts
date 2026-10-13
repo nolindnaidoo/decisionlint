@@ -1053,7 +1053,10 @@ export async function answer(
 	// Valid JSON that is not an object, such as `null` or a list, is not a request.
 	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
 		return error(null, ERRORS.request, 'Not a request');
-	const { id, method, params } = parsed as Json;
+	const { jsonrpc, id, method, params } = parsed as Json;
+	// The version is what says this is a request at all. A frame without it is answered, not served.
+	if (jsonrpc !== '2.0')
+		return error(id ?? null, ERRORS.request, 'Not a JSON-RPC 2.0 request');
 	if (typeof method !== 'string')
 		return error(id ?? null, ERRORS.request, 'Not a request');
 	// A message with no id is a notification, which is never answered.

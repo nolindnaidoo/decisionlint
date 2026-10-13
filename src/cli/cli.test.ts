@@ -1587,6 +1587,34 @@ describe('the MCP server', () => {
 		expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
 	});
 
+	it.each([
+		['no version', { id: 11, method: 'ping' }, 11],
+		['the wrong version', { jsonrpc: '1.0', id: 12, method: 'ping' }, 12],
+		['a version that is not text', { jsonrpc: 2, id: 13, method: 'ping' }, 13],
+	])(
+		'refuses a frame with %s and goes on serving',
+		async (_name, frame, id) => {
+			const result = await cli(
+				['--mcp'],
+				{},
+				[
+					JSON.stringify(frame),
+					JSON.stringify({ jsonrpc: '2.0', id: 99, method: 'ping' }),
+				].join('\n'),
+			);
+			const [refused, pinged] = result.out
+				.trim()
+				.split('\n')
+				.map((line) => JSON.parse(line));
+			expect(refused).toEqual({
+				jsonrpc: '2.0',
+				id,
+				error: { code: -32600, message: 'Not a JSON-RPC 2.0 request' },
+			});
+			expect(pinged).toEqual({ jsonrpc: '2.0', id: 99, result: {} });
+		},
+	);
+
 	it('answers bad JSON and an unknown method with protocol errors', async () => {
 		const result = await cli(
 			['--mcp'],

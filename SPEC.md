@@ -1,8 +1,10 @@
 # JevLint-LE — specification
 
-**Status: released as 0.2.0 on 2026-10-05, after 0.1.0 on 2026-10-04.** The exact rules, the wording rules, the
-four sources, the VS Code shell and their tests exist and pass. Everything
-under an "Extended release" heading is intent and none of it is built.
+**Status: released. The current version and its date are the top heading of
+[CHANGELOG.md](CHANGELOG.md); 0.1.0 shipped on 2026-10-04 and 0.2.0 on
+2026-10-05.** The exact rules, the wording rules, the four sources, the VS Code
+shell and their tests exist and pass. Everything under an "Extended release"
+heading is intent and none of it is built.
 
 A VS Code extension in the LE family, category **Check**, that finds the
 questions a project sends to TypeSafe's Jev
@@ -119,9 +121,11 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | JEV012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
 | JEV013 | newer-model | info | `model` is a versioned Jev id, three numbers and nothing after them, above the version the rules were measured on |
 
-**JEV001 has no automatic fix.** Pinning needs the current version id, and the
-extension cannot fetch it. A hard-coded id would be wrong after the next
-release. The message says to copy the `model` value from a response.
+**JEV001's fix is never applied for you.** It offers to pin to `KNOWN_VERSION`,
+the version `jev-latest` pointed to when the repo last checked, and is marked
+unsafe, so `--fix`, fix on save and `fix_text` leave it alone: which version
+to pin is a choice, and a hard-coded id is wrong after the next release. The
+message says to copy the `model` value from a response.
 
 **JEV004 is `info`, not `warning`.** TypeSafe's advice is to add `other` or
 `none of the above` "when the list might not cover every input", and the text
@@ -215,7 +219,7 @@ Scores sent with no levels.
 | `jevlint-le.rules` | `{}` | Severity per rule code: `off`, `hint`, `info`, `warning`, `error` |
 | `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `jevlint-le.include` | JSON, JS and TS globs | Files the workspace command lints |
+| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
 | `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
 | `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
@@ -224,6 +228,7 @@ Scores sent with no levels.
 | `jevlint-le.jev.sendState` | `false` | Also send a state written in the file, for `JEV311` and `JEV312` |
 | `jevlint-le.jev.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
 | `jevlint-le.jev.apiKey` | empty | The TypeSafe key, typed in. User settings only, not synced |
+| `jevlint-le.jev.openaiApiKey` | empty | The OpenAI key, typed in, used when the model is `gpt-6-luna`. User settings only, not synced |
 
 ### Not built from the first draft of this spec
 
@@ -1146,9 +1151,10 @@ the other sixteen.
   and the tool also listed among the rest in its right place.
 - **The site's claims are read per tool.** Its registry and its copy stated
   things of every tool, such as twelve locales and a Rust crate, that are not
-  true of this one. The registry now declares what this tool has: one npm
-  package for the command line and the MCP server, its Open VSX namespace, no
-  MCP registry listing, and that one command sends on request.
+  true of this one. The registry now declares what this tool has: an npm
+  package for the command line and one for the MCP server, its Open VSX
+  namespace, its MCP registry listing as `io.github.nolindnaidoo/jevlint-le`,
+  and that one command sends on request.
 - **The fleet check names it and does not compare it.** `OUTSIDE_FLEET` in the
   site's `scripts/check-fleet.ts` lists this repo, and a test there holds every
   tool in exactly one list. The files this repo copies unchanged, listed in

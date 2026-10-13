@@ -31,7 +31,7 @@ export type Configuration = Readonly<{
 	}>;
 }>;
 
-/** Must equal the defaults declared in package.json. `config.test.ts` holds the two together. */
+/** Must equal the defaults declared in package.json. `extension.test.ts` holds the two together. */
 export const CONFIG_DEFAULTS = Object.freeze({
 	rules: Object.freeze({}),
 	fallbackOptions: DEFAULT_FALLBACK_OPTIONS,

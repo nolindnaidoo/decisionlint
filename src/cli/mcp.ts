@@ -1016,6 +1016,9 @@ async function callTool(params: Json, io: Io): Promise<Reply> {
 	};
 }
 
+/** The tools, by name, for the documents that list them. */
+export const TOOL_NAMES: ReadonlyArray<string> = TOOLS.map((tool) => tool.name);
+
 // A Map, because the key is the method name a client sends: a plain object
 // answered `constructor` with Object itself, which echoed the params as a result.
 type Method = (params: Json, io: Io) => Reply | Promise<Reply>;

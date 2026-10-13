@@ -260,6 +260,10 @@ the reason in its tooltip, when the project's copy cannot be used:
 - the copy is older than 0.3.0, the first version an editor can load
 - the copy fails to load, or does not read that kind of file
 
+When the copy's `package.json` cannot be read there is no version to show, so
+the status bar says `project copy unreadable`, again with the reason in its
+tooltip.
+
 **Check This File with Jev** and the probe always run the extension's own
 code, whatever the project installs.
 
@@ -303,7 +307,7 @@ Jev, and it never uses the network, unless you pass `--jev`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/jevlint-le@v0.5.2
+- uses: nolindnaidoo/jevlint-le@v0.8.0
   with:
     paths: src
 ```
@@ -325,7 +329,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/jevlint-le
-  rev: v0.5.2
+  rev: v0.8.0
   hooks:
     - id: jevlint-le
 ```
@@ -517,7 +521,7 @@ will not press by accident.
 | `jevlint-le.rules` | `{}` | Severity per rule: `off`, `hint`, `info`, `warning`, `error` |
 | `jevlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `jevlint-le.include` | JSON, JS and TS files | Files the workspace command lints |
+| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `jevlint-le.exclude` | `node_modules` and build output | Files the workspace command skips |
 | `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
 | `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `all` adds a summary after each command, and `silent` shows a message only when a command could not run. Findings always show in the editor |

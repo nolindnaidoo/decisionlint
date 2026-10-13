@@ -19,7 +19,7 @@ An [MCP](https://modelcontextprotocol.io) server that lints the questions a
 project sends to TypeSafe's Jev model or to OpenAI's Decisions API
 (`gpt-6-luna`) before they are sent, and mends the ones it can. It is the
 engine behind the [JevLint-LE](https://letools.dev/tools/jevlint-le) editor
-extension, as five tools an agent can call.
+extension, as eight tools an agent can call.
 
 Linting needs no API key and makes no network calls, and nothing here writes
 a file. Two tools ask the model itself, with your key, when you ask them to.

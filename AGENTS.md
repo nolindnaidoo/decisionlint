@@ -12,9 +12,9 @@ measured to fail. Linting uses no network and no API key. One command, run by
 the user with their own key, asks the model to check a file. No filesystem
 writes outside an accepted quick fix.
 
-**Status:** released as 0.2.0 on 2026-10-05, after 0.1.0 on 2026-10-04. The name
-appears in `package.json`, the `jevlint-le.*` settings and commands, the
-`jevlint-le-disable` directive and the diagnostic source.
+**Status:** released; the current version is the top heading of `CHANGELOG.md`.
+The name appears in `package.json`, the `jevlint-le.*` settings and commands,
+the `jevlint-le-disable` directive and the diagnostic source.
 
 ## Architecture
 
@@ -75,8 +75,9 @@ cli/
   format.ts              stylish, compact, JSON, GitHub annotation, SARIF and JUnit output
   run.ts                 run(argv, io) -> exit status. Everything but the process
   jev.ts                 --jev: the plan across files under one call limit, and the run
-  mcp.ts                 the MCP server: five read-only tools over the same
-                         linting, the fixes and the rule pages
+  mcp.ts                 the MCP server: eight tools, six read-only over the
+                         same linting, the fixes and the rule pages, and two
+                         that send with the user's key
   main.ts                the process: real filesystem, streams and exit code
   mcpMain.ts             the server-only process, published as jevlint-le-mcp
 services/linter.ts       diagnostics collection, per-document results, debounce

@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Fetch } from '../jev/client';
 import { lines } from './lines';
-import { stat } from './process';
+import { createStopSignal, stat } from './process';
 import { EXIT, run } from './run';
 
 async function stdin(): Promise<string> {
@@ -19,14 +19,6 @@ function version(): string {
 		? beside
 		: join(__dirname, '..', 'package.json');
 	return String(JSON.parse(readFileSync(path, 'utf8')).version);
-}
-
-// Listening for the interrupt is what stops it ending the process, so it is
-// listened for only once requests are being sent. A second one ends it.
-function stopSignal(): AbortSignal {
-	const stop = new AbortController();
-	process.once('SIGINT', () => stop.abort());
-	return stop.signal;
 }
 
 // A reader that closes early, such as `head`, is not an error of this tool's.
@@ -53,7 +45,7 @@ run(process.argv.slice(2), {
 	columns: process.stdout.columns,
 	fetch: ((url, init) => fetch(url, init)) as Fetch,
 	wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-	stopSignal,
+	stopSignal: createStopSignal(process),
 })
 	.then((status) => {
 		process.exitCode = status;

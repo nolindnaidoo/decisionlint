@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { Fetch } from '../jev/client';
 import { lines } from './lines';
 import { serve } from './mcp';
-import { stat } from './process';
+import { createStopSignal, stat } from './process';
 import { EXIT } from './run';
 
 /**
@@ -27,13 +27,6 @@ const never = (what: string) => (): never => {
 	throw new Error(`The MCP server ${what}.`);
 };
 
-// A request in flight is cut off by the first interrupt, as on the command line.
-function stopSignal(): AbortSignal {
-	const stop = new AbortController();
-	process.once('SIGINT', () => stop.abort());
-	return stop.signal;
-}
-
 // A client that closes the pipe is not an error of this server's.
 process.stdout.on('error', (error: NodeJS.ErrnoException) => {
 	if (error.code !== 'EPIPE') throw error;
@@ -56,7 +49,7 @@ serve({
 	terminal: false,
 	fetch: ((url, init) => fetch(url, init)) as Fetch,
 	wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-	stopSignal,
+	stopSignal: createStopSignal(process),
 }).catch((error: unknown) => {
 	process.stderr.write(`jevlint-le-mcp: ${String(error)}\n`);
 	process.exitCode = EXIT.unusable;

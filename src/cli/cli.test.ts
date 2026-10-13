@@ -1496,6 +1496,33 @@ describe('the MCP server', () => {
 		expect(pinged.result).toEqual({});
 	});
 
+	it.each([
+		'constructor',
+		'toString',
+		'valueOf',
+		'hasOwnProperty',
+		'__proto__',
+	])('answers a method named %s as unknown, like any other', async (method) => {
+		const result = await cli(
+			['--mcp'],
+			{},
+			[
+				JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: { x: 1 } }),
+				JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'ping' }),
+			].join('\n'),
+		);
+		const [unknown, pinged] = result.out
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(unknown).toEqual({
+			jsonrpc: '2.0',
+			id: 1,
+			error: { code: -32601, message: `Unknown method: ${method}` },
+		});
+		expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
+	});
+
 	it('answers bad JSON and an unknown method with protocol errors', async () => {
 		const result = await cli(
 			['--mcp'],

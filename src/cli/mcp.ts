@@ -914,32 +914,36 @@ async function callTool(params: Json, io: Io): Promise<Json> {
 	};
 }
 
-const METHODS: Readonly<
-	Record<string, (params: Json, io: Io) => Json | Promise<Json>>
-> = Object.freeze({
-	initialize: (params, io) => initialize(params, io.version),
-	ping: () => ({}),
-	'tools/list': () => ({
-		tools: TOOLS.map(
-			({
-				name,
-				title,
-				description,
-				inputSchema,
-				outputSchema,
-				annotations,
-			}) => ({
-				name,
-				title,
-				description,
-				inputSchema,
-				outputSchema,
-				annotations,
-			}),
-		),
-	}),
-	'tools/call': callTool,
-});
+// A Map, because the key is the method name a client sends: a plain object
+// answered `constructor` with Object itself, which echoed the params as a result.
+type Method = (params: Json, io: Io) => Json | Promise<Json>;
+const METHODS: ReadonlyMap<string, Method> = new Map<string, Method>([
+	['initialize', (params, io) => initialize(params, io.version)],
+	['ping', () => ({})],
+	[
+		'tools/list',
+		() => ({
+			tools: TOOLS.map(
+				({
+					name,
+					title,
+					description,
+					inputSchema,
+					outputSchema,
+					annotations,
+				}) => ({
+					name,
+					title,
+					description,
+					inputSchema,
+					outputSchema,
+					annotations,
+				}),
+			),
+		}),
+	],
+	['tools/call', callTool],
+]);
 
 const error = (id: unknown, code: number, message: string) =>
 	JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } });
@@ -963,7 +967,7 @@ export async function answer(
 		return error(id ?? null, ERRORS.request, 'Not a request');
 	// A message with no id is a notification, which is never answered.
 	if (id === undefined) return undefined;
-	const handler = METHODS[method];
+	const handler = METHODS.get(method);
 	if (!handler) return error(id, ERRORS.method, `Unknown method: ${method}`);
 	const asked =
 		typeof params === 'object' && params !== null ? (params as Json) : {};

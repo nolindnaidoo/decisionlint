@@ -1708,6 +1708,18 @@ describe('a project settings file in the editor', () => {
 			expect(_state.statusBar.text).toBe('$(checklist) Jev 1');
 		});
 
+		it('names a copy whose manifest cannot be read, and lints with its own', () => {
+			within({ '/work/app/node_modules/jevlint-le/package.json': '{' }, file());
+			expect(messages().join(' ')).toContain(BUNDLED);
+			// A copy that is there and cannot be named is not "none installed", so it is said.
+			expect(_state.statusBar.text).toBe(
+				'$(checklist) Jev 1 · project copy unreadable',
+			);
+			expect(_state.statusBar.tooltip).toContain(
+				'its package.json is not JSON',
+			);
+		});
+
 		it('does not stop the editor linting when the project has none', () => {
 			within({}, file());
 			expect(messages().join(' ')).toContain(BUNDLED);

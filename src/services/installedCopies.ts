@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
-import { findInstalled, type Installed } from '../config/installed';
+import {
+	findInstalled,
+	type Installed,
+	type UnreadableCopy,
+} from '../config/installed';
 import { type ConfigFs, parent } from '../config/projectConfig';
 
 // Asked on every lint, so the answer for a folder is kept this long. A
@@ -13,11 +17,14 @@ const MOST_KEPT = 512;
 /** The copy of this tool a document's project has installed, if it has one. */
 export type InstalledLookup = (
 	document: vscode.TextDocument,
-) => Installed | undefined;
+) => Installed | UnreadableCopy | undefined;
 
 export function createInstalledLookup(fs: ConfigFs): InstalledLookup {
 	// In the order the folders were last asked about, which is what a Map keeps.
-	const known = new Map<string, { at: number; found: Installed | undefined }>();
+	const known = new Map<
+		string,
+		{ at: number; found: Installed | UnreadableCopy | undefined }
+	>();
 	const makeRoom = (now: number): void => {
 		if (known.size < MOST_KEPT) return;
 		for (const [dir, kept] of known)

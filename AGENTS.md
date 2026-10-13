@@ -446,9 +446,11 @@ family's files, copied unchanged from `regex-le`.
   code from the project. `services/engines.ts` is the one place that decides,
   and `extension.test.ts` fails if an untrusted workspace loads anything.
 - **The editor never stops linting for want of a project copy.** No copy, an
-  untrusted workspace, a copy too old, one that fails to load or one that
-  does not read the file's language all fall back to the bundled linter. Every
-  fallback but "none installed" is named in the status bar with its reason.
+  untrusted workspace, a copy too old, one that fails to load, one whose
+  manifest cannot be read or one that does not read the file's language all
+  fall back to the bundled linter. Every fallback but "none installed" is
+  named in the status bar with its reason; `extension.test.ts` reads the
+  status bar for each.
 - **`src/lib.ts` is a promise.** The npm package exports it and editors of
   other versions load it. Add names freely. Change or remove one only by
   raising `api`, which makes older editors fall back instead of misreading.

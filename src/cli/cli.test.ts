@@ -1944,6 +1944,20 @@ describe('checking with Jev', () => {
 		expect(result.out).toContain('Jev answered 0 of 2 requests');
 	});
 
+	it('names Luna, not Jev, when a run against OpenAI falls short', async () => {
+		const result = await cli(
+			['--jev', '--jev-model', 'gpt-6-luna', '.'],
+			{ 'a.ts': VAGUE, 'b.ts': HEAVY },
+			'',
+			world(jevSays({}, 401), { OPENAI_API_KEY: 'sk-test' }),
+		);
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain(
+			'OpenAI rejected the API key (401). Luna answered 0 of 2 requests.',
+		);
+		expect(result.err).not.toContain('Jev answered');
+	});
+
 	it('stops sending after a failure', async () => {
 		const fetch = jevSays({}, 401);
 		await cli(

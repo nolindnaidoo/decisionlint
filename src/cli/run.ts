@@ -447,14 +447,16 @@ const sending = (jev: JevTotals): string =>
 	].join(' ');
 
 // A run that checked part of what it was asked to must not pass as the whole.
+// `who` is the model's name, Jev or Luna, so the sentence names the one asked.
 function shortfall(
 	jev: JevTotals,
+	who: string,
 	failure: string | undefined,
 	stopped: boolean,
 ): string | undefined {
 	const of = `${jev.answered} of ${plural(jev.planned, 'request')}`;
-	if (failure) return `${failure}. Jev answered ${of}.`;
-	if (stopped) return `Stopped. Jev answered ${of}.`;
+	if (failure) return `${failure}. ${who} answered ${of}.`;
+	if (stopped) return `Stopped. ${who} answered ${of}.`;
 	if (jev.overLimit)
 		return `${plural(jev.overLimit, 'request')} over the --jev-max-calls limit not sent. Raise the limit to check every question.`;
 	return undefined;
@@ -480,12 +482,13 @@ async function runWithJev(
 		return fails(totals, options.maxWarnings) ? EXIT.failed : EXIT.passed;
 	}
 	if (plan.totals.planned) say(sending(plan.totals));
+	const provider = providerFor(plan.totals.model);
 	const ran = await runJev(
 		plan,
 		{
 			fetch: io.fetch,
 			wait: io.wait,
-			key: (io.env[providerFor(plan.totals.model).envKey] ?? '').trim(),
+			key: (io.env[provider.envKey] ?? '').trim(),
 			signal: io.stopSignal(),
 		},
 		options.quiet,
@@ -494,8 +497,8 @@ async function runWithJev(
 	io.out(render(options, io, ran.reports, totals));
 	const failure =
 		ran.failure &&
-		`${failureMessage(ran.failure.kind, providerFor(plan.totals.model))} (${ran.failure.detail})`;
-	const short = shortfall(ran.totals, failure, ran.stopped);
+		`${failureMessage(ran.failure.kind, provider)} (${ran.failure.detail})`;
+	const short = shortfall(ran.totals, provider.model, failure, ran.stopped);
 	if (short) {
 		say(short);
 		return EXIT.unusable;

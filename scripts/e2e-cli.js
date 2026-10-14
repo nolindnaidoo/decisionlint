@@ -72,7 +72,7 @@ assert.strictEqual(wrong.out, '');
 // The report has to be larger than a pipe holds for the write to fail at all.
 const { mkdtempSync, writeFileSync } = require('node:fs');
 const { tmpdir } = require('node:os');
-const big = join(mkdtempSync(join(tmpdir(), 'decisionlint-le-')), 'big.json');
+const big = join(mkdtempSync(join(tmpdir(), 'decisionlint-')), 'big.json');
 const question = (i) => `"q${i}": {"type":"choice","instructions":"Which team is it?","criteria":{"a":"A","b":"B"}}`;
 writeFileSync(big, `{"questions": {${Array.from({ length: 3000 }, (_, i) => question(i)).join(',')}}}`);
 const closedEarly = spawnSync(
@@ -92,7 +92,7 @@ assert.strictEqual(closedEarly.stdout, '', 'crashed when its reader closed the p
 // A path that is not a regular file is refused by name and never opened. A
 // named pipe with nobody writing to it would otherwise block the read for ever.
 if (process.platform !== 'win32') {
-	const pipe = join(mkdtempSync(join(tmpdir(), 'decisionlint-le-')), 'pipe.json');
+	const pipe = join(mkdtempSync(join(tmpdir(), 'decisionlint-')), 'pipe.json');
 	assert.strictEqual(spawnSync('mkfifo', [pipe]).status, 0, 'mkfifo failed');
 	const piped = spawnSync(process.execPath, [bin, pipe], {
 		encoding: 'utf8',
@@ -194,7 +194,7 @@ assert.deepStrictEqual(JSON.parse(answers[2].result.content[0].text), linted);
 // listing points at, so that package carries it and the other does not.
 const mcpManifest = require(join(root, 'mcp', 'package.json'));
 const listing = require(join(root, 'server.json'));
-assert.strictEqual(mcpManifest.name, 'decisionlint-le-mcp');
+assert.strictEqual(mcpManifest.name, 'decisionlint-mcp');
 assert.strictEqual(mcpManifest.mcpName, listing.name);
 assert.strictEqual(npmManifest.mcpName, undefined);
 assert.strictEqual(listing.packages[0].identifier, mcpManifest.name);

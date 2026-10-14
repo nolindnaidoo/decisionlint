@@ -106,7 +106,7 @@ export function findFiles(paths: ReadonlyArray<string>, files: Files): Found {
 		if (!syntaxForPath(path))
 			return {
 				ok: false,
-				error: `Not a file type decisionlint-le reads: ${path}`,
+				error: `Not a file type decisionlint reads: ${path}`,
 			};
 		found.push(path);
 	}

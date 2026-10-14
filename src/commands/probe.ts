@@ -27,7 +27,7 @@ type Deps = KeySource &
 		wait: (ms: number) => Promise<void>;
 	}>;
 
-export const PROBE_COMMAND = 'jevlint-le.probeQuestion';
+export const PROBE_COMMAND = 'decisionlint.probeQuestion';
 
 type Target = Readonly<{
 	id: string;
@@ -156,7 +156,7 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	const probed = await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: `DecisionLint-LE: probing '${target.id}'`,
+			title: `DecisionLint: probing '${target.id}'`,
 			cancellable: true,
 		},
 		(_progress, token) => {
@@ -185,7 +185,7 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		blocked(`${report.verdict} The full report could not be opened.`);
 }
 
-const REPORT_SCHEME = 'decisionlint-le-probe';
+const REPORT_SCHEME = 'decisionlint-probe';
 const KEPT_REPORTS = 20;
 
 /** The report pages, served from memory, and the event that tells an open one to reload. */

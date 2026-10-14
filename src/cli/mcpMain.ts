@@ -7,8 +7,8 @@ import { createStopSignal, stat } from './process';
 import { EXIT } from './run';
 
 /**
- * The server-only process, published as `decisionlint-le-mcp`. It is the server
- * `decisionlint-le --mcp` runs, reached with no flag, so a client that installs
+ * The server-only process, published as `decisionlint-mcp`. It is the server
+ * `decisionlint --mcp` runs, reached with no flag, so a client that installs
  * by package name cannot start the command line by mistake and sit waiting
  * on a linter that has already exited. The network and the environment are
  * handed in for ask_model and probe_question, which are the only tools
@@ -51,6 +51,6 @@ serve({
 	wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 	stopSignal: createStopSignal(process),
 }).catch((error: unknown) => {
-	process.stderr.write(`decisionlint-le-mcp: ${String(error)}\n`);
+	process.stderr.write(`decisionlint-mcp: ${String(error)}\n`);
 	process.exitCode = EXIT.unusable;
 });

@@ -11,7 +11,7 @@ import type { LintOptions } from '../types';
 import { readLintOptions } from './projectConfig';
 
 /** The settings section, which is the extension's id and stays so for everyone who has it installed. */
-export const SECTION = 'jevlint-le';
+export const SECTION = 'decisionlint';
 
 /** `all` shows every message, `important` hides summaries, `silent` shows only why a command could not run. */
 export type NotificationsLevel = 'all' | 'important' | 'silent';

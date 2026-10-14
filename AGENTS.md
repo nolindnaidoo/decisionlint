@@ -1,4 +1,4 @@
-# AGENTS.md — DecisionLint-LE
+# AGENTS.md — DecisionLint
 
 Technical source of truth for this repo. [SPEC.md](SPEC.md) says what the
 product is and what is planned. [README.md](README.md) is user-facing.
@@ -16,16 +16,17 @@ settled which platforms exist and what each publishes is in
 `docs/research/`, and what the code takes from it is in `lint/targets.ts`.
 
 **Status:** released; the current version is the top heading of `CHANGELOG.md`.
-The product is DecisionLint-LE, and it was JevLint-LE until 1.0.0. The
-extension keeps the old install identity on purpose, so the people who have
-it get the new version in place: the extension id is `nolindnaidoo.jevlint-le`,
-its settings are `jevlint-le.*` and its command ids `jevlint-le.*`, and its
-keychain still reads the two keys JevLint-LE stored. Everything else carries
-the new name: the display name, every title and message, the diagnostic
-source `decisionlint-le`, the shared files `decisionlint-le.json` and
-`decisionlint-le-disable` (the old spellings still read), the npm packages
-`decisionlint-le` and `decisionlint-le-mcp`, the MCP server
-`io.github.nolindnaidoo/decisionlint-le`, and the repository.
+The product is DecisionLint, and it was JevLint-LE, `nolindnaidoo.jevlint-le`,
+until 1.0.0. It stands on its own, outside the LE family's naming, so the
+name is the whole word everywhere: the extension id is
+`nolindnaidoo.decisionlint`, its settings and command ids are
+`decisionlint.*`, the diagnostic source is `decisionlint`, the shared files
+are `decisionlint.json` and `decisionlint-disable` (the old spellings
+`jevlint-le.json` and `jevlint-le-disable` still read, for ever), the npm
+packages are `decisionlint` and `decisionlint-mcp`, the MCP server is
+`io.github.nolindnaidoo/decisionlint`, and the repository is
+`nolindnaidoo/decisionlint`. The old extension id is a different keychain,
+so a key stored by JevLint-LE is not read; the user sets it once more.
 
 ## Architecture
 
@@ -96,7 +97,7 @@ cli/
                          same linting, the fixes and the rule pages, and two
                          that send with the user's key
   main.ts                the process: real filesystem, streams and exit code
-  mcpMain.ts             the server-only process, published as decisionlint-le-mcp
+  mcpMain.ts             the server-only process, published as decisionlint-mcp
 services/linter.ts       diagnostics collection, per-document results, debounce
 services/reviewer.ts     shows what ask/review.ts finds in a document, in its own collection
 services/mcpProvider.ts  offers the bundled MCP server to agents in the editor
@@ -107,7 +108,7 @@ commands/ask.ts          one Ask command per platform, a Set API Key per slot, C
 commands/probe.ts        probe the question at the cursor
 config/config.ts         getConfiguration() snapshot; CONFIG_DEFAULTS
 config/installed.ts      the copy of this tool a project has installed, read from its manifest
-config/projectConfig.ts  decisionlint-le.json: parsing it and finding the one that applies.
+config/projectConfig.ts  decisionlint.json: parsing it and finding the one that applies.
                          No `vscode`, so the command line shares it
 services/projectConfigs.ts  the settings for a document, and a watch on the files
 services/installedCopies.ts  the installed copy for a document, kept for a few seconds
@@ -206,7 +207,7 @@ family's files, copied unchanged from `regex-le`.
   `JEV010` is worked out after every finding has been asked about, and never
   for a comment that names only Jev-backed rules. It is not silenced by a
   comment, or a bare one would hide the report of itself.
-- **Where a `decisionlint-le.json` applies it replaces the editor's lint settings.**
+- **Where a `decisionlint.json` applies it replaces the editor's lint settings.**
   It is never merged with them. The point of the file is that the editor and
   the command line report the same findings, and `extension.test.ts` runs
   both on one file to hold that.
@@ -214,10 +215,10 @@ family's files, copied unchanged from `regex-le`.
   defaults would show findings CI does not, or hide ones it does. The editor
   clears the file's findings and says why. The command line exits 2.
 - **The editor's lint settings go through the settings file's reader.**
-  `jevlint-le.rules`, `fallbackOptions`, `ignore` and `target` are read by
+  `decisionlint.rules`, `fallbackOptions`, `ignore` and `target` are read by
   `readLintOptions` in `config/projectConfig.ts`, so a rule entry that names
   no rule or no level, or a list that is not one, stops linting with the same
-  sentence a `decisionlint-le.json` would give, and a rule may be named by its
+  sentence a `decisionlint.json` would give, and a rule may be named by its
   name. An entry dropped quietly once left a typo'd rule on with no word.
   `extension.test.ts` reads the status bar for it.
 - **The settings file is parsed in one place**, `config/projectConfig.ts`, and
@@ -424,10 +425,10 @@ family's files, copied unchanged from `regex-le`.
   with nothing sent: routed to OpenAI it would spend the key on a request
   that fails there. The user names any other host with `jev.endpoint` in
   the editor, `--ask-endpoint` on the command line, or
-  `DECISIONLINT_LE_ASK_ENDPOINT` for the server, and the shape with `jev.shape`,
-  `--ask-shape` or `DECISIONLINT_LE_ASK_SHAPE` where the path does not end in
+  `DECISIONLINT_ASK_ENDPOINT` for the server, and the shape with `jev.shape`,
+  `--ask-shape` or `DECISIONLINT_ASK_SHAPE` where the path does not end in
   `/systemone` or `/decisions`. The endpoint is read from the same places as
-  the key and never from `decisionlint-le.json`, a project's `.env` or a tool
+  the key and never from `decisionlint.json`, a project's `.env` or a tool
   argument: a repository or an agent could otherwise point the key at a host
   of its choosing. A host the table does not list is one the user runs: it
   gets the key of the shape's SDK, `TYPESAFE_API_KEY` or `OPENAI_API_KEY`,
@@ -444,7 +445,7 @@ family's files, copied unchanged from `regex-le`.
 - **The editor and the command line send the same requests for the same
   text.** Both call `ask/review.ts`, and `extension.test.ts` compares the
   request bodies. A check added to one is added to both by construction.
-- **Only a flag turns `--ask` on.** Never a key in `decisionlint-le.json`, or a
+- **Only a flag turns `--ask` on.** Never a key in `decisionlint.json`, or a
   cloned repository could spend the key of whoever lints it. This is the
   command line's workspace trust.
 - **The command line's key is the variable the platform names, and nothing
@@ -595,8 +596,8 @@ family's files, copied unchanged from `regex-le`.
   new language adds its extension there, a reader in `LANGUAGES` in
   `lint/lint.ts`, an `onLanguage` activation event and an entry in the
   linter service's `LANGUAGES`.
-- **Two npm packages, one source.** `decisionlint-le` is the command line, the
-  library and the server behind `--mcp`. `decisionlint-le-mcp` is the server
+- **Two npm packages, one source.** `decisionlint` is the command line, the
+  library and the server behind `--mcp`. `decisionlint-mcp` is the server
   alone, from `cli/mcpMain.ts`, with no flag, so a client that installs by
   name cannot start the command line by mistake. Both are assembled by
   `bun run build:npm`, which writes the root manifest's version into

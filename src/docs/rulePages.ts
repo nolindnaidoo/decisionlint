@@ -58,7 +58,7 @@ function kind(code: RuleCode): string {
 function level(code: RuleCode): string {
 	const { severity } = RULES[code];
 	if (severity !== 'off') return `On by default, as \`${severity}\`.`;
-	return `Off by default. Turn it on in \`decisionlint-le.json\` with \`{ "rules": { "${code}": "warning" } }\`.`;
+	return `Off by default. Turn it on in \`decisionlint.json\` with \`{ "rules": { "${code}": "warning" } }\`.`;
 }
 
 function fixing(code: RuleCode, example: RuleExample | undefined): string {
@@ -118,15 +118,15 @@ function asked(code: RuleCode): string {
 
 function silence(code: RuleCode): string {
 	if (code === 'JEV010')
-		return 'Remove the comment it points at. To stop the rule itself, set it to `off` in `decisionlint-le.json`.\n';
+		return 'Remove the comment it points at. To stop the rule itself, set it to `off` in `decisionlint.json`.\n';
 	return [
 		'In code, on the line above:',
 		'',
 		`${FENCE}ts`,
-		`// decisionlint-le-disable-next-line ${code}`,
+		`// decisionlint-disable-next-line ${code}`,
 		FENCE,
 		'',
-		'In JSON, which has no comments, by question id in `decisionlint-le.json`:',
+		'In JSON, which has no comments, by question id in `decisionlint.json`:',
 		'',
 		`${FENCE}json`,
 		`{ "ignore": ["${code}:your-question-id"] }`,

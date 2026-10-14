@@ -26,7 +26,7 @@ on:
         type: boolean
         default: false
       npm:
-        description: Publish the command line and MCP server to npm (decisionlint-le), then the listing to the MCP registry
+        description: Publish the command line and MCP server to npm (decisionlint), then the listing to the MCP registry
         type: boolean
         default: false
 
@@ -216,12 +216,12 @@ jobs:
         run: bun run test:cli
 
       # Two steps, so a failure names the package that did not go out.
-      - name: Publish decisionlint-le to npm
+      - name: Publish decisionlint to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish ./npm --access public
 
-      - name: Publish decisionlint-le-mcp to npm
+      - name: Publish decisionlint-mcp to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish ./mcp --access public

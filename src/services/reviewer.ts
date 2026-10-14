@@ -54,9 +54,8 @@ type Deps = Readonly<{
 /** Runs the Jev checks in `jev/review.ts` over a document and shows what they find. */
 export function createReviewer(deps: Deps): Reviewer {
 	// A separate collection, so linting as you type never wipes what a paid check found.
-	const collection = vscode.languages.createDiagnosticCollection(
-		'decisionlint-le-jev',
-	);
+	const collection =
+		vscode.languages.createDiagnosticCollection('decisionlint-jev');
 
 	// The runs still sending, by document. An edit or a close marks the run as
 	// overtaken and stops it, so it neither spends more nor reports on old text.

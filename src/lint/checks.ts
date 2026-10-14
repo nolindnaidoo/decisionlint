@@ -406,7 +406,7 @@ function checkNewerModels(extraction: Extraction): ReadonlyArray<Finding> {
 		.filter((model) => isNewerJev(model.value, MEASURED_ON))
 		.map((model) => ({
 			code: 'JEV013' as const,
-			message: `'${model.value}' is newer than ${MEASURED_ON}, the version these rules were measured on. A finding may cost no answers on it, and a weakness new to it is not looked for. A later DecisionLint-LE may have measured it.`,
+			message: `'${model.value}' is newer than ${MEASURED_ON}, the version these rules were measured on. A finding may cost no answers on it, and a weakness new to it is not looked for. A later DecisionLint may have measured it.`,
 			span: model.span,
 			questionId: undefined,
 			fix: undefined,

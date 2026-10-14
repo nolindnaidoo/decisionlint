@@ -14,7 +14,7 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 | [JEV007](JEV007.md) | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
 | [JEV008](JEV008.md) | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
 | [JEV009](JEV009.md) | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
-| [JEV010](JEV010.md) | unused-disable | warning | A `decisionlint-le-disable` comment silences nothing, so it can only hide a finding added later |
+| [JEV010](JEV010.md) | unused-disable | warning | A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later |
 | [JEV011](JEV011.md) | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
 | [JEV012](JEV012.md) | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
 | [JEV013](JEV013.md) | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |

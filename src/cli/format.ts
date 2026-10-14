@@ -335,9 +335,9 @@ function asSarif(
 			{
 				tool: {
 					driver: {
-						name: 'DecisionLint-LE',
+						name: 'DecisionLint',
 						version: look.version,
-						informationUri: 'https://github.com/nolindnaidoo/decisionlint-le',
+						informationUri: 'https://github.com/nolindnaidoo/decisionlint',
 						rules: codes.map((code) => ({
 							id: code,
 							name: RULES[code].name,
@@ -403,7 +403,7 @@ function asJunit(reports: ReadonlyArray<FileReport>, totals: Totals): string {
 	);
 	return [
 		'<?xml version="1.0" encoding="UTF-8"?>',
-		`<testsuites name="decisionlint-le" tests="${tests}" failures="${totals.counts.error}" errors="0">`,
+		`<testsuites name="decisionlint" tests="${tests}" failures="${totals.counts.error}" errors="0">`,
 		...suites,
 		'</testsuites>',
 		'',

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "DecisionLint-LE project settings",
+  "title": "DecisionLint project settings",
   "description": "Lint settings for this project. The editor and the command line both read this file, so they report the same findings.",
   "type": "object",
   "additionalProperties": false,

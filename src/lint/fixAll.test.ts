@@ -48,7 +48,7 @@ describe('fixing a text', () => {
 	it('does not fix a finding that is switched off or silenced', () => {
 		const off = { ...OPTIONS, rules: { JEV006: 'off' as const } };
 		expect(fixText(BROKEN, off).text).toContain('"yes"');
-		const silenced = `// decisionlint-le-disable JEV006\nconst q = { type: 'noul', instructions: 'Is it late?', criteria: { yes: 'Late', no: 'On time' } };`;
+		const silenced = `// decisionlint-disable JEV006\nconst q = { type: 'noul', instructions: 'Is it late?', criteria: { yes: 'Late', no: 'On time' } };`;
 		expect(fixText(silenced, OPTIONS)).toEqual({ text: silenced, fixed: 0 });
 	});
 

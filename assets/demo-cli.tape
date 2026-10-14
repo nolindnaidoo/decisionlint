@@ -1,4 +1,4 @@
-# decisionlint-le — recorded by vhs, driving the real command line against the
+# decisionlint — recorded by vhs, driving the real command line against the
 # request in demo/.
 #
 # Reproduce:  bun run build:npm
@@ -24,13 +24,13 @@ Set TypingSpeed 45ms
 Set Theme "Catppuccin Mocha"
 
 Hide
-Type `cd demo && alias decisionlint-le="node ../../npm/cli.js" && PS1="$ " && clear`
+Type `cd demo && alias decisionlint="node ../../npm/cli.js" && PS1="$ " && clear`
 Enter
 Type "cat request.jev.json"
 Enter
 Sleep 4s
 Show
 
-Type "decisionlint-le request.jev.json"
+Type "decisionlint request.jev.json"
 Enter
 Sleep 9s

@@ -35,7 +35,7 @@ import {
 	withoutExcluded,
 } from './run';
 
-const NAME = 'decisionlint-le';
+const NAME = 'decisionlint';
 // Newest first. A client is answered in the version it asked for when it is one of these.
 const PROTOCOLS: ReadonlyArray<string> = [
 	'2025-06-18',
@@ -127,7 +127,7 @@ const ASK_INPUTS = Object.freeze({
 		type: 'string',
 		enum: ASK_PLATFORM_IDS,
 		description:
-			'Where to send, named outright: typesafe for Jev, openai for Luna, or openrouter, vercel, llmgateway or liquid. Each has its own key variable and a default model. Without it the model id goes where its spelling says, or to DECISIONLINT_LE_ASK_ENDPOINT.',
+			'Where to send, named outright: typesafe for Jev, openai for Luna, or openrouter, vercel, llmgateway or liquid. Each has its own key variable and a default model. Without it the model id goes where its spelling says, or to DECISIONLINT_ASK_ENDPOINT.',
 	},
 	model: {
 		type: 'string',
@@ -443,7 +443,7 @@ function named(input: Json): Named | string {
 		return `'text' is over the size limit of ${MAX_FILE_SIZE_BYTES} bytes.`;
 	if (typeof filename !== 'string') return "'filename' must be a string.";
 	const syntax = syntaxForPath(filename);
-	if (!syntax) return `Not a file type decisionlint-le reads: ${filename}`;
+	if (!syntax) return `Not a file type decisionlint reads: ${filename}`;
 	return { text, filename, syntax };
 }
 
@@ -912,7 +912,7 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 		name: 'ask_model',
 		title: 'Check with the model',
 		description:
-			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_ask first when the cost matters. The key is read from the platform's own variable, TYPESAFE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, LLM_GATEWAY_API_KEY or LIQUID_API_KEY, in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Where the requests go is the platform the model id's spelling names, or DECISIONLINT_LE_ASK_ENDPOINT in that environment for a host the user runs, never an argument either. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
+			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_ask first when the cost matters. The key is read from the platform's own variable, TYPESAFE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, LLM_GATEWAY_API_KEY or LIQUID_API_KEY, in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Where the requests go is the platform the model id's spelling names, or DECISIONLINT_ASK_ENDPOINT in that environment for a host the user runs, never an argument either. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -964,7 +964,7 @@ function initialize(params: Json, version: string): Json {
 	return {
 		protocolVersion: PROTOCOLS.includes(asked) ? asked : PROTOCOLS[0],
 		capabilities: { tools: {} },
-		serverInfo: { name: NAME, title: 'DecisionLint-LE', version },
+		serverInfo: { name: NAME, title: 'DecisionLint', version },
 		instructions: INSTRUCTIONS,
 	};
 }

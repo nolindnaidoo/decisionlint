@@ -21,7 +21,7 @@ export type Resolved =
 
 export type ProjectConfigs = Readonly<{
 	/**
-	 * The settings that apply to a document. A `decisionlint-le.json` in its folder
+	 * The settings that apply to a document. A `decisionlint.json` in its folder
 	 * or one above it, no higher than the workspace folder, replaces the editor's own
 	 * settings, so the editor reports what the command line would. `editor` is
 	 * those settings, or the reason they cannot be used, which is the answer

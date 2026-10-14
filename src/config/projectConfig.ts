@@ -8,7 +8,7 @@ import type { LintOptions, RuleCode, Severity } from '../types';
  * the command line apply the same rules. Without it a rule switched off in
  * one would still fail in the other.
  */
-export const CONFIG_FILE = 'decisionlint-le.json';
+export const CONFIG_FILE = 'decisionlint.json';
 /** The file's name before the rename. Read where the new name is absent, for ever: a repository's file is not this tool's to update. */
 export const OLD_CONFIG_FILE = 'jevlint-le.json';
 export const CONFIG_KEYS: ReadonlyArray<string> = [
@@ -90,7 +90,7 @@ export function parseConfig(text: string | undefined): LintOptions | string {
 
 /**
  * The lint settings in `config`, checked as the file is checked, or the
- * reason they cannot be used. The editor's own `jevlint-le.*` settings are
+ * reason they cannot be used. The editor's own `decisionlint.*` settings are
  * read through here too, so a typo'd rule code is refused in both places and
  * never dropped quietly, leaving the rule on.
  */

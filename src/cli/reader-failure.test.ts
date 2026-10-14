@@ -63,7 +63,7 @@ describe('a file the reader fails on', () => {
 		const result = await cli(['.'], { 'b.json': 'POISON' });
 		expect(result.status).toBe(EXIT.unusable);
 		expect(result.err).toBe(
-			'decisionlint-le: No files could be linted. Not readable: b.json.\n',
+			'decisionlint: No files could be linted. Not readable: b.json.\n',
 		);
 		expect(result.out).toBe('');
 	});

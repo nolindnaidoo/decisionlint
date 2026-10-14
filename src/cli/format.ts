@@ -1,4 +1,4 @@
-import { providerFor } from '../jev/provider';
+import { asSubject } from '../ask/provider';
 import { pageFor, RULES } from '../lint/rules';
 import type { ReportedFinding, Severity, Span } from '../types';
 import type { Format } from './args';
@@ -28,11 +28,11 @@ export type Totals = Readonly<{
 	/** Present only under `--fix`: what was written. */
 	fixed?: Readonly<{ findings: number; files: number }>;
 	/** Present only when the run was asked to check with Jev. */
-	jev?: JevTotals;
+	ask?: AskTotals;
 }>;
 
-/** What a check with Jev sent, or under `--jev-plan` what it would send. */
-export type JevTotals = Readonly<{
+/** What a check with Jev sent, or under `--ask-plan` what it would send. */
+export type AskTotals = Readonly<{
 	/** False when the run only planned. */
 	sent: boolean;
 	/** Requests within the limit. */
@@ -44,9 +44,13 @@ export type JevTotals = Readonly<{
 	overLimit: number;
 	/** An estimate made before sending. */
 	estimatedInputTokens: number;
-	/** What TypeSafe counted. */
+	/** What the vendor counted. */
 	inputTokens: number;
 	model: string;
+	/** Who was sent the requests, or would be. */
+	vendor: string;
+	/** What answers, as the messages name it: Jev, Luna or the model. */
+	answerer: string;
 	/** True when state written in a file was sent, or would be. */
 	state: boolean;
 }>;
@@ -116,29 +120,29 @@ export function summarize(totals: Totals): string {
 		parts.push(
 			`Fixed ${plural(totals.fixed.findings, 'finding')} in ${plural(totals.fixed.files, 'file')}.`,
 		);
-	if (totals.jev) parts.push(...describeJev(totals.jev));
+	if (totals.ask) parts.push(...describeAsk(totals.ask));
 	return parts.join(' ');
 }
 
 /** What was held back from Jev, said the same way before a run and after it. */
-export function heldBack(jev: JevTotals): string | undefined {
+export function heldBack(jev: AskTotals): string | undefined {
 	const parts = [
 		...(jev.runtime
 			? [`${plural(jev.runtime, 'question')} built at runtime`]
 			: []),
 		...(jev.overLimit
-			? [`${plural(jev.overLimit, 'request')} over the --jev-max-calls limit`]
+			? [`${plural(jev.overLimit, 'request')} over the --ask-max-calls limit`]
 			: []),
 	];
 	return parts.length ? `Not sent: ${parts.join(', ')}.` : undefined;
 }
 
-function describeJev(jev: JevTotals): ReadonlyArray<string> {
+function describeAsk(jev: AskTotals): ReadonlyArray<string> {
 	const requests = plural(jev.planned, 'request');
 	const state = jev.state ? ' State is sent.' : '';
 	const said = jev.sent
-		? `${providerFor(jev.model).model} answered ${jev.answered} of ${requests} on ${jev.model}, ${jev.inputTokens} input tokens.`
-		: `--jev would send ${requests} to ${jev.model}, about ${jev.estimatedInputTokens} input tokens.${state}`;
+		? `${asSubject(jev.answerer)} answered ${jev.answered} of ${requests} on ${jev.model}, ${jev.inputTokens} input tokens.`
+		: `--ask would send ${requests} to ${jev.vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.${state}`;
 	const held = heldBack(jev);
 	return held ? [said, held] : [said];
 }
@@ -331,9 +335,9 @@ function asSarif(
 			{
 				tool: {
 					driver: {
-						name: 'JevLint-LE',
+						name: 'DecisionLint-LE',
 						version: look.version,
-						informationUri: 'https://github.com/nolindnaidoo/jevlint-le',
+						informationUri: 'https://github.com/nolindnaidoo/decisionlint-le',
 						rules: codes.map((code) => ({
 							id: code,
 							name: RULES[code].name,
@@ -399,7 +403,7 @@ function asJunit(reports: ReadonlyArray<FileReport>, totals: Totals): string {
 	);
 	return [
 		'<?xml version="1.0" encoding="UTF-8"?>',
-		`<testsuites name="jevlint-le" tests="${tests}" failures="${totals.counts.error}" errors="0">`,
+		`<testsuites name="decisionlint-le" tests="${tests}" failures="${totals.counts.error}" errors="0">`,
 		...suites,
 		'</testsuites>',
 		'',

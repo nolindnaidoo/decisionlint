@@ -1,7 +1,6 @@
-import { providerFor } from './provider';
+import type { Provider } from './provider';
 import type { ReviewRequest } from './reviews';
 
-export const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 /** Where the editor and the command line both look for a Jev key in the environment. */
 export const ENV_KEY = 'TYPESAFE_API_KEY';
 
@@ -43,7 +42,10 @@ export type Failure = Readonly<{
 
 type Deps = Readonly<{
 	fetch: Fetch;
+	/** Empty for a host the user runs that takes none. Then no Authorization header is sent. */
 	key: string;
+	/** Where the request goes and in what shape. */
+	provider: Provider;
 	wait: (ms: number) => Promise<void>;
 	signal?: AbortSignal;
 }>;
@@ -91,13 +93,13 @@ async function attempt(
 	const timer = setTimeout(stop, TIMEOUT_MS);
 	deps.signal?.addEventListener('abort', stop, { once: true });
 	if (deps.signal?.aborted) stop();
-	const provider = providerFor(request.model);
+	const { provider } = deps;
 	// The body is read inside the same limit: a reply can stall after its headers.
 	const answered = async (): Promise<Reply | Failure> => {
 		const response = await deps.fetch(provider.endpoint, {
 			method: 'POST',
 			headers: {
-				Authorization: `Bearer ${deps.key}`,
+				...(deps.key ? { Authorization: `Bearer ${deps.key}` } : {}),
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify(provider.toBody(request)),
@@ -151,7 +153,7 @@ export function isFailure(result: Reply | Failure): result is Failure {
 }
 
 /**
- * Sends one review to the model its `model` names, Jev or Luna. Retries only
+ * Sends one review where the provider says, in its shape. Retries only
  * when the fault is the vendor's, a fixed number of times, and never on a bad
  * key or a rejected request, which no retry can fix. It waits as long as the
  * vendor asks, up to a limit.

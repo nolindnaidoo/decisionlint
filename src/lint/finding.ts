@@ -1,4 +1,5 @@
 import type { Finding, Question, RuleCode, Span, Syntax } from '../types';
+import type { Target } from './targets';
 
 export type CheckContext = Readonly<{
 	text: string;
@@ -7,6 +8,8 @@ export type CheckContext = Readonly<{
 	fallbackName: string;
 	/** The language an edit at this position must be written in. */
 	syntaxAt: (offset: number) => Syntax;
+	/** The platform the questions of a map go to, by the map's index, or undefined when nothing says. */
+	targetFor: (map: number | undefined) => Target | undefined;
 }>;
 
 export type Check = (

@@ -21,7 +21,7 @@ function plural(count: number, noun: string): string {
 }
 
 export function summarize(result: LintResult): string {
-	const base = `${plural(result.findings.length, 'finding')} in ${plural(result.questionCount, 'Jev question')}`;
+	const base = `${plural(result.findings.length, 'finding')} in ${plural(result.questionCount, 'decision question')}`;
 	if (!result.unreadableCount) return base;
 	return `${base}, ${result.unreadableCount} not fully read`;
 }
@@ -34,7 +34,7 @@ export function createStatusBar(command: string): StatusBar {
 	item.command = command;
 	return Object.freeze({
 		show: (result: LintResult | undefined, note?: Note) => {
-			// A file with no Jev questions has nothing to report, so the item stays out of the way.
+			// A file with no decision questions has nothing to report, so the item stays out of the way.
 			if (!result?.questionCount) {
 				item.hide();
 				return;
@@ -43,14 +43,14 @@ export function createStatusBar(command: string): StatusBar {
 				? ` · ${result.unreadableCount} unread`
 				: '';
 			const noted = note ? ` · ${note.short}` : '';
-			item.text = `$(checklist) Jev ${result.findings.length}${unread}${noted}`;
+			item.text = `$(checklist) DecisionLint ${result.findings.length}${unread}${noted}`;
 			item.tooltip = note
 				? `${summarize(result)}\n${note.detail}`
 				: summarize(result);
 			item.show();
 		},
 		warn: (reason: string) => {
-			item.text = '$(warning) Jev not linted';
+			item.text = '$(warning) DecisionLint not linted';
 			item.tooltip = reason;
 			item.show();
 		},

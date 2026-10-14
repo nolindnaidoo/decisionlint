@@ -1,20 +1,23 @@
-# AGENTS.md — JevLint-LE
+# AGENTS.md — DecisionLint-LE
 
 Technical source of truth for this repo. [SPEC.md](SPEC.md) says what the
 product is and what is planned. [README.md](README.md) is user-facing.
 
 ## What this is
 
-A VS Code extension that finds the questions a project sends to TypeSafe's Jev
-model or to OpenAI's Decisions API (`gpt-6-luna`), in JSON, JavaScript,
-TypeScript, Python, Rust and Go, and reports the ones written in a way
-measured to fail. Linting uses no network and no API key. One command, run by
-the user with their own key, asks the model to check a file. No filesystem
-writes outside an accepted quick fix.
+A VS Code extension that finds the questions a project sends to a decision
+model, TypeSafe's Jev, OpenAI's Decisions API (`gpt-6-luna`), or any of the
+platforms that serve either shape, in JSON, JavaScript, TypeScript, Python,
+Rust and Go, and reports the ones written in a way measured to fail. Linting
+uses no network and no API key. One command, run by the user with their own
+key, asks the model to check a file, at whichever platform the user sends it
+to. No filesystem writes outside an accepted quick fix. The research that
+settled which platforms exist and what each publishes is in
+`docs/research/`, and what the code takes from it is in `lint/targets.ts`.
 
 **Status:** released; the current version is the top heading of `CHANGELOG.md`.
-The name appears in `package.json`, the `jevlint-le.*` settings and commands,
-the `jevlint-le-disable` directive and the diagnostic source.
+The name appears in `package.json`, the `decisionlint-le.*` settings and commands,
+the `decisionlint-le-disable` directive and the diagnostic source.
 
 ## Architecture
 
@@ -47,7 +50,12 @@ extraction/
                          string, with a placeholder per runtime part
   requests.ts            tree -> questions, question maps, model names
 lint/
-  limits.ts              every vendor fact a rule depends on, with URL and date
+  limits.ts              every TypeSafe fact a rule depends on, with URL and date
+  targets.ts             every platform a request can go to, as a row: shapes,
+                         hosts, limits, each with URL and date. Resolves a
+                         target from a setting or a model id's spelling
+  models.ts              a model id read into prefix, family, version, alias
+                         and snapshot, so a rule never matches a spelling
   rules.ts               the rule registry: code, name, default severity, docs
   finding.ts             shared types and helpers for checks
   checks.ts              question-level rules and the `check` entry point
@@ -58,7 +66,7 @@ lint/
   fixAll.ts              a text with every safe fix applied
   suppress.ts            comment directives
   lint.ts                lintText(text, options): the pure entry point
-jev/
+ask/
   literal.ts             a question as plain data, or nothing if any part is runtime
   reviews.ts             the checks Jev makes: what is asked, the cutoff, the message
   review.ts              what a check of one text would send, and the sending of it.
@@ -74,23 +82,24 @@ cli/
                          .env.local, then .env, never a tool argument
   format.ts              stylish, compact, JSON, GitHub annotation, SARIF and JUnit output
   run.ts                 run(argv, io) -> exit status. Everything but the process
-  jev.ts                 --jev: the plan across files under one call limit, and the run
+  ask.ts                 --ask: where a run goes, the plan across files under one call
+                         limit, and the run
   mcp.ts                 the MCP server: eight tools, six read-only over the
                          same linting, the fixes and the rule pages, and two
                          that send with the user's key
   main.ts                the process: real filesystem, streams and exit code
-  mcpMain.ts             the server-only process, published as jevlint-le-mcp
+  mcpMain.ts             the server-only process, published as decisionlint-le-mcp
 services/linter.ts       diagnostics collection, per-document results, debounce
-services/reviewer.ts     shows what jev/review.ts finds in a document, in its own collection
+services/reviewer.ts     shows what ask/review.ts finds in a document, in its own collection
 services/mcpProvider.ts  offers the bundled MCP server to agents in the editor
 ui/                      diagnostics mapping, status bar, quick-fix provider
 ui/notifier.ts           every notification, gated by `notificationsLevel`
 commands/                lint file, lint workspace, open settings
-commands/jev.ts          check with Jev, set and clear the API key
+commands/ask.ts          one Ask command per platform, a Set API Key per slot, Clear API Keys
 commands/probe.ts        probe the question at the cursor
 config/config.ts         getConfiguration() snapshot; CONFIG_DEFAULTS
 config/installed.ts      the copy of this tool a project has installed, read from its manifest
-config/projectConfig.ts  jevlint-le.json: parsing it and finding the one that applies.
+config/projectConfig.ts  decisionlint-le.json: parsing it and finding the one that applies.
                          No `vscode`, so the command line shares it
 services/projectConfigs.ts  the settings for a document, and a watch on the files
 services/installedCopies.ts  the installed copy for a document, kept for a few seconds
@@ -102,7 +111,7 @@ docs/rulePages.ts         the page for each rule, written from the registry and 
 types.ts                 types only
 ```
 
-`extraction/`, `lint/`, `jev/` and `cli/` never import `vscode`. `lintText` is
+`extraction/`, `lint/`, `ask/` and `cli/` never import `vscode`. `lintText` is
 the seam the command line and the MCP server call.
 
 ## Code style
@@ -134,8 +143,29 @@ family's files, copied unchanged from `regex-le`.
   hides the hints and leaves the count, so an unread file never looks clean.
 - **Duplicate keys must survive the reader.** `JEV005` depends on it, which is
   why JSON is read by this reader and not by `JSON.parse`.
-- **No vendor number outside `lint/limits.ts`.** Each entry carries the page it
-  was read from. `VERIFIED_ON` is the date.
+- **No vendor number outside `lint/limits.ts` and `lint/targets.ts`.** Each
+  entry carries the page it was read from and the date. A number enters
+  `targets.ts` only from the platform's own page; a figure that rests on a
+  survey or an aggregator stays in `docs/research/` until the platform says
+  it. A platform that publishes no limit has none in its row, and a rule that
+  needs one stays silent there rather than borrow a neighbour's.
+- **A platform is a row in `lint/targets.ts`, never a branch in a rule.** A
+  rule asks `limitsFor` for the numbers and names the owner in its message.
+  The target of a request is the `target` setting, else what the model id's
+  spelling says (`~typesafe/` is OpenRouter, `typesafe-ai/` is Vercel, a
+  bare id is the vendor's own), else unknown. `openai/` is written by every
+  gateway, so it resolves to none. With the target unknown, a question in
+  TypeSafe's shape keeps TypeSafe's limits and the other shapes keep none.
+  `lintText` throws on a target id the table does not have, and the settings
+  readers refuse it first.
+- **A model id is parsed, never matched.** `lint/models.ts` reads every
+  spelling into its parts. `JEV001` fires on any floating Jev alias and its
+  fix pins in the spelling the platform documents, or offers none: a bare
+  alias becomes `KNOWN_VERSION`, `~typesafe/jev-latest` becomes
+  `typesafe/jev-1.13` as OpenRouter writes it, and `typesafe/jev-latest` gets
+  no fix because no page says what its pinned form is. `JEV013` compares the
+  version out of any spelling. A Hugging Face repo id, an Ollama tag or a
+  deployment name is no family this reads, so neither rule touches it.
 - **The rule tables in SPEC.md and README.md must equal `lint/rules.ts`.**
   `lint/rules.test.ts` fails when code, name or default severity differ, and
   when the README's "What it means" column is not the registry's `meaning`.
@@ -168,7 +198,7 @@ family's files, copied unchanged from `regex-le`.
   `JEV010` is worked out after every finding has been asked about, and never
   for a comment that names only Jev-backed rules. It is not silenced by a
   comment, or a bare one would hide the report of itself.
-- **Where a `jevlint-le.json` applies it replaces the editor's lint settings.**
+- **Where a `decisionlint-le.json` applies it replaces the editor's lint settings.**
   It is never merged with them. The point of the file is that the editor and
   the command line report the same findings, and `extension.test.ts` runs
   both on one file to hold that.
@@ -176,10 +206,10 @@ family's files, copied unchanged from `regex-le`.
   defaults would show findings CI does not, or hide ones it does. The editor
   clears the file's findings and says why. The command line exits 2.
 - **The editor's lint settings go through the settings file's reader.**
-  `jevlint-le.rules`, `fallbackOptions` and `ignore` are read by
+  `decisionlint-le.rules`, `fallbackOptions`, `ignore` and `target` are read by
   `readLintOptions` in `config/projectConfig.ts`, so a rule entry that names
   no rule or no level, or a list that is not one, stops linting with the same
-  sentence a `jevlint-le.json` would give, and a rule may be named by its
+  sentence a `decisionlint-le.json` would give, and a rule may be named by its
   name. An entry dropped quietly once left a typo'd rule on with no word.
   `extension.test.ts` reads the status bar for it.
 - **The settings file is parsed in one place**, `config/projectConfig.ts`, and
@@ -196,7 +226,7 @@ family's files, copied unchanged from `regex-le`.
   the command and the reason. Left to the editor, the rejection goes to a log
   no user reads and the command looks broken. `extension.test.ts` makes the
   document throw under three commands.
-- **One paid run per file, one probe at a time.** A second Check with Jev on
+- **One paid run per file, one probe at a time.** A second Ask command on
   a file that is being checked, or a second probe while one runs, is refused
   with `blocked` and sends nothing: it would pay for the same answers and
   race the first to show them. `extension.test.ts` starts the second from
@@ -333,9 +363,17 @@ family's files, copied unchanged from `regex-le`.
 - **A project's own type is not the API's shape.** In Rust and Go, criteria
   held in a named type are unreadable, a struct with a field the API lacks is
   partial, and a struct with no `type` field is never reported as missing
-  one. Each of these was a false finding on public code first.
-- **A name means a question type only when it holds exactly one of the three
-  words** (`typeInName`), and a typed struct is a question only when it has an
+  one. Each of these was a false finding on public code first. The APIs'
+  fields are TypeSafe's and OpenAI's: OpenAI's Go SDK writes `Name`, `Input`,
+  `Choices` of `{Value, Description}`, `Levels` of `{Label, Description}`,
+  and each question of a list as a one-member `OfPredicate`, `OfChoice` or
+  `OfScore` union, which `requests.ts` unwraps. `Predicate` in a type's name
+  is the yes/no type. A literal made only of an option's or level's fields
+  is not a project's own shape. Added on 2026-10-14 from the vendor's guide,
+  with the run over public Go code still to do.
+- **A name means a question type only when it holds exactly one of the four
+  words** (`typeInName`: `noul`, `choice`, `score`, and OpenAI's `predicate`
+  for the first), and a typed struct is a question only when it has an
   `instructions` or `criteria` field. `Answer::Noul { noul }` has neither.
 - **JSON in a string is read only when the string has no escapes.** Then a
   position in the value is a position in the file. With escapes it is not,
@@ -345,51 +383,80 @@ family's files, copied unchanged from `regex-le`.
 - **No reshape fix in Rust or Go.** Turning a list into a map is spelt
   differently for every type, so none is offered.
 - **A Python class is a question on one of two grounds.** Its name is imported
-  from `typesafe_sdk`, or its arguments are exactly the keywords
-  `instructions` and `criteria`. A `Choice(title=..., value=...)` from another
-  library is neither. Do not loosen the second without a run over public
-  code.
+  from `typesafe_sdk` or LangChain's `langchain_typesafe`, or its arguments
+  are exactly the keywords `instructions` and `criteria`. A
+  `Choice(title=..., value=...)` from another library is neither. Do not
+  loosen the second without a run over public code. LangChain's
+  `NoulCriteria(true=..., false=...)` is read as the criteria map it stands
+  for, under a name imported for it and under the module, and under no other
+  name.
+- **A model id inside `*.decisionModel('...')` is a model reference.** The
+  JavaScript reader keeps the AI SDK's factory call as the inner literal of
+  the expression it cannot read, and `requests.ts` takes its one string
+  argument as the model and nothing else: a factory given a variable or two
+  arguments names no model. Which provider made the factory is not read.
 - **A value under a runtime key is kept as `loose`.** Its key is gone, so it
   has no id and joins no map, but a question written there is still linted.
   Only the Python reader does this.
 - **Text in backticks or double quotes is not the question's wording.**
   `prose()` removes it before any wording rule reads.
-- **Only five callers may reach the network:** `commands/jev.ts`,
-  `commands/probe.ts` and `services/reviewer.ts` in the editor, `cli/jev.ts`
-  under `--jev`, and `cli/mcp.ts` under `check_with_jev` and
+- **Only five callers may reach the network:** `commands/ask.ts`,
+  `commands/probe.ts` and `services/reviewer.ts` in the editor, `cli/ask.ts`
+  under `--ask`, and `cli/mcp.ts` under `ask_model` and
   `probe_question`. `lintText` and everything under it stay offline.
   `extension.test.ts` fails if linting calls `fetch`, and `cli.test.ts`
-  fails if a run without `--jev` does, or if any other MCP tool does. Two
-  hosts, and only two:
-  `api.typesafe.ai` for a Jev model and `api.openai.com` for `gpt-6-luna`,
-  chosen by `jev/provider.ts` from the model id, each with its own key.
+  fails if a run without `--ask` does, or if any other MCP tool does.
+- **The host is never guessed.** `ask/provider.ts` sends a model id to the
+  platform its spelling names in `lint/targets.ts`, when that platform
+  publishes an endpoint, with the key in that platform's own variable:
+  `jev-1.13.0` to TypeSafe, `gpt-6-luna` to OpenAI, `~typesafe/jev-latest`
+  to OpenRouter, `typesafe-ai/jev` to Vercel, `gpt-6-luna-decisions` to LLM
+  Gateway, `d1` to Liquid AI. A spelling that names no host, such as
+  `openai/gpt-6-luna-decisions`, which every gateway writes, is refused
+  with nothing sent: routed to OpenAI it would spend the key on a request
+  that fails there. The user names any other host with `jev.endpoint` in
+  the editor, `--ask-endpoint` on the command line, or
+  `DECISIONLINT_LE_ASK_ENDPOINT` for the server, and the shape with `jev.shape`,
+  `--ask-shape` or `DECISIONLINT_LE_ASK_SHAPE` where the path does not end in
+  `/systemone` or `/decisions`. The endpoint is read from the same places as
+  the key and never from `decisionlint-le.json`, a project's `.env` or a tool
+  argument: a repository or an agent could otherwise point the key at a host
+  of its choosing. A host the table does not list is one the user runs: it
+  gets the key of the shape's SDK, `TYPESAFE_API_KEY` or `OPENAI_API_KEY`,
+  or no Authorization header when neither is set, and `provider.test.ts`
+  holds each of these.
+- **A reply is read in the shape that was sent**, and the model that answers
+  is named from the id's family: Jev, Luna, or "the model" for anything else,
+  which `asSubject` capitalises at the start of a sentence.
 - **A question carries its dialect.** `extraction/requests.ts` reads
   TypeSafe's, OpenAI's and the AI SDK's shapes into the same `criteria`, so a
   rule never looks at `choices` or `options`. Only the shape rule and the
-  fixes read `criteriaRaw`. A rule about TypeSafe's API limits checks the
-  dialect first.
+  fixes read `criteriaRaw`. A rule about an API limit asks the target, and
+  the dialect only where the target is unknown.
 - **The editor and the command line send the same requests for the same
-  text.** Both call `jev/review.ts`, and `extension.test.ts` compares the
+  text.** Both call `ask/review.ts`, and `extension.test.ts` compares the
   request bodies. A check added to one is added to both by construction.
-- **Only a flag turns `--jev` on.** Never a key in `jevlint-le.json`, or a
+- **Only a flag turns `--ask` on.** Never a key in `decisionlint-le.json`, or a
   cloned repository could spend the key of whoever lints it. This is the
   command line's workspace trust.
-- **The command line's key is `TYPESAFE_API_KEY` and nothing else.** No flag
-  takes it, so it cannot reach shell history or a CI log. The MCP server
-  reads the same names, and also from the project's `.env.local` and `.env`,
-  because an agent host starts the server in the project and rarely carries
-  a shell environment of its own.
+- **The command line's key is the variable the platform names, and nothing
+  else.** `TYPESAFE_API_KEY` by default, `OPENAI_API_KEY` for Luna, and the
+  `envKey` of the target row for the rest. No flag takes it, so it cannot
+  reach shell history or a CI log. The MCP server reads the same names, and
+  also from the project's `.env.local` and `.env`, because an agent host
+  starts the server in the project and rarely carries a shell environment of
+  its own.
 - **The call limit on the command line is for the run, not the file.** Each
   file is planned with what the files before it left. A run that needed more
   exits 2, as does one that failed or was stopped.
-- **The MCP server sends only from `check_with_jev` and `probe_question`,
+- **The MCP server sends only from `ask_model` and `probe_question`,
   and never writes a file.** The other six tools' descriptions say they send
   nothing, and a test holds `fetch` uncalled across all of them. The two that
   send are annotated open-world and not idempotent, and their descriptions
   and the server's instructions tell an agent to call them only when the user
   asks, because each call spends the user's key. `fix_text` returns the
   mended text in place of writing it, which is what lets every tool carry
-  `readOnlyHint`. `--jev` with `--mcp` is still refused: the flag has no run
+  `readOnlyHint`. `--ask` with `--mcp` is still refused: the flag has no run
   to apply to.
 - **The server's key comes from the environment or the project's `.env`,
   never from a tool argument.** `cli/dotenv.ts` reads `TYPESAFE_API_KEY` or
@@ -397,12 +464,15 @@ family's files, copied unchanged from `regex-le`.
   working directory, and the first found wins. An argument would put the key
   in the agent's transcript and the host's log. No answer carries the key:
   `keySource` names where it came from, and a test checks the key string is
-  in no reply. With none found the call fails before anything is sent.
+  in no reply. With none found the call fails before anything is sent, unless
+  the endpoint is a host the user runs, where `keySource` says no key was
+  sent. The endpoint itself comes from `io.env` only, never from the `.env`
+  files, which a cloned repository writes.
 - **Every MCP tool declares an `outputSchema` and answers with
   `structuredContent` equal to its text.** A client reads either. A tool
   that answers prose, `explain_rule`, puts the page in both.
 - **The API key lives in secret storage, the environment, or the user's own
-  settings, and never in a workspace's.** The `jev.apiKey` setting has
+  settings, and never in a workspace's.** The `ask.keys` setting has
   application scope and `ignoreSync`, and a test fails if either is removed,
   because a workspace setting is a file in the repository. No message,
   finding or error may contain the key. The client returns
@@ -425,7 +495,7 @@ family's files, copied unchanged from `regex-le`.
   when any part is built at runtime, and the run counts what it held back.
 - **No test calls TypeSafe.** `fetch` is stubbed. The scripts under `scripts/`
   that do call it are run by hand, and each has a `--dry-run` and a call limit.
-- **A reply is a Jev reply or it is a failure.** `jev/provider.ts` checks the
+- **A reply is a Jev reply or it is a failure.** `ask/provider.ts` checks the
   body against the request before reading it: TypeSafe's API reference
   returns one answer per question, under the same ids, each carrying its
   type's value, so a body that answers fewer questions than were asked, or
@@ -476,7 +546,7 @@ family's files, copied unchanged from `regex-le`.
 - **A finding can carry a rule this extension does not know.** A project's
   copy can be newer. `toDiagnostic` takes the docs link from the copy that
   found it and must not index `RULES` with a foreign code.
-- **Check with Jev and the probe never use a project's copy.** They spend the
+- **The Ask commands and the probe never use a project's copy.** They spend the
   user's key, so they run the code the user installed as an extension.
 - **A byte order mark is not text.** Node keeps it as the first character of
   a UTF-8 file and the editor never shows it. Every reader from disk, the
@@ -488,10 +558,10 @@ family's files, copied unchanged from `regex-le`.
   line's files and standard input, and the server's `text` argument are all
   held to `MAX_FILE_SIZE_BYTES`, so no entry point is the way around another.
 - **The pinned model and the call limit are defined once,** in
-  `jev/review.ts`. The editor's defaults and the command line's read them.
+  `ask/review.ts`. The editor's defaults and the command line's read them.
   The model is `MEASURED_ON` from `lint/limits.ts`, where the offline rules
   can read it too.
-  `jev/pin.test.ts` holds the copies TypeScript cannot import to
+  `ask/pin.test.ts` holds the copies TypeScript cannot import to
   `DEFAULT_MODEL`: the setting's default in `package.json`, both readmes and
   the two lines of `SPEC.md` that state the default.
 - **`KNOWN_VERSION` and `DEFAULT_MODEL` are two facts.** The first, in
@@ -517,8 +587,8 @@ family's files, copied unchanged from `regex-le`.
   new language adds its extension there, a reader in `LANGUAGES` in
   `lint/lint.ts`, an `onLanguage` activation event and an entry in the
   linter service's `LANGUAGES`.
-- **Two npm packages, one source.** `jevlint-le` is the command line, the
-  library and the server behind `--mcp`. `jevlint-le-mcp` is the server
+- **Two npm packages, one source.** `decisionlint-le` is the command line, the
+  library and the server behind `--mcp`. `decisionlint-le-mcp` is the server
   alone, from `cli/mcpMain.ts`, with no flag, so a client that installs by
   name cannot start the command line by mistake. Both are assembled by
   `bun run build:npm`, which writes the root manifest's version into

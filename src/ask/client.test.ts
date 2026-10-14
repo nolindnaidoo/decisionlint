@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ask, type Fetch, isFailure, TIMEOUT_MS } from './client';
+import { providerFor } from './provider';
 
 const REQUEST = { state: {}, model: 'jev-1.13.0', questions: {} };
 const REPLY = { model: 'jev-1.13.0', answers: {}, usage: { input_tokens: 7 } };
@@ -17,12 +18,18 @@ const answering = (
 		text: async () => '',
 	}));
 
+const JEV = ((provider) => {
+	if (typeof provider === 'string') throw new Error(provider);
+	return provider;
+})(providerFor('jev-1.13.0'));
+
 function deps(fetch: unknown, signal?: AbortSignal) {
 	const waits: number[] = [];
 	return {
 		waits,
 		fetch: fetch as Fetch,
 		key: 'k',
+		provider: JEV,
 		wait: async (ms: number) => {
 			waits.push(ms);
 		},
@@ -163,6 +170,7 @@ describe('a stop during the wait before another try', () => {
 			{
 				fetch: fetch as unknown as Fetch,
 				key: 'k',
+				provider: JEV,
 				signal: stop.signal,
 				// A wait that would hold the run for as long as it is asked to.
 				wait: () => {

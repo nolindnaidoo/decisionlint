@@ -158,6 +158,151 @@ describe('JEV013 newer-model', () => {
 	});
 });
 
+describe("a model id in another platform's spelling", () => {
+	it("fires JEV001 on OpenRouter's alias and pins it as OpenRouter writes a pinned id", () => {
+		const text = request(CLEAN_NOUL, '~typesafe/jev-latest');
+		const pin = finding(text, 'JEV001');
+		expect(pin.fix?.title).toContain("Pin to 'typesafe/jev-1.13'");
+		expect(apply(text, pin)).toContain('"model": "typesafe/jev-1.13"');
+	});
+
+	it('fires JEV001 with no fix on an alias whose pinned spelling no platform documents', () => {
+		const pin = finding(request(CLEAN_NOUL, 'typesafe/jev-latest'), 'JEV001');
+		expect(pin.fix).toBeUndefined();
+	});
+
+	it.each([
+		'typesafe-ai/jev',
+		'typesafe/jev-1.13',
+		'ZefanCai/Open-Jev-9B',
+		'laya:en',
+	])('reports nothing about %s', (model) => {
+		expect(codes(request(CLEAN_NOUL, model))).toEqual([]);
+	});
+
+	it('fires JEV013 on a version above the measured one in any spelling', () => {
+		expect(codes(request(CLEAN_NOUL, 'typesafe/jev-2.0'))).toEqual(['JEV013']);
+		expect(
+			codes(request(CLEAN_NOUL, 'openai/gpt-6-luna-decisions-20261006')),
+		).toEqual([]);
+	});
+});
+
+describe("a model named through the AI SDK's factory", () => {
+	const decide = (factory: string, questions: string) =>
+		`import { experimental_decide as decide } from 'ai';\nconst r = await decide({ model: ${factory}, state, questions: { ${questions} } });`;
+
+	it('fires JEV001 on an alias inside decisionModel(), and pins it there', () => {
+		const text = decide(`typeSafeAi.decisionModel('jev-latest')`, CLEAN_NOUL);
+		const pin = finding(text, 'JEV001');
+		expect(text.slice(pin.span.start, pin.span.end)).toBe(`'jev-latest'`);
+		expect(apply(text, pin)).toContain(`decisionModel('jev-1.13.0')`);
+	});
+
+	it("holds the request to the platform the factory's id names", () => {
+		const levels = Array.from(
+			{ length: 11 },
+			(_, i) =>
+				`"${['Nothing works', 'Starts then stops', 'Runs with faults', 'Runs with one fault', 'Runs but is slow', 'Runs at normal speed', 'Runs faster than expected', 'Handles double the load', 'Handles every load tried', 'Has never failed', 'Cannot be made to fail'][i]}"`,
+		).join(', ');
+		const text = decide(
+			`gateway.decisionModel('typesafe-ai/jev')`,
+			`"damage": { "type": "score", "instructions": "Rate the damage", "levels": [${levels}] }`,
+		);
+		expect(finding(text, 'JEV003').message).toBe(
+			'This Score has 11 levels. Vercel AI Gateway accepts at most 10.',
+		);
+	});
+
+	it('reads nothing from a factory given anything but one string', () => {
+		expect(codes(decide(`openai.decisionModel(MODEL)`, CLEAN_NOUL))).toEqual(
+			[],
+		);
+		expect(codes(decide(`pickModel('jev-latest')`, CLEAN_NOUL))).toEqual([]);
+	});
+});
+
+describe('the target of a request', () => {
+	const levels = [
+		'Nothing works',
+		'Starts then stops',
+		'Runs with faults',
+		'Runs with one fault',
+		'Runs but is slow',
+		'Runs at normal speed',
+		'Runs faster than expected',
+		'Handles double the load',
+		'Handles every load tried',
+		'Has never failed',
+		'Cannot be made to fail',
+	]
+		.map((level, i) => `{ "label": "L${i}", "description": "${level}" }`)
+		.join(', ');
+	const luna = (model: string) =>
+		`{ "model": "${model}", "input": "s", "questions": [ { "type": "score", "name": "q", "instructions": "Rate the damage", "levels": [${levels}] } ] }`;
+	const questions = (count: number) =>
+		Array.from(
+			{ length: count },
+			(_, i) =>
+				`"q${i}": { "type": "noul", "instructions": "Does the note name deadline ${i}?" }`,
+		).join(', ');
+
+	it('holds an OpenAI-shaped request to no limit when nothing says where it goes', () => {
+		expect(codes(luna('gpt-6-luna'))).toEqual([]);
+		expect(codes(luna('openai/gpt-6-luna-decisions'))).toEqual([]);
+	});
+
+	it("holds it to Vercel's limits when the model id is Vercel's spelling", () => {
+		const found = finding(luna('typesafe-ai/jev'), 'JEV003');
+		expect(found.message).toBe(
+			'This Score has 11 levels. Vercel AI Gateway accepts at most 10.',
+		);
+	});
+
+	it('holds it to the configured target over the model id', () => {
+		const vercel = { ...DEFAULT_OPTIONS, target: 'vercel' };
+		expect(codes(luna('gpt-6-luna'), vercel)).toEqual(['JEV003']);
+		const openai = { ...DEFAULT_OPTIONS, target: 'openai' };
+		expect(codes(luna('typesafe-ai/jev'), openai)).toEqual([]);
+	});
+
+	it('names TypeSafe in a limit message for a TypeSafe-shaped request sent nobody knows where', () => {
+		const text = request(
+			`"q": { "type": "score", "instructions": "Rate the damage", "criteria": [${Array.from({ length: 11 }, (_, i) => `"Level ${i} of eleven"`).join(', ')}] }`,
+		);
+		expect(finding(text, 'JEV003').message).toBe(
+			'This Score has 11 levels. TypeSafe accepts at most 10.',
+		);
+	});
+
+	it('fires JEV014 on the first question past what the target takes in one request', () => {
+		const litellm = { ...DEFAULT_OPTIONS, target: 'litellm' };
+		const text = request(questions(129));
+		const result = lintText(text, litellm);
+		expect(result.findings.map((finding) => finding.code)).toEqual(['JEV014']);
+		const found = result.findings[0];
+		expect(found?.message).toBe(
+			'This request has 129 questions. LiteLLM accepts at most 128 in one request.',
+		);
+		expect(found?.questionId).toBe('q128');
+		expect(text.slice(found?.span.start, found?.span.end)).toBe('"q128"');
+	});
+
+	it('does not fire JEV014 at the limit, or for a target that publishes none', () => {
+		const litellm = { ...DEFAULT_OPTIONS, target: 'litellm' };
+		expect(codes(request(questions(128)), litellm)).toEqual([]);
+		const openai = { ...DEFAULT_OPTIONS, target: 'openai' };
+		expect(codes(request(questions(129)), openai)).toEqual([]);
+		expect(codes(request(questions(129)))).toEqual([]);
+	});
+
+	it('refuses a target the table does not have, naming the ones it does', () => {
+		expect(() => lintText('{}', { ...DEFAULT_OPTIONS, target: 'jay' })).toThrow(
+			'Unknown target "jay". Use one of: typesafe, openai, vercel, litellm, openrouter, llmgateway, edenai, liquid, llamacpp.',
+		);
+	});
+});
+
 describe('JEV002 choice-option-limit', () => {
 	const options = (count: number) =>
 		Array.from({ length: count }, (_, i) => `"o${i}": null`).join(', ');
@@ -742,20 +887,24 @@ describe('suppression', () => {
 
 	it('silences the next line, the same line and the whole file', () => {
 		expect(
-			codes(`// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`),
+			codes(`// decisionlint-le-disable-next-line JEV004\nconst q = ${bare};`),
 		).toEqual([]);
-		expect(codes(`const q = ${bare}; // jevlint-le-disable-line`)).toEqual([]);
+		expect(codes(`const q = ${bare}; // decisionlint-le-disable-line`)).toEqual(
+			[],
+		);
 		expect(
-			codes(`/* jevlint-le-disable JEV004 */\n\n\nconst q = ${bare};`),
+			codes(`/* decisionlint-le-disable JEV004 */\n\n\nconst q = ${bare};`),
 		).toEqual([]);
 	});
 
 	it('leaves other rules and other lines alone, and reports the comment that silenced nothing', () => {
 		expect(
-			codes(`// jevlint-le-disable-next-line JEV001\nconst q = ${bare};`),
+			codes(`// decisionlint-le-disable-next-line JEV001\nconst q = ${bare};`),
 		).toEqual(['JEV010', 'JEV004']);
 		expect(
-			codes(`// jevlint-le-disable-next-line JEV004\n\nconst q = ${bare};`),
+			codes(
+				`// decisionlint-le-disable-next-line JEV004\n\nconst q = ${bare};`,
+			),
 		).toEqual(['JEV010', 'JEV004']);
 	});
 
@@ -766,24 +915,28 @@ describe('suppression', () => {
 				.findings;
 
 		it('is reported, at the comment', () => {
-			const text = `// jevlint-le-disable-next-line JEV004\nconst q = ${clean};`;
+			const text = `// decisionlint-le-disable-next-line JEV004\nconst q = ${clean};`;
 			const [finding] = found(text);
 			expect(finding?.code).toBe('JEV010');
 			expect(finding?.severity).toBe('warning');
 			expect(text.slice(finding?.span.start, finding?.span.end)).toBe(
-				'jevlint-le-disable-next-line JEV004',
+				'decisionlint-le-disable-next-line JEV004',
 			);
 		});
 
 		it('is not reported when it silences a finding', () => {
 			expect(
-				codes(`// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`),
+				codes(
+					`// decisionlint-le-disable-next-line JEV004\nconst q = ${bare};`,
+				),
 			).toEqual([]);
-			expect(codes(`// jevlint-le-disable\nconst q = ${bare};`)).toEqual([]);
+			expect(codes(`// decisionlint-le-disable\nconst q = ${bare};`)).toEqual(
+				[],
+			);
 		});
 
 		it('is reported when the rule it names is switched off, since that rule reports nothing', () => {
-			const text = `// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`;
+			const text = `// decisionlint-le-disable-next-line JEV004\nconst q = ${bare};`;
 			expect(found(text, { JEV004: 'off' }).map((f) => f.code)).toEqual([
 				'JEV010',
 			]);
@@ -792,18 +945,20 @@ describe('suppression', () => {
 		it('is not reported when it names only rules that Jev checks, which linting never runs', () => {
 			expect(
 				codes(
-					`// jevlint-le-disable-next-line JEV303 JEV305\nconst q = ${clean};`,
+					`// decisionlint-le-disable-next-line JEV303 JEV305\nconst q = ${clean};`,
 				),
 			).toEqual([]);
 		});
 
 		it('says to name the rule when it names none', () => {
-			const [finding] = found(`// jevlint-le-disable\nconst q = ${clean};`);
+			const [finding] = found(
+				`// decisionlint-le-disable\nconst q = ${clean};`,
+			);
 			expect(finding?.message).toContain('name the rule');
 		});
 
 		it('can be switched off, and is not silenced by the comment it reports', () => {
-			const text = `// jevlint-le-disable\nconst q = ${clean};`;
+			const text = `// decisionlint-le-disable\nconst q = ${clean};`;
 			expect(found(text).map((f) => f.code)).toEqual(['JEV010']);
 			expect(found(text, { JEV010: 'off' })).toEqual([]);
 		});
@@ -1099,5 +1254,21 @@ describe('the file types the tool reads', () => {
 		).toThrow(
 			'Unknown syntax "constructor". Use one of: js, python, rust, go.',
 		);
+	});
+});
+
+describe("a directive written under the tool's old name", () => {
+	const bad = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } };`;
+
+	it('still silences', () => {
+		expect(codes(`// jevlint-le-disable-next-line JEV004\n${bad}`)).toEqual([]);
+		expect(codes(`// jevlint-le-disable JEV004\n${bad}`)).toEqual([]);
+	});
+
+	it('is still reported when it silences nothing', () => {
+		expect(codes(`// jevlint-le-disable-next-line JEV009\n${bad}`)).toEqual([
+			'JEV010',
+			'JEV004',
+		]);
 	});
 });

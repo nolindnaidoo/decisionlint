@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 /** Must equal the id declared under `mcpServerDefinitionProviders` in the manifest. */
-export const MCP_PROVIDER_ID = 'jevlint-le';
+export const MCP_PROVIDER_ID = 'decisionlint-le';
 /** The command line, shipped in the extension. Run with `--mcp` it is the server. */
 export const MCP_BUNDLE = 'dist/cli.js';
 
@@ -9,7 +9,7 @@ function definition(
 	context: vscode.ExtensionContext,
 ): vscode.McpStdioServerDefinition {
 	return new vscode.McpStdioServerDefinition(
-		'JevLint-LE',
+		'DecisionLint-LE',
 		// The extension host is Electron, so this is the editor's own binary.
 		// ELECTRON_RUN_AS_NODE makes it run the script as Node would. Without it
 		// a second editor window opens and no server starts.

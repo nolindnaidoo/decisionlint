@@ -1,11 +1,11 @@
 # Lints the Jev questions in a repository and annotates the pull request.
 #
-#   - uses: nolindnaidoo/jevlint-le@v0.8.1
+#   - uses: nolindnaidoo/decisionlint-le@v1.0.0
 #     with:
 #       paths: src
 #
 # The runner needs Node 20 or newer, which GitHub's hosted runners have.
-name: JevLint-LE
+name: DecisionLint-LE
 description: Lint the questions written for TypeSafe's Jev model. No API key and no network calls.
 author: Nolin Naidoo
 branding:
@@ -17,9 +17,9 @@ inputs:
     required: false
     default: .
   version:
-    description: The jevlint-le version to run. Defaults to the one this action was released with.
+    description: The decisionlint-le version to run. Defaults to the one this action was released with.
     required: false
-    default: 0.8.1
+    default: 1.0.0
   format:
     description: How findings are printed. github annotates the pull request. sarif is for code scanning.
     required: false
@@ -36,10 +36,10 @@ runs:
       # Inputs reach the shell as environment variables, never spliced into
       # the script, so a value cannot be read as a command.
       env:
-        JEVLINT_VERSION: ${{ inputs.version }}
-        JEVLINT_FORMAT: ${{ inputs.format }}
-        JEVLINT_ARGS: ${{ inputs.args }}
-        JEVLINT_PATHS: ${{ inputs.paths }}
+        DECISIONLINT_VERSION: ${{ inputs.version }}
+        DECISIONLINT_FORMAT: ${{ inputs.format }}
+        DECISIONLINT_ARGS: ${{ inputs.args }}
+        DECISIONLINT_PATHS: ${{ inputs.paths }}
       run: |
         # shellcheck disable=SC2086 # paths and args are lists, split on purpose
-        npx --yes "jevlint-le@${JEVLINT_VERSION}" --format "${JEVLINT_FORMAT}" ${JEVLINT_ARGS} ${JEVLINT_PATHS}
+        npx --yes "decisionlint-le@${DECISIONLINT_VERSION}" --format "${DECISIONLINT_FORMAT}" ${DECISIONLINT_ARGS} ${DECISIONLINT_PATHS}

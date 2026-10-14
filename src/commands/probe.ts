@@ -1,25 +1,25 @@
 import * as vscode from 'vscode';
-import { ask, type Failure, type Fetch, isFailure } from '../jev/client';
-import { type QuestionLiteral, toLiteral, toPlain } from '../jev/literal';
+import { ask, type Failure, type Fetch, isFailure } from '../ask/client';
+import { type QuestionLiteral, toLiteral, toPlain } from '../ask/literal';
 import {
 	buildProbe,
 	type ProbeResult,
 	readProbe,
 	summarize,
-} from '../jev/probe';
-import { providerFor } from '../jev/provider';
-import { DEFAULT_MODEL } from '../jev/review';
+} from '../ask/probe';
+import type { Provider } from '../ask/provider';
 import { readQuestions, syntaxFor } from '../lint/lint';
 import { blocked, caution } from '../ui/notifier';
-import { guarded } from './guard';
 import {
 	failureMessage,
 	findKey,
 	type KeySource,
+	providerForSlot,
 	refuseUntrusted,
 	reportNoKey,
 	SEND,
-} from './jev';
+} from './ask';
+import { guarded } from './guard';
 
 type Deps = KeySource &
 	Readonly<{
@@ -27,7 +27,7 @@ type Deps = KeySource &
 		wait: (ms: number) => Promise<void>;
 	}>;
 
-export const PROBE_COMMAND = 'jevlint-le.probeQuestion';
+export const PROBE_COMMAND = 'decisionlint-le.probeQuestion';
 
 type Target = Readonly<{
 	id: string;
@@ -52,7 +52,7 @@ function targetAt(
 		(candidate) =>
 			candidate.span.start <= offset && offset <= candidate.span.end,
 	);
-	if (!question) return 'Put the cursor inside a Jev question first.';
+	if (!question) return 'Put the cursor inside a decision question first.';
 	const literal = toLiteral(question);
 	if (!literal)
 		return 'Part of this question is built at runtime, so it cannot be sent as written.';
@@ -74,6 +74,7 @@ async function runProbe(
 	deps: Deps,
 	target: Target,
 	key: string,
+	provider: Provider,
 	signal: AbortSignal,
 	model: string,
 ): Promise<Probed> {
@@ -87,7 +88,7 @@ async function runProbe(
 	for (const variant of variants) {
 		if (signal.aborted) return cancelled();
 		const reply = await ask(
-			{ fetch: deps.fetch, key, wait: deps.wait, signal },
+			{ fetch: deps.fetch, key, provider, wait: deps.wait, signal },
 			variant.request,
 		);
 		// A request the user cut off fails too, and that is not a failure to report.
@@ -108,18 +109,21 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		blocked('No file is open.');
 		return;
 	}
-	if (!vscode.workspace.isTrusted) {
-		refuseUntrusted('A probe sends a question and its state to TypeSafe');
-		return;
-	}
 	// Read once, before the first await, so the key, the count the user agrees
 	// to and the requests all name the same model.
 	const config = deps.getConfiguration();
-	// The variants are built and read in Jev's shape. Luna's reply for a Choice or a Score is not read yet.
-	const provider = providerFor(config.jev.model);
-	if (provider.id !== 'typesafe') {
-		blocked(
-			`The probe asks Jev only. Set jevlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
+	// The variants are built and read in System One's shape, so the probe asks
+	// Jev at TypeSafe, with the model Ask Jev sends. Luna's reply for a Choice
+	// or a Score is not read yet.
+	const routed = providerForSlot(config, 'typesafe');
+	if (typeof routed === 'string') {
+		blocked(routed);
+		return;
+	}
+	const { provider, model } = routed;
+	if (!vscode.workspace.isTrusted) {
+		refuseUntrusted(
+			`A probe sends a question and its state to ${provider.vendor}`,
 		);
 		return;
 	}
@@ -137,15 +141,14 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		return;
 	}
 	const { key } = found;
-	const count = buildProbe(
-		target.state,
-		target.question,
-		config.jev.model,
-	).length;
-	if (config.jev.confirm) {
+	const count = buildProbe(target.state, target.question, model).length;
+	if (config.ask.confirm) {
 		const answer = await vscode.window.showInformationMessage(
-			`Probe '${target.id}' with ${count} requests to TypeSafe?`,
-			{ modal: true, detail: 'Under 1¢. The question and its state are sent.' },
+			`Probe '${target.id}' with ${count} requests to ${provider.vendor}?`,
+			{
+				modal: true,
+				detail: `${provider.pricePerMillionTokens === undefined ? `${provider.vendor} publishes no price this tool has read.` : 'Under 1¢.'} The question and its state are sent.`,
+			},
 			SEND,
 		);
 		if (answer !== SEND) return;
@@ -153,13 +156,13 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	const probed = await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: `JevLint-LE: probing '${target.id}'`,
+			title: `DecisionLint-LE: probing '${target.id}'`,
 			cancellable: true,
 		},
 		(_progress, token) => {
 			const abort = new AbortController();
 			token.onCancellationRequested(() => abort.abort());
-			return runProbe(deps, target, key, abort.signal, config.jev.model);
+			return runProbe(deps, target, key, provider, abort.signal, model);
 		},
 	);
 	if (probed.kind === 'failed') {
@@ -182,7 +185,7 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		blocked(`${report.verdict} The full report could not be opened.`);
 }
 
-const REPORT_SCHEME = 'jevlint-le-probe';
+const REPORT_SCHEME = 'decisionlint-le-probe';
 const KEPT_REPORTS = 20;
 
 /** The report pages, served from memory, and the event that tells an open one to reload. */

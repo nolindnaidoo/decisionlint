@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "jevlint-le-samples",
+      "name": "decisionlint-le-samples",
       "dependencies": {
         "@typesafe-ai/sdk": "0.6.0",
       },

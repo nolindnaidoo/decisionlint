@@ -72,7 +72,7 @@ assert.strictEqual(wrong.out, '');
 // The report has to be larger than a pipe holds for the write to fail at all.
 const { mkdtempSync, writeFileSync } = require('node:fs');
 const { tmpdir } = require('node:os');
-const big = join(mkdtempSync(join(tmpdir(), 'jevlint-le-')), 'big.json');
+const big = join(mkdtempSync(join(tmpdir(), 'decisionlint-le-')), 'big.json');
 const question = (i) => `"q${i}": {"type":"choice","instructions":"Which team is it?","criteria":{"a":"A","b":"B"}}`;
 writeFileSync(big, `{"questions": {${Array.from({ length: 3000 }, (_, i) => question(i)).join(',')}}}`);
 const closedEarly = spawnSync(
@@ -92,7 +92,7 @@ assert.strictEqual(closedEarly.stdout, '', 'crashed when its reader closed the p
 // A path that is not a regular file is refused by name and never opened. A
 // named pipe with nobody writing to it would otherwise block the read for ever.
 if (process.platform !== 'win32') {
-	const pipe = join(mkdtempSync(join(tmpdir(), 'jevlint-le-')), 'pipe.json');
+	const pipe = join(mkdtempSync(join(tmpdir(), 'decisionlint-le-')), 'pipe.json');
 	assert.strictEqual(spawnSync('mkfifo', [pipe]).status, 0, 'mkfifo failed');
 	const piped = spawnSync(process.execPath, [bin, pipe], {
 		encoding: 'utf8',
@@ -104,16 +104,16 @@ if (process.platform !== 'win32') {
 }
 
 // The Jev checks, as far as they go with nothing sent: the plan, and the refusal without a key.
-const plan = cli(['--jev-plan', '--format', 'json', 'clean.ts']);
+const plan = cli(['--ask-plan', '--format', 'json', 'clean.ts']);
 assert.strictEqual(plan.status, 0, plan.err);
-const planned = JSON.parse(plan.out).totals.jev;
+const planned = JSON.parse(plan.out).totals.ask;
 assert.strictEqual(planned.sent, false);
 assert.ok(planned.planned > 0, 'planned no requests for a file with questions');
 assert.strictEqual(planned.answered, 0);
 
-const keyless = cli(['--jev', 'clean.ts']);
+const keyless = cli(['--ask', 'clean.ts']);
 assert.strictEqual(keyless.status, 2);
-assert.match(keyless.err, /--jev needs an API key in TYPESAFE_API_KEY/);
+assert.match(keyless.err, /--ask needs an API key in TYPESAFE_API_KEY/);
 assert.strictEqual(keyless.out, '');
 
 // The MCP server, spoken to over standard input the way an agent's client does.
@@ -128,10 +128,10 @@ assert.strictEqual(served.status, 0, served.err);
 const replies = served.out.trim().split('\n').map((line) => JSON.parse(line));
 assert.deepStrictEqual(replies.map((reply) => reply.id), [1, 2, 3]);
 assert.strictEqual(replies[0].result.serverInfo.version, require(join(root, 'package.json')).version);
-assert.deepStrictEqual(replies[1].result.tools.map((tool) => tool.name), ['lint_text', 'lint_paths', 'fix_text', 'list_rules', 'explain_rule', 'plan_jev', 'check_with_jev', 'probe_question']);
+assert.deepStrictEqual(replies[1].result.tools.map((tool) => tool.name), ['lint_text', 'lint_paths', 'fix_text', 'list_rules', 'explain_rule', 'plan_ask', 'ask_model', 'probe_question']);
 assert.ok(replies[1].result.tools.every((tool) => tool.annotations.readOnlyHint && tool.outputSchema));
 // Only the two that send are open-world; the rest a host may run unasked.
-assert.deepStrictEqual(replies[1].result.tools.filter((tool) => tool.annotations.openWorldHint).map((tool) => tool.name), ['check_with_jev', 'probe_question']);
+assert.deepStrictEqual(replies[1].result.tools.filter((tool) => tool.annotations.openWorldHint).map((tool) => tool.name), ['ask_model', 'probe_question']);
 const linted = JSON.parse(replies[2].result.content[0].text);
 assert.strictEqual(linted.files[0].findings.length, 7);
 // The answer as data is the text, so a client may read either.
@@ -194,7 +194,7 @@ assert.deepStrictEqual(JSON.parse(answers[2].result.content[0].text), linted);
 // listing points at, so that package carries it and the other does not.
 const mcpManifest = require(join(root, 'mcp', 'package.json'));
 const listing = require(join(root, 'server.json'));
-assert.strictEqual(mcpManifest.name, 'jevlint-le-mcp');
+assert.strictEqual(mcpManifest.name, 'decisionlint-le-mcp');
 assert.strictEqual(mcpManifest.mcpName, listing.name);
 assert.strictEqual(npmManifest.mcpName, undefined);
 assert.strictEqual(listing.packages[0].identifier, mcpManifest.name);

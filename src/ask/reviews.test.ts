@@ -4,6 +4,7 @@ import { readQuestions } from '../lint/lint';
 import { RULES } from '../lint/rules';
 import { ask, type Fetch, isFailure } from './client';
 import { toLiteral } from './literal';
+import { providerFor } from './provider';
 import {
 	buildRequest,
 	buildRequestReview,
@@ -321,9 +322,12 @@ describe('the client', () => {
 		json: async () => body,
 		text: async () => JSON.stringify(body),
 	});
+	const provider = providerFor(MODEL);
+	if (typeof provider === 'string') throw new Error(provider);
 	const deps = (fetch: Fetch) => ({
 		fetch,
 		key: 'secret-key',
+		provider,
 		wait: vi.fn(async () => {}),
 	});
 

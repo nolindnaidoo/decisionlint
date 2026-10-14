@@ -8,6 +8,7 @@ import type {
 import { type Check, NONE, normalizeOption, repeated, report } from './finding';
 import { fallbackFix, fallbackListFix } from './fix';
 import { LIMITS } from './limits';
+import { limitsFor } from './targets';
 
 const NUMERIC = /^\s*-?\d+(\.\d+)?\s*$/;
 
@@ -34,17 +35,21 @@ export function wrapsList(options: ObjectNode): ArrayNode | undefined {
 	return value?.kind === 'array' && value.items.length ? value : undefined;
 }
 
-const checkChoiceCount: Check = (question) => {
+const checkChoiceCount: Check = (question, context) => {
 	const options = choiceOptions(question);
 	if (!options || wrapsList(options)) return NONE;
 	const count = options.props.length;
-	// The limits are TypeSafe's. OpenAI publishes none, and the AI SDK routes to either.
-	if (count > LIMITS.choiceMaxOptions && question.dialect === 'typesafe') {
+	const { owner, limits } = limitsFor(
+		question.dialect,
+		context.targetFor(question.map),
+	);
+	const max = limits.choiceMaxOptions;
+	if (max !== undefined && count > max) {
 		return [
 			report(
 				'JEV002',
 				question,
-				`This Choice has ${count} options. The API accepts at most ${LIMITS.choiceMaxOptions}.`,
+				`This Choice has ${count} options. ${owner} accepts at most ${max}.`,
 			),
 		];
 	}
@@ -96,16 +101,21 @@ const checkDuplicateOptions: Check = (question) => {
 	);
 };
 
-const checkLevelCount: Check = (question) => {
+const checkLevelCount: Check = (question, context) => {
 	const levels = scoreLevels(question);
 	if (!levels) return NONE;
 	const count = levels.items.length;
-	if (count > LIMITS.scoreMaxLevels && question.dialect === 'typesafe') {
+	const { owner, limits } = limitsFor(
+		question.dialect,
+		context.targetFor(question.map),
+	);
+	const max = limits.scoreMaxLevels;
+	if (max !== undefined && count > max) {
 		return [
 			report(
 				'JEV003',
 				question,
-				`This Score has ${count} levels. The API accepts at most ${LIMITS.scoreMaxLevels}.`,
+				`This Score has ${count} levels. ${owner} accepts at most ${max}.`,
 			),
 		];
 	}

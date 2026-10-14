@@ -5,7 +5,7 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 | Code | Name | Default | What it means |
 |---|---|---|---|
 | [JEV000](JEV000.md) | unreadable | hint | Part of the question is built at runtime, so the rules that need it did not run |
-| [JEV001](JEV001.md) | unpinned-model | warning | `jev-latest` and `jev-preview` move with each release, so answers can change with no change on your side |
+| [JEV001](JEV001.md) | unpinned-model | warning | An alias such as `jev-latest` moves with each release, so answers can change with no change on your side |
 | [JEV002](JEV002.md) | choice-option-limit | error | A Choice has more than 255 options. The API rejects it |
 | [JEV003](JEV003.md) | score-level-limit | error | A Score has more than 10 levels. The API rejects it |
 | [JEV004](JEV004.md) | no-fallback-option | info | A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text |
@@ -14,10 +14,11 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 | [JEV007](JEV007.md) | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
 | [JEV008](JEV008.md) | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
 | [JEV009](JEV009.md) | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
-| [JEV010](JEV010.md) | unused-disable | warning | A `jevlint-le-disable` comment silences nothing, so it can only hide a finding added later |
+| [JEV010](JEV010.md) | unused-disable | warning | A `decisionlint-le-disable` comment silences nothing, so it can only hide a finding added later |
 | [JEV011](JEV011.md) | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
 | [JEV012](JEV012.md) | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
 | [JEV013](JEV013.md) | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
+| [JEV014](JEV014.md) | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
 | [JEV101](JEV101.md) | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | [JEV102](JEV102.md) | arithmetic | warning | The question asks Jev to count or compare numbers |
 | [JEV103](JEV103.md) | date-comparison | info | The question asks Jev to order two times or measure the gap between them |

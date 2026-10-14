@@ -1,4 +1,4 @@
-# JevLint-LE — specification
+# DecisionLint-LE — specification
 
 **Status: released. The current version and its date are the top heading of
 [CHANGELOG.md](CHANGELOG.md); 0.1.0 shipped on 2026-10-04 and 0.2.0 on
@@ -35,7 +35,7 @@ you type, read straight out of source code, with no key and no calls.
 
 Checks that need the meaning of a question and not its shape, such as two
 options that overlap, cannot be done from text patterns. Those are available
-on demand through the **Check This File with Jev** command.
+on demand through the **Ask Jev About This File** command.
 
 ## Scope
 
@@ -53,8 +53,8 @@ around them.
 
 - Linting makes no network request and needs no API key. This is an LE family
   extension and that is the family's promise. The one exception is the
-  **Check This File with Jev** command, which the user runs on purpose with
-  their own key. See "Check with Jev".
+  **Ask Jev About This File** command, which the user runs on purpose with
+  their own key. See "Ask a model".
 - No filesystem writes outside edits the user accepts through a quick fix,
   fix on save, or `--fix` on the command line.
 - Refuse rather than guess. A question the reader cannot see whole is reported
@@ -77,15 +77,21 @@ check runs on the tree and does not know which reader made it.
 | **S2** | `oxlint-plugin-jev` config | A `jev/ask` rule whose options hold a `rules` array. Each entry with a `question` is a Noul question, identified by its `id` |
 | **S3** | JavaScript and TypeScript object literals | The same shape as S1, anywhere in the file, including inside call arguments and callbacks. A question object outside a map is recognized on its own |
 | **S5** | Python dict literals | The same shape as S1. `True`, `False` and `None` are read, adjacent and bracketed strings are joined, and an f-string with a slot is unreadable. A dict assigned to a name ending in `questions` is read as a question map |
-| **S6** | Python SDK classes | `Noul(...)`, `Choice(...)`, `Score(...)` under a name imported from `typesafe_sdk` or `typesafe_ai`, including `import ... as`. Under any other import, only a call whose arguments are exactly the keywords `instructions` and `criteria` |
+| **S6** | Python SDK classes | `Noul(...)`, `Choice(...)`, `Score(...)` under a name imported from `typesafe_sdk`, `typesafe_ai` or LangChain's `langchain_typesafe`, including `import ... as`. LangChain's `NoulCriteria(true=..., false=...)` is read as the criteria map it stands for. Under any other import, only a call whose arguments are exactly the keywords `instructions` and `criteria` |
 | **S7** | Python `system_one(...)` | The first two positional arguments are `state` and `questions`. Keywords are read by name |
 | **S8** | Rust | The JSON inside `json!`. A struct or enum variant whose name holds one question type and which has an `instructions` or `criteria` field with a value that could be read. A `::noul(...)`, `::choice(...)` or `::score(...)` call whose first argument is a string, read for its wording only. `Some(x)`, `String::from(x)`, `.to_string()`, `.into()` and `vec![...]` are seen through, and a list of pairs or `BTreeMap::from([...])` is read as a map |
-| **S9** | Go | A map with string keys. A struct with a `Type` or `Kind` field, given as a string or as a constant named for the type. A struct named for a question type. Field names are read lowercased. `[]string{...}` is a list |
+| **S9** | Go | A map with string keys. A struct with a `Type` or `Kind` field, given as a string or as a constant named for the type. A struct named for a question type, `Predicate` included. Field names are read lowercased. `[]string{...}` is a list. OpenAI's Go SDK, `openai.DecisionNewParams{Questions: []...{{OfPredicate: &...{Name, Instructions}}}}`, is read through its one-member unions, with `Choices` of `{Value, Description}` and `Levels` of `{Label, Description}` as the API's own fields |
 | **S10** | JSON inside a string | A string that opens with `{` and names `questions`, `instructions` or `criteria`, in any language above. Only a string with no escapes is read, so every position maps back to the file |
 | **S4** | SDK helper calls | `noul(...)`, `choice(...)`, `score(...)`, read only for the names the file imports from `@typesafe-ai/sdk`. Method calls, declarations and aliased imports are not read |
 
 A `model` property whose value is a literal alias is found anywhere in the
 file, which covers both request bodies and `new TypeSafeClient({ model })`.
+So is one named through the AI SDK's factory,
+`model: typeSafeAi.decisionModel('jev-latest')` or
+`gateway.decisionModel('typesafe-ai/jev')`: the id inside the call is the
+model, and its spelling can name the platform. Which provider made the
+factory is not read, so a question sent through `anthropic.decisionModel(...)`
+to a language model is linted as any other.
 
 ### What cannot be read
 
@@ -107,7 +113,7 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | Code | Name | Default | Fires when |
 |---|---|---|---|
 | JEV000 | unreadable | hint | A field a rule needs is built at runtime |
-| JEV001 | unpinned-model | warning | `model` is the literal `jev-latest` or `jev-preview` |
+| JEV001 | unpinned-model | warning | `model` is a floating Jev alias in any platform's spelling: `jev-latest`, `jev-preview`, `~typesafe/jev-latest` |
 | JEV002 | choice-option-limit | error | A Choice has more than 255 options |
 | JEV003 | score-level-limit | error | A Score has more than 10 levels |
 | JEV004 | no-fallback-option | info | A Choice has two or more options and none has a fallback word in its name |
@@ -116,10 +122,11 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | JEV007 | invalid-question | error | The `type` is missing or unknown, or the instructions are an empty string |
 | JEV008 | numeric-levels | warning | Every level of a Score is a bare number |
 | JEV009 | too-few-options | info | A Choice has fewer than two options, or a Score fewer than two levels |
-| JEV010 | unused-disable | warning | A `jevlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
+| JEV010 | unused-disable | warning | A `decisionlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
 | JEV011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
 | JEV012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
-| JEV013 | newer-model | info | `model` is a versioned Jev id, three numbers and nothing after them, above the version the rules were measured on |
+| JEV013 | newer-model | info | `model` is a versioned Jev id in any platform's spelling, numbers and nothing after them, above the version the rules were measured on |
+| JEV014 | question-limit | error | A `questions` map or list has more entries than its target takes in one request. Only a target in `lint/targets.ts` that publishes the number is checked |
 
 **JEV001's fix is never applied for you.** It offers to pin to `KNOWN_VERSION`,
 the version `jev-latest` pointed to when the repo last checked, and is marked
@@ -180,7 +187,7 @@ Scores sent with no levels.
     names into a map.
   - `JEV007`: correct a mistyped type when exactly one real type is within two
     edits.
-- **Project settings file.** `jevlint-le.json`, read by the editor, the
+- **Project settings file.** `decisionlint-le.json`, read by the editor, the
   command line and the MCP server. The nearest one to a file applies, looking
   upward as far as the workspace folder in the editor and the working
   directory on the command line. Where one applies it replaces the editor's
@@ -201,8 +208,8 @@ Scores sent with no levels.
 - **Commands:** lint the active file, lint the workspace, open settings. The
   workspace command reports files skipped as too large and files it could not
   open.
-- **Suppression** by comment: `jevlint-le-disable-next-line JEV004`,
-  `jevlint-le-disable-line`, or `jevlint-le-disable` for the file. No code list means
+- **Suppression** by comment: `decisionlint-le-disable-next-line JEV004`,
+  `decisionlint-le-disable-line`, or `decisionlint-le-disable` for the file. No code list means
   every rule. JSON has no comments, so the `ignore` setting takes
   `CODE:questionId` entries.
 - **JSON schema** for request bodies, applied to files named `*.jev.json`. It
@@ -216,19 +223,22 @@ Scores sent with no levels.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `jevlint-le.json` |
-| `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
-| `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
-| `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
-| `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
-| `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
-| `jevlint-le.jev.model` | `jev-1.13.0` | The model the Jev command asks |
-| `jevlint-le.jev.maxCalls` | `25` | The most requests one Jev check may send |
-| `jevlint-le.jev.sendState` | `false` | Also send a state written in the file, for `JEV311` and `JEV312` |
-| `jevlint-le.jev.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
-| `jevlint-le.jev.apiKey` | empty | The TypeSafe key, typed in. User settings only, not synced |
-| `jevlint-le.jev.openaiApiKey` | empty | The OpenAI key, typed in, used when the model is `gpt-6-luna`. User settings only, not synced |
+| `decisionlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `decisionlint-le.json` |
+| `decisionlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
+| `decisionlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `decisionlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `decisionlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `decisionlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
+| `decisionlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
+| `decisionlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `decisionlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
+| `decisionlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
+| `decisionlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
+| `decisionlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
+| `decisionlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
+| `decisionlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
+| `decisionlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
+| `decisionlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
 
 ### Not built from the first draft of this spec
 
@@ -261,7 +271,7 @@ or its primitives guide.
 | JEV111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
 | JEV112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
 
-A rule that is `off` still runs when switched on in `jevlint-le.rules`.
+A rule that is `off` still runs when switched on in `decisionlint-le.rules`.
 
 Text inside backticks or double quotes is left out before a wording rule
 reads a question, because it is a field name or quoted data and not the
@@ -553,9 +563,9 @@ on real code.
 - **A notice for skipped languages.** A question that is not English gets no
   wording findings and nothing says so.
 
-## Check with Jev
+## Ask a model
 
-Built. A command, **Check This File with Jev**, that sends each question in
+Built. A command, **Ask Jev About This File**, that sends each question in
 the active file to Jev and asks it about defects no pattern can see. It is the
 only part of the extension that uses the network, it runs only when the user
 runs it, and it uses the user's own API key.
@@ -588,9 +598,9 @@ question costs one request. `JEV309` also sends the ids of the other questions
 in the request. One further request per `questions` map carries `JEV310`, a
 check on every pair of up to ten questions, and `JEV312`.
 
-**The key.** `JevLint-LE: Set TypeSafe API Key` stores it in the operating
+**The key.** `DecisionLint-LE: Set TypeSafe API Key` stores it in the operating
 system keychain through VS Code's secret storage. It can also be typed into
-the `jevlint-le.jev.apiKey` setting, by the owner's decision: a settings
+the `decisionlint-le.ask.keys` setting, by the owner's decision: a settings
 field is where people look. A settings file is plain text, so that setting
 has application scope, which means it can be set only in user settings and
 never in a workspace, where it would be committed with the repository, and
@@ -600,17 +610,17 @@ message and no log.
 
 **What is sent.** By default only questions: type, instructions, criteria and
 ids. The `state` a program would send with them is not. `JEV311` and `JEV312`
-read the state, so they run only when `jevlint-le.jev.sendState` is on, and
+read the state, so they run only when `decisionlint-le.ask.sendState` is on, and
 only where the state is written out in the file, which in practice means
 request JSON files.
 
 **What it will not send.** A question with any part built at runtime, since
 Jev would be judging something other than what runs. Anything in an untrusted
-workspace. More than `jevlint-le.jev.maxCalls` requests in one run, 25 by
+workspace. More than `decisionlint-le.ask.maxCalls` requests in one run, 25 by
 default. Each of these is counted in the summary, so a short run never looks
 like a complete one.
 
-**A confirmation, when asked for.** With `jevlint-le.jev.confirm` on, the
+**A confirmation, when asked for.** With `decisionlint-le.ask.confirm` on, the
 command first shows how many requests it will make, an estimate of the input
 tokens and the cost, whether the state is included, and what it is holding
 back, and waits for a yes. It is off by default, by the owner's decision:
@@ -623,7 +633,7 @@ errs high.
 **After an edit** the findings are removed. They were about text that has
 changed.
 
-**The model is pinned** to `jev-1.13.0` in `jevlint-le.jev.model`, because the
+**The model is pinned** to `jev-1.13.0` in `decisionlint-le.ask.models`, because the
 cutoffs below were set on that version.
 
 ### How the cutoffs were set
@@ -632,7 +642,7 @@ cutoffs below were set on that version.
 with the checks that apply and saves each probability in
 `fixtures/validation/calibration.json`, 390 calls so far. A cutoff is read off
 those numbers, so changing one costs nothing, and adding a check sends only
-that check. `src/jev/reviews.test.ts` holds each per-question cutoff to the
+that check. `src/ask/reviews.test.ts` holds each per-question cutoff to the
 saved numbers: a check may not flag a question the corpus calls good.
 
 | Check | Cutoff | Bad caught | Lowest bad | Highest good |
@@ -743,12 +753,12 @@ variable, and a `questions` dict passed to a function under another name.
 
 ## Command line
 
-It is one npm package, `jevlint-le`, assembled in
+It is one npm package, `decisionlint-le`, assembled in
 `npm/`, that is both the command line and the MCP server. `src/cli/` wraps
 `lintText` in a process: it finds
 files, lints each with the reader its extension calls for, prints, and sets
 an exit status. It imports nothing from the editor. It uses the network only
-under `--jev`. The probe is not in it.
+under `--ask`. The probe is not in it.
 
 | | Behaviour |
 |---|---|
@@ -756,9 +766,9 @@ under `--jev`. The probe is not in it.
 | Formats | `stylish`, the default, grouped by file for a person to read. `compact`, one finding per line as `path:line:column`. `json`, with one-based positions, the rule name and its docs link. `github`, workflow annotations. `sarif`, version 2.1.0, for code scanning. `junit`, one suite per file, failing only on errors |
 | Integrations | `action.yml`, a composite GitHub Action, and `.pre-commit-hooks.yaml`. Both run the published package through `npx` at the version they ship with. Neither has been run by its host tool yet |
 | Fixing | `--fix` writes the fixes marked safe, then reports what is left. Never with standard input or `--mcp` |
-| Files | `exclude` in `jevlint-le.json` leaves files out, relative to that file. `--no-error-on-unmatched-pattern` passes a run with nothing to lint |
+| Files | `exclude` in `decisionlint-le.json` leaves files out, relative to that file. `--no-error-on-unmatched-pattern` passes a run with nothing to lint |
 | Exit status | 0 passed. 1 an error was found, or more warnings than `--max-warnings`. 2 the run could not be done as asked |
-| Settings | The `jevlint-le.json` nearest each file. `--config` names one to use for every file instead. `--rule CODE=level`, repeatable, overrides either |
+| Settings | The `decisionlint-le.json` nearest each file. `--config` names one to use for every file instead. `--rule CODE=level`, repeatable, overrides either |
 | Standard input | `--stdin-filename` lints piped text under a file name, which picks the reader |
 
 It refuses where passing would mislead. An unknown option is an error and
@@ -791,7 +801,7 @@ Not built: the same pages on letools.dev.
 ### The project's own copy in the editor
 
 Built for 0.3.0, as Biome's extension does it. A project that lists
-`jevlint-le` in its dev dependencies is linted in the editor by that copy.
+`decisionlint-le` in its dev dependencies is linted in the editor by that copy.
 
 | The project has | The editor lints with |
 |---|---|
@@ -814,24 +824,24 @@ the samples' `node_modules` and expects its finding.
 Not built: a setting to force the bundled copy, and loading from a global
 install.
 
-### Check with Jev from the command line
+### Asking from the command line
 
-Built, in 0.2.0. `--jev` runs the Jev-backed checks after linting, through
+Built, in 0.2.0. `--ask` runs the Jev-backed checks after linting, through
 `jev/review.ts`, the same code the editor's command runs. The two send
 identical requests for identical text, and a test compares them.
 
 | | Behaviour |
 |---|---|
-| Key | `TYPESAFE_API_KEY` in the environment, and nowhere else. `--jev` without it exits 2 before a file is read |
-| Consent | The flag. No setting in `jevlint-le.json` turns it on, which stands in for workspace trust |
-| Plan | `--jev-plan` prints what would be sent and sends nothing. Under `--jev` the same count goes to standard error before the first request |
-| Limit | `--jev-max-calls`, default 25, for the whole run and not per file as in the editor. A run that needed more exits 2 |
-| State | Sent only with `--jev-send-state` |
-| Model | `--jev-model`, default the pinned calibration model |
+| Key | `TYPESAFE_API_KEY` in the environment, and nowhere else. `--ask` without it exits 2 before a file is read |
+| Consent | The flag. No setting in `decisionlint-le.json` turns it on, which stands in for workspace trust |
+| Plan | `--ask-plan` prints what would be sent and sends nothing. Under `--ask` the same count goes to standard error before the first request |
+| Limit | `--ask-max-calls`, default 25, for the whole run and not per file as in the editor. A run that needed more exits 2 |
+| State | Sent only with `--ask-send-state` |
+| Model | `--ask-model`, default the pinned calibration model |
 | Failure | A rejected key, a rejected request, a busy or failing service after three tries, a reply that is not a Jev reply, no answer in 30 seconds, or an interrupt stops the sending. What was found is printed, the reason and the count answered of the count planned go to standard error, and the exit is 2 |
-| Output | Jev findings join each file's findings. `totals.jev` is present only when asked for |
+| Output | Jev findings join each file's findings. `totals.ask` is present only when asked for |
 
-Not built: the model and state settings in `jevlint-le.json`, so a team's
+Not built: the model and state settings in `decisionlint-le.json`, so a team's
 editors and its CI can still ask different models. A price in the plan line,
 because a stale one in a CI log reads as a quote. The probe.
 
@@ -852,8 +862,8 @@ case this tool is most useful for.
 | `fix_text` | as `lint_text` | The text with the safe fixes applied, how many were mended, and the report of what is left. Nothing is written |
 | `list_rules` | nothing | Every rule with its meaning, default level, its pages, and whether it runs offline here |
 | `explain_rule` | `code` | The rule's own page as Markdown, rendered from the bundle, and the same fields as `list_rules` |
-| `plan_jev` | `text` or `paths`, optional `model`, `maxCalls`, `sendState`, `rules` | The report with `totals.jev` saying what `check_with_jev` would send. Nothing is sent and no key is needed |
-| `check_with_jev` | the same | The report with the model's findings added and `totals.jev` saying what was sent and answered, where the key came from, and why the check fell short when it did |
+| `plan_ask` | `text` or `paths`, optional `model`, `maxCalls`, `sendState`, `rules` | The report with `totals.ask` saying what `ask_model` would send. Nothing is sent and no key is needed |
+| `ask_model` | the same | The report with the model's findings added and `totals.ask` saying what was sent and answered, where the key came from, and why the check fell short when it did |
 | `probe_question` | `text`, optional `filename`, `questionId`, `model` | The probe report as Markdown with its verdict and the variants that moved the decision. Jev only |
 
 Every tool declares the shape of its answer and returns it as structured
@@ -871,7 +881,7 @@ The key is found the way `cli/dotenv.ts` finds it: `TYPESAFE_API_KEY` or
 `OPENAI_API_KEY` in the environment the client started the server with,
 then `.env.local`, then `.env` in its working directory. Never a tool
 argument, so no key lands in an agent's transcript, and never a workspace
-setting or `jevlint-le.json`, for the reason the command line refuses those.
+setting or `decisionlint-le.json`, for the reason the command line refuses those.
 No answer carries the key: the report names where it came from.
 
 The server is listed on the MCP registry from `server.json` at the root,
@@ -882,15 +892,15 @@ The extension also offers the server to the editor it runs in, through
 setup. The command line bundle ships in the VSIX as `dist/cli.js` for this.
 An editor without agent mode is left alone.
 
-From 0.7.0 it is also a package of its own, `jevlint-le-mcp`, as every
+From 0.7.0 it is also a package of its own, `decisionlint-le-mcp`, as every
 sibling's server is: one `bin` that is the server, with no flag. Until then
-the server was reached only as `jevlint-le --mcp`, on the reasoning that two
+the server was reached only as `decisionlint-le --mcp`, on the reasoning that two
 packages would be two versions to keep equal. What changed the decision: a
 client that installs by package name, and an index that reads one, starts
-`jevlint-le` bare and gets a linter that exits, and the family's convention
+`decisionlint-le` bare and gets a linter that exits, and the family's convention
 is what the outside world pattern-matches. The two versions are kept equal
 the way the family keeps them: `build-npm.js` writes both from one source and
-CI fails if they differ. `jevlint-le` keeps `--mcp` for a project that already
+CI fails if they differ. `decisionlint-le` keeps `--mcp` for a project that already
 pins it, and the VSIX starts its own bundled copy that way.
 
 A bad argument, an unknown tool or a tool that throws is a failed call with
@@ -1153,7 +1163,7 @@ the other sixteen.
   things of every tool, such as twelve locales and a Rust crate, that are not
   true of this one. The registry now declares what this tool has: an npm
   package for the command line and one for the MCP server, its Open VSX
-  namespace, its MCP registry listing as `io.github.nolindnaidoo/jevlint-le`,
+  namespace, its MCP registry listing as `io.github.nolindnaidoo/decisionlint-le`,
   and that one command sends on request.
 - **The fleet check names it and does not compare it.** `OUTSIDE_FLEET` in the
   site's `scripts/check-fleet.ts` lists this repo, and a test there holds every
@@ -1175,7 +1185,7 @@ Not planned for now: a Rust port of the command line, which every sibling
 has. The TypeScript one lints thousands of files in seconds, and a port would
 be every reader and rule kept in agreement twice.
 
-The MCP registry listing, `io.github.nolindnaidoo/jevlint-le`, is in
+The MCP registry listing, `io.github.nolindnaidoo/decisionlint-le`, is in
 `server.json` and goes out with the npm job of the Release workflow from
 0.6.0, pointing at the npm package with `--mcp`. It was held back until the
 server gave an agent something to act on: the fixes, `fix_text` and
@@ -1225,10 +1235,10 @@ shape rule reports a Decisions mistake in OpenAI's own field names, and a
 mistyped `predicate` is caught and fixed; a shape mistake in the AI SDK's
 form cannot be told from a foreign client and is left alone.
 
-**Asking Luna.** `--jev-model gpt-6-luna`, or `jevlint-le.jev.model` in the
+**Asking Luna.** `--ask-model gpt-6-luna`, or `decisionlint-le.ask.models` in the
 editor, sends the same checks to OpenAI's Decisions API with the key in
 `OPENAI_API_KEY`, or in the keychain through **Set OpenAI API Key**, or in
-`jevlint-le.jev.openaiApiKey`. `jev/provider.ts` is the one file that knows
+`decisionlint-le.ask.keys`. `ask/provider.ts` is the one file that knows
 the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
@@ -1243,6 +1253,145 @@ not read yet.
 Whether Luna fails the same way is unknown, and the rule pages say "measured
 on Jev". A labelled sample of public Decisions requests and a bad-against-good
 run on Luna are the next two measurements, and both wait on a key.
+
+## Every provider
+
+Status: built on 2026-10-14 as 0.9.0, all four phases. One thing is
+outstanding: the reading of OpenAI's Go SDK was added from the vendor's
+guide and has not yet had the run over public Go code that every other
+reader change had. The research behind it is
+`docs/research/reports/Decision model API providers.md`, with the notes
+beside it, and every claim below that is not already in the code comes from
+there.
+
+**What the research found.** Four weeks after Jev shipped, every typed
+decision API found speaks one of two wire shapes. TypeSafe's, `state` with a
+`questions` map and the types `noul`, `choice` and `score`, is used by
+Microsoft-Decision-1, Liquid d1, Cloudflare Clef, Upstage, llama.cpp, vLLM
+and nine community projects that each call themselves "Open Jev". OpenAI's,
+`input` with a `questions` list and the type `predicate`, is used by OpenAI
+and spreading through the gateways: Vercel, LiteLLM, OpenRouter and LLM
+Gateway serve both shapes and convert between them. The AI SDK adds a third
+word for yes/no, `boolean`. No model, vendor or API named "JAY" was found.
+The three dialects this linter reads already cover every body shape seen.
+What differs between the platforms is everything around the body: the
+limits, the spelling of a model id, the host, and the call that sends it.
+
+The platforms differ in three ways the rules do not yet know:
+
+1. **Limits are per platform, and most are unpublished.** OpenAI states
+   none. Vercel's OpenAI-shaped path takes 1 to 255 choices and 2 to 10
+   levels. LiteLLM refuses more than 128 questions and refuses a single
+   option. Together's Tev1 takes 2 to 24 options. The rules today apply
+   Jev's limits to the TypeSafe dialect and none to the others.
+2. **A model id has fifteen spellings for two models.** Jev is `jev-1.13.0`,
+   `jev-latest`, `typesafe/jev-1.13`, `~typesafe/jev-latest`,
+   `typesafe-ai/jev` and `jev-1.13.0` unprefixed on LLM Gateway. Luna is
+   `gpt-6-luna`, `openai/gpt-6-luna`, `gpt-6-luna-decisions`,
+   `openai/gpt-6-luna-decisions` and a dated `-20261006`. Other platforms
+   use tier suffixes (`d1:free`), `@cf/` paths, Azure deployment names,
+   Ollama tags and Hugging Face repo ids. `JEV001` knows two aliases and
+   `JEV013` one version pattern, and `ask/provider.ts` picks the host by
+   matching the id against `gpt-6-luna`.
+3. **The path and the model id do not say which shape a request is in.**
+   Ollaya serves TypeSafe bodies on `/v1/decisions`, Eden AI on
+   `/v3/alpha/decisions`, and LiteLLM serves `openai/gpt-6-luna` on
+   `/v1/systemone`. The body decides, which is what the reader already does.
+
+### Design
+
+**D1. A platform is a row in a table, not a branch in the code.**
+`lint/targets.ts`, beside `limits.ts`, holds every platform as data: an id,
+a name, its kind (a vendor, a gateway or a runtime a user hosts), the wire
+shapes it accepts, the hosts it is reached at, how its model ids are spelt,
+which of them are floating aliases and what the pinned spelling is, and its
+limits, each with the page and the date it was read from. A limit the
+platform does not publish is absent, not borrowed from a neighbour. A number
+enters the table only from the platform's own page. The research marks
+every secondary figure, and those stay in the report until a primary page
+says them. Adding a platform is a row and a test, and never a change to a
+rule.
+
+**D2. The target of a request is resolved from the file, and resolved is not
+guessed.** In order: the `target` setting in `decisionlint-le.json` or
+`decisionlint-le.target`, for a project that sends everything to one platform;
+a base URL written in the file whose host a target claims; the model id,
+where its spelling names a platform (`@cf/`, `~typesafe/`, a `liquid`
+model) or a family of them (`openai/` is every gateway, so it resolves to
+"a gateway" and no further). What none of these settles is unknown. A rule
+that needs a limit asks the target. With the target unknown, the TypeSafe
+dialect keeps Jev's limits and the others keep none, as today, and the
+message says whose limit it is. With the target known and publishing no
+limit, the rule is silent.
+
+**D3. A model id is parsed, never matched.** `lint/models.ts` reads an id
+into its family, its version, whether it floats, and the spelling it was
+written in. `JEV001` fires on every floating spelling, and its fix pins in
+the same spelling: `~typesafe/jev-latest` becomes `typesafe/jev-1.13`, as
+OpenRouter writes it, and `jev-latest` becomes `jev-1.13.0`. `JEV013`
+compares the version out of any spelling. A Hugging Face repo id, an Ollama
+tag or a deployment name is not a Jev id, so neither rule reads it.
+
+**D4. An Ask command reaches any target, and never guesses a host.**
+`ask/provider.ts` becomes a provider built from a target row: the wire
+shape, the endpoint and the name of the environment variable that holds the
+key. A vendor with a fixed host, TypeSafe, OpenAI, Liquid, OpenRouter, LLM
+Gateway and Vercel, needs nothing set. A runtime the user hosts, llama.cpp,
+vLLM, Ollaya, LiteLLM, needs an endpoint, from `decisionlint-le.ask.endpoint` in
+the editor or `--ask-endpoint` on the command line, and the shape to send is
+the target's or, for a host the table does not know, `--ask-shape`. A model
+id that resolves to no fixed host, such as `openai/gpt-6-luna-decisions`
+with no endpoint set, is refused before anything is sent: routed by the
+old rule it would carry the OpenAI key to `api.openai.com` on a request that
+fails there. The endpoint is never read from `decisionlint-le.json`, for the
+reason the key is not: a cloned repository could point the key at any host.
+The reply is read against the request, in the shape that was sent, as today.
+
+**D5. The calls that send a request are read, in every SDK the research
+found.** JavaScript and TypeScript: `client.decisions.create({...})` and
+`client.systemOne({...})` as requests, so an entry inside is `inRequest`;
+the AI SDK's `experimental_decide` and the older `experimental_evaluate`
+from `ai`, including the aliased import the docs themselves use,
+`experimental_decide as decide`, which is one named exception to the rule
+that an aliased import is not followed; and `*.decisionModel('<id>')` as a
+model reference, with the factory naming the platform. Python: the
+`langchain_typesafe` module beside `typesafe_sdk` for `Noul`, `Choice`,
+`Score` and `NoulCriteria`, after the run over public code the invariant
+asks for. Go: `openai.DecisionNewParams{...}`, once the SDK's struct fields
+are read from its source. Rust: `typesafe-rs` and `kunobi-jev`, the same.
+
+**D6. Messages name the platform.** "The API accepts at most 255" becomes
+"TypeSafe's API accepts at most 255", or the target's name when one is
+resolved. A finding about a question the AI SDK may send to a language model
+through `anthropic.decisionModel(...)` says that the model may not be a
+decision model at all.
+
+### Phases
+
+Each phase is a commit on `feat/every-provider`, gates green, and the
+version is finished in one pull request with its changelog dated.
+
+| Phase | Builds | Done when |
+|---|---|---|
+| P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `JEV001` and `JEV013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `JEV003`, an unknown target changes nothing |
+| P2 | `ask/provider.ts` from the target table, `jev.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
+| P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go is still to do |
+| P4 | A URL in the file resolves the target, over the model id and under the setting; the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
+
+### Not built, and why
+
+- **Field names from the unshipped "Open Jev" (`options` with `legend`).**
+  The project is at phase 0 with no weights and no server. Its fields are
+  already foreign fields, so a question written in them is `open` and gets
+  no shape finding, which is the right answer for a shape that may change.
+- **A limit from a secondary source.** Cloudflare's 64 questions,
+  Perplexity's 128 and OpenRouter's 200 for Luna each rest on one page that
+  is not the vendor's. They go in when read from the vendor.
+- **JAY.** Nothing by that name exists in any source searched. Built when
+  someone supplies a URL or a model id.
+- **Calibration of the checks on any model but `jev-1.13.0`.** Reaching a
+  platform is not the same as having measured it. A finding from any other
+  model keeps saying where the cutoff was set.
 
 ## Extended release 1: request-level rules
 
@@ -1337,7 +1486,7 @@ Each is fixed, and each test was seen to fail before its fix.
   written per model version, so wording rules will need a version dimension.
 - **R2. Vendor ships validation.** TypeSafe could add question validation to
   the API or SDK. The SDK already throws on a Choice given an array.
-- **R3. Name.** Decided 2026-10-04: `jevlint-le`, in the LE family. "Jev" is
+- **R3. Name.** Decided 2026-10-04: `decisionlint-le`, in the LE family. "Jev" is
   TypeSafe's product name and its trademark policy has not been checked.
   `jevlint` alone is taken on GitHub and PyPI by tools that are not this one.
 - **R4. Small audience.** API access is gated, so the number of people writing

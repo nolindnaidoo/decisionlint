@@ -1,5 +1,109 @@
 # Changelog
 
+## 1.0.0 — 2026-10-14
+
+**JevLint-LE is DecisionLint-LE.** It lints the questions sent to any
+decision model, and nine platforms serve one, so the name says what it does
+rather than which model came first. Everything that carried the old name is
+renamed: the npm packages are `decisionlint-le` and `decisionlint-le-mcp`,
+the extension is `nolindnaidoo.decisionlint-le`, the MCP server is
+`io.github.nolindnaidoo/decisionlint-le`, the settings are
+`decisionlint-le.*`, the settings file is `decisionlint-le.json` and the
+directive is `decisionlint-le-disable`. Two spellings a repository may
+already hold are kept for ever: a `jevlint-le.json` is read where no
+`decisionlint-le.json` sits beside it, and a `jevlint-le-disable` comment
+still silences. The rule codes stay `JEV`: a code is an identifier in
+comments and settings files that nothing ever updates, and the number ranges
+already say what each rule is about. The old packages and the old extension
+get one final release that points here.
+
+**The verb is ask, and there is one command per platform.** `--jev` and the
+`jev.*` settings were named after one model and now reach nine platforms.
+The editor has **Ask Jev About This File**, **Ask Luna About This File**,
+**Ask via OpenRouter**, **Ask via Vercel AI Gateway**, **Ask via LLM
+Gateway**, **Ask Liquid d1** and **Ask the Model at My Endpoint**, each
+sending the model in `decisionlint-le.ask.models` for that platform with
+that platform's own key: typed into `decisionlint-le.ask.keys`, stored by
+its own **Set ... API Key** command, or read from the variable the platform
+names. The command line has `--ask`, `--ask-plan`, `--ask-platform`,
+`--ask-model`, `--ask-endpoint`, `--ask-shape`, `--ask-max-calls` and
+`--ask-send-state`, and the server's tools are `ask_model` and `plan_ask`
+with a `platform` argument. The JSON report's totals carry `ask` where they
+carried `jev`. The probe asks Jev at TypeSafe.
+
+| Was | Is |
+|---|---|
+| `jevlint-le`, `jevlint-le-mcp` on npm | `decisionlint-le`, `decisionlint-le-mcp` |
+| `nolindnaidoo.jevlint-le` on the Marketplace and Open VSX | `nolindnaidoo.decisionlint-le` |
+| `io.github.nolindnaidoo/jevlint-le` on the MCP registry | `io.github.nolindnaidoo/decisionlint-le` |
+| `jevlint-le.json` | `decisionlint-le.json`, the old name still read |
+| `jevlint-le-disable` | `decisionlint-le-disable`, the old name still honoured |
+| `jevlint-le.jev.model`, `.apiKey`, `.openaiApiKey` | `decisionlint-le.ask.models`, `decisionlint-le.ask.keys`, one entry per platform |
+| `jevlint-le.jev.maxCalls`, `.sendState`, `.confirm` | `decisionlint-le.ask.maxCalls`, `.sendState`, `.confirm` |
+| Check This File with Jev; Set TypeSafe API Key, Set OpenAI API Key | one Ask command and one Set API Key command per platform |
+| `--jev`, `--jev-*` | `--ask`, `--ask-*`, plus `--ask-platform` |
+| `check_with_jev`, `plan_jev` | `ask_model`, `plan_ask` |
+| `totals.jev` in the JSON report | `totals.ask` |
+
+Every platform that serves a decision model, not two. Microsoft, Liquid AI
+and Cloudflare serve their own models in TypeSafe's shape; OpenRouter, Vercel
+AI Gateway, LiteLLM and LLM Gateway forward to any of them in either shape;
+llama.cpp, vLLM and Ollaya run open models on a machine of your own. The two
+shapes were already read, so every one of them is linted by the same rules.
+What differed between them, the limits, the spelling of a model id, the host
+and the key, is now held in one table, `src/lint/targets.ts`, with the page
+each fact was read from. The research behind it is in `docs/research/`.
+
+- **The limits a request is held to are its platform's.** The platform is
+  read from the model id where its spelling says, `~typesafe/jev-latest` is
+  OpenRouter and `typesafe-ai/jev` is Vercel, from the one platform a URL in
+  the file names, or from a new `target` setting, in `jevlint-le.json` or as
+  `jevlint-le.target`. Vercel's 255 choices and 10 levels, LiteLLM's 128
+  questions per request, and none where a platform publishes none: a
+  request bound for OpenAI gets no limit finding, as before. Nothing saying
+  where a request goes, a TypeSafe-shaped question keeps TypeSafe's limits.
+  A new `JEV014` reports a request with more questions than its platform
+  takes in one call. Messages name the platform: "Vercel AI Gateway accepts
+  at most 10".
+- **A floating alias is caught in every spelling**, and pinned in the one
+  the platform documents: `jev-latest` to `jev-1.13.0`,
+  `~typesafe/jev-latest` to `typesafe/jev-1.13`. A spelling no page gives a
+  pinned form for, `typesafe/jev-latest`, is reported with no fix. `JEV013`
+  reads the version out of any spelling. A Hugging Face repo id, an Ollama
+  tag or a deployment name is left alone.
+- **A check goes to any platform, and the host is never guessed.** A model
+  id is sent to the platform its spelling names, with the key in that
+  platform's own variable: `OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`,
+  `LLM_GATEWAY_API_KEY`, `LIQUID_API_KEY`, beside the two there were. A
+  spelling that names no host, such as `openai/gpt-6-luna-decisions`, which
+  every gateway writes, is refused with nothing sent, where before it went
+  to OpenAI and failed with the key spent. A platform you host is named
+  with `jevlint-le.jev.endpoint`, `--jev-endpoint` or
+  `JEVLINT_LE_JEV_ENDPOINT`, and the shape with `jevlint-le.jev.shape`,
+  `--jev-shape` or `JEVLINT_LE_JEV_SHAPE` where the path does not say. The
+  endpoint is read from the same places as the key and never from a
+  repository file or a tool argument. A host the table does not know is
+  sent the key of the shape's SDK, or no key when none is set, which is how
+  a local llama.cpp is reached. Findings from any model but Jev or Luna name
+  "the model", and every finding from a model but `jev-1.13.0` still says
+  where the cutoff was set.
+- **More of the SDKs are read.** The AI SDK's model factory,
+  `typeSafeAi.decisionModel('jev-latest')`, is read for the id inside it.
+  LangChain's `langchain_typesafe` is trusted like `typesafe_sdk`, and its
+  `NoulCriteria(true=, false=)` is read as the criteria map it stands for.
+  OpenAI's Go SDK is read through its `OfPredicate`, `OfChoice` and
+  `OfScore` unions, with `Predicate` as the yes/no type. A module-qualified
+  Python class, `ts.Noul(...)`, is read directly instead of as a literal
+  inside an unreadable expression.
+- **The JSON report and the MCP server's answers** say who was sent the
+  requests and what answers, as `vendor` and `answerer` beside `model`.
+- **Not measured.** The cutoffs of the checks were set on `jev-1.13.0` at
+  TypeSafe, and the reading of OpenAI's Go SDK has not yet been run over
+  public Go code. Neither JAY nor Open Jev is a platform: no model, vendor or
+  API named JAY was found, and "Open Jev" is a name nine unrelated projects
+  use for a reimplementation of `/v1/systemone`, each reached as an endpoint
+  you set.
+
 ## 0.8.1 — 2026-10-14
 
 A pass over every surface, the extension, the command line, the library and

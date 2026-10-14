@@ -7,7 +7,7 @@ import type {
 	Span,
 	Syntax,
 } from '../types';
-import { KNOWN_VERSION, VERIFIED_ON } from './limits';
+import { VERIFIED_ON } from './limits';
 
 const DESCRIPTION = 'Fits none of the other options';
 
@@ -138,14 +138,15 @@ export function renameKeyFix(prop: Prop, name: string): Fix {
 
 /**
  * Pins an alias to the newest version this extension has been checked
- * against. The title carries the date, because that version stops being the
+ * against, spelt as the platform that takes the alias spells its pinned
+ * ids. The title carries the date, because that version stops being the
  * newest and the edit cannot know when.
  */
-export function pinModelFix(text: string, span: Span): Fix {
+export function pinModelFix(text: string, span: Span, pinned: string): Fix {
 	return replace(
-		`Pin to '${KNOWN_VERSION}', the version current on ${VERIFIED_ON}`,
+		`Pin to '${pinned}', the version current on ${VERIFIED_ON}`,
 		span,
-		requote(text, span, KNOWN_VERSION),
+		requote(text, span, pinned),
 		// Which version to pin is a choice, and this one goes stale.
 		false,
 	);

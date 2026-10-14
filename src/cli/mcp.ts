@@ -1,15 +1,15 @@
-import { readRules } from '../config/projectConfig';
-import { rulePage } from '../docs/rulePages';
-import { ask, isFailure } from '../jev/client';
-import { toLiteral, toPlain } from '../jev/literal';
+import { ask, isFailure } from '../ask/client';
+import { toLiteral, toPlain } from '../ask/literal';
 import {
 	buildProbe,
 	type ProbeResult,
 	readProbe,
 	summarize,
-} from '../jev/probe';
-import { providerFor } from '../jev/provider';
-import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
+} from '../ask/probe';
+import { type Provider, providerFor, providerForTarget } from '../ask/provider';
+import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../ask/review';
+import { readRules } from '../config/projectConfig';
+import { rulePage } from '../docs/rulePages';
 import { fixText } from '../lint/fixAll';
 import {
 	MAX_FILE_SIZE_BYTES,
@@ -17,10 +17,11 @@ import {
 	syntaxForPath,
 } from '../lint/lint';
 import { pageFor, RULE_CODES, RULES } from '../lint/rules';
+import { ASK_PLATFORM_IDS, targetById } from '../lint/targets';
 import type { RuleCode, Syntax } from '../types';
+import { failureMessage, planAsk, ROUTE_ENV, routeFrom, runAsk } from './ask';
 import { keyFrom, keyPlaces } from './dotenv';
-import { type FileReport, type JevTotals, plural, toReport } from './format';
-import { failureMessage, planJev, runJev } from './jev';
+import { type AskTotals, type FileReport, plural, toReport } from './format';
 import { MAX_LINE_BYTES } from './lines';
 import {
 	createSettings,
@@ -34,7 +35,7 @@ import {
 	withoutExcluded,
 } from './run';
 
-const NAME = 'jevlint-le';
+const NAME = 'decisionlint-le';
 // Newest first. A client is answered in the version it asked for when it is one of these.
 const PROTOCOLS: ReadonlyArray<string> = [
 	'2025-06-18',
@@ -121,10 +122,16 @@ const PATHS_SCHEMA = Object.freeze({
 	description:
 		'Files or directories on disk, relative to the directory the server was started in.',
 });
-const JEV_INPUTS = Object.freeze({
+const ASK_INPUTS = Object.freeze({
+	platform: {
+		type: 'string',
+		enum: ASK_PLATFORM_IDS,
+		description:
+			'Where to send, named outright: typesafe for Jev, openai for Luna, or openrouter, vercel, llmgateway or liquid. Each has its own key variable and a default model. Without it the model id goes where its spelling says, or to DECISIONLINT_LE_ASK_ENDPOINT.',
+	},
 	model: {
 		type: 'string',
-		description: `The model to ask: a Jev version, or gpt-6-luna for OpenAI's Decisions API. Defaults to ${DEFAULT_MODEL}, which the checks were measured on.`,
+		description: `The model to ask: a Jev version, gpt-6-luna for OpenAI's Decisions API, or a model id in another platform's spelling, such as ~typesafe/jev-latest for OpenRouter. It is sent to the platform the spelling names, or to ${ROUTE_ENV.endpoint} in the environment the server was started with, which is never an argument. Defaults to ${DEFAULT_MODEL}, which the checks were measured on.`,
 	},
 	maxCalls: {
 		type: 'integer',
@@ -200,10 +207,10 @@ const FINDING_SCHEMA = Object.freeze({
 		'fix',
 	],
 });
-const JEV_TOTALS_SCHEMA = Object.freeze({
+const ASK_TOTALS_SCHEMA = Object.freeze({
 	type: 'object',
 	description:
-		'What was sent to the model, or under plan_jev what would be. Present only on those calls.',
+		'What was sent to the model, or under plan_ask what would be. Present only on those calls.',
 	properties: {
 		sent: {
 			type: 'boolean',
@@ -218,6 +225,15 @@ const JEV_TOTALS_SCHEMA = Object.freeze({
 		estimatedInputTokens: integer('An estimate made before sending.'),
 		inputTokens: integer('What the vendor counted.'),
 		model: { type: 'string' },
+		vendor: {
+			type: 'string',
+			description: 'Who was sent the requests, or would be.',
+		},
+		answerer: {
+			type: 'string',
+			description:
+				'What answers, as the messages name it: Jev, Luna or the model.',
+		},
 		state: {
 			type: 'boolean',
 			description: 'True when state written in the text was sent, or would be.',
@@ -232,6 +248,8 @@ const JEV_TOTALS_SCHEMA = Object.freeze({
 		'estimatedInputTokens',
 		'inputTokens',
 		'model',
+		'vendor',
+		'answerer',
 		'state',
 	],
 });
@@ -279,7 +297,7 @@ const REPORT_PROPERTIES = Object.freeze({
 				required: ['error', 'warning', 'info', 'hint'],
 			},
 			fixable: integer('Findings fix_text would mend.'),
-			jev: JEV_TOTALS_SCHEMA,
+			jev: ASK_TOTALS_SCHEMA,
 		},
 		required: [
 			'files',
@@ -376,7 +394,7 @@ const RULE_PROPERTIES = Object.freeze({
 	runsHere: {
 		type: 'boolean',
 		description:
-			'False for a rule that asks the model itself, which only check_with_jev runs.',
+			'False for a rule that asks the model itself, which only ask_model runs.',
 	},
 });
 const RULE_LIST_SCHEMA = Object.freeze({
@@ -425,7 +443,7 @@ function named(input: Json): Named | string {
 		return `'text' is over the size limit of ${MAX_FILE_SIZE_BYTES} bytes.`;
 	if (typeof filename !== 'string') return "'filename' must be a string.";
 	const syntax = syntaxForPath(filename);
-	if (!syntax) return `Not a file type jevlint-le reads: ${filename}`;
+	if (!syntax) return `Not a file type decisionlint-le reads: ${filename}`;
 	return { text, filename, syntax };
 }
 
@@ -547,7 +565,7 @@ function describe(code: RuleCode): Json {
 		default: RULES[code].severity,
 		docs: RULES[code].docs,
 		page: pageFor(code),
-		// These ask the model itself, which only check_with_jev does, with the user's key.
+		// These ask the model itself, which only ask_model does, with the user's key.
 		runsHere: runsHere(code),
 	};
 }
@@ -567,64 +585,93 @@ function explainRuleTool(input: Json): Outcome {
 	return ok({ ...describe(known), markdown }, markdown);
 }
 
-type JevAsked = Readonly<{
+type Asked = Readonly<{
 	model: string;
 	maxCalls: number;
 	sendState: boolean;
+	provider: Provider;
 }>;
 
-function jevAsked(input: Json): JevAsked | string {
+/** How an endpoint is set for the server, after the sentence that says one is needed. */
+const HOW_TO_ROUTE = `Set ${ROUTE_ENV.endpoint}, and ${ROUTE_ENV.shape} where its path does not say, in the environment the server was started with.`;
+
+/** Where a model id is sent, read from the server's environment and never from an argument. */
+function providerFromEnv(model: string, io: Io): Provider | string {
+	const route = routeFrom(
+		{ askEndpoint: undefined, askShape: undefined },
+		io.env,
+	);
+	if (typeof route === 'string') return route;
+	const provider = providerFor(model, route);
+	return typeof provider === 'string'
+		? `${provider} ${HOW_TO_ROUTE}`
+		: provider;
+}
+
+function askedOf(input: Json, io: Io): Asked | string {
 	const {
-		model = DEFAULT_MODEL,
+		platform,
+		model,
 		maxCalls = DEFAULT_MAX_CALLS,
 		sendState = false,
 	} = input;
-	if (typeof model !== 'string' || !model.trim())
+	if (platform !== undefined && typeof platform !== 'string')
+		return `'platform' must be one of ${ASK_PLATFORM_IDS.join(', ')}.`;
+	if (model !== undefined && (typeof model !== 'string' || !model.trim()))
 		return `'model' must be a model id, such as ${DEFAULT_MODEL} or gpt-6-luna.`;
 	if (!Number.isInteger(maxCalls) || (maxCalls as number) < 1)
 		return "'maxCalls' must be a whole number above zero.";
 	if (typeof sendState !== 'boolean')
 		return "'sendState' must be true or false.";
-	return { model: model.trim(), maxCalls: maxCalls as number, sendState };
+	const target = platform === undefined ? undefined : targetById(platform);
+	if (platform !== undefined && !target?.defaultModel)
+		return `'${platform}' is not a platform. Use one of ${ASK_PLATFORM_IDS.join(', ')}.`;
+	const id = (model ?? target?.defaultModel ?? DEFAULT_MODEL).trim();
+	const provider = target
+		? providerForTarget(target, id)
+		: providerFromEnv(id, io);
+	if (typeof provider === 'string') return provider;
+	return { model: id, maxCalls: maxCalls as number, sendState, provider };
 }
 
 type Planned = Readonly<{
 	linted: Linted;
-	plan: ReturnType<typeof planJev>;
+	plan: ReturnType<typeof planAsk>;
 }>;
 
-/** Everything check_with_jev and plan_jev share before anything is sent. */
-function planned(input: Json, io: Io, asked: JevAsked): Planned | string {
+/** Everything ask_model and plan_ask share before anything is sent. */
+function planned(input: Json, io: Io, asked: Asked): Planned | string {
 	const settings = settingsFrom(input, io);
 	if (typeof settings === 'string') return settings;
 	const pick = picked(input, io);
 	if (typeof pick === 'string') return pick;
 	const linted = lint(pick, settings);
 	if (typeof linted === 'string') return linted;
-	const plan = planJev(linted.reports, settings.optionsFor, {
-		jevModel: asked.model,
-		jevMaxCalls: asked.maxCalls,
-		jevSendState: asked.sendState,
+	const plan = planAsk(linted.reports, settings.optionsFor, {
+		model: asked.model,
+		askMaxCalls: asked.maxCalls,
+		askSendState: asked.sendState,
+		provider: asked.provider,
 	});
 	if (typeof plan === 'string') return plan;
 	return { linted, plan };
 }
 
-function planJevTool(input: Json, io: Io): Outcome {
-	const asked = jevAsked(input);
+function planAskTool(input: Json, io: Io): Outcome {
+	const asked = askedOf(input, io);
 	if (typeof asked === 'string') return fail(asked);
 	const ready = planned(input, io, asked);
 	if (typeof ready === 'string') return fail(ready);
 	if (typeof ready.plan === 'string') return fail(ready.plan);
 	const { reports, left } = ready.linted;
 	return ok(
-		toReport(reports, { ...total(reports, left), jev: ready.plan.totals }),
+		toReport(reports, { ...total(reports, left), ask: ready.plan.totals }),
 	);
 }
 
 // A check that covered part of what it was asked must not read as the whole.
 function shortfall(
-	jev: JevTotals,
+	jev: AskTotals,
 	failure: string | undefined,
 	stopped: boolean,
 ): string | undefined {
@@ -636,25 +683,26 @@ function shortfall(
 	return undefined;
 }
 
-async function checkWithJevTool(input: Json, io: Io): Promise<Outcome> {
-	const asked = jevAsked(input);
+async function askModelTool(input: Json, io: Io): Promise<Outcome> {
+	const asked = askedOf(input, io);
 	if (typeof asked === 'string') return fail(asked);
 	const ready = planned(input, io, asked);
 	if (typeof ready === 'string') return fail(ready);
 	if (typeof ready.plan === 'string') return fail(ready.plan);
-	const provider = providerFor(asked.model);
-	// Looked for only once there is something to send, and never echoed.
+	const { provider } = asked;
+	// Looked for only once there is something to send, and never echoed. A
+	// host the user runs may take none, and then none is sent.
 	const found = keyFrom(provider.envKey, io.env, io.files);
-	if (!found)
+	if (!found && !provider.keyOptional)
 		return fail(
-			`check_with_jev needs ${keyPlaces(provider.envKey)}. Nothing was sent.`,
+			`ask_model needs ${keyPlaces(provider.envKey)}. Nothing was sent.`,
 		);
-	const ran = await runJev(
+	const ran = await runAsk(
 		ready.plan,
 		{
 			fetch: io.fetch,
 			wait: io.wait,
-			key: found.key,
+			key: found?.key ?? '',
 			signal: io.stopSignal(),
 		},
 		false,
@@ -668,11 +716,11 @@ async function checkWithJevTool(input: Json, io: Io): Promise<Outcome> {
 	if (short && !ran.totals.answered) return fail(short);
 	const totals = {
 		...total(ran.reports, ready.linted.left),
-		jev: ran.totals,
+		ask: ran.totals,
 	};
 	return ok({
 		...toReport(ran.reports, totals),
-		keySource: found.source,
+		keySource: found?.source ?? 'none: the host takes no key',
 		shortfall: short ?? null,
 	});
 }
@@ -685,9 +733,10 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 		return fail("'questionId' must be a string.");
 	if (typeof model !== 'string' || !model.trim())
 		return fail(`'model' must be a Jev version, such as ${DEFAULT_MODEL}.`);
-	// The variants are built and read in Jev's shape. Luna's reply for a Choice or a Score is not read yet.
-	const provider = providerFor(model.trim());
-	if (provider.id !== 'typesafe')
+	const provider = providerFromEnv(model.trim(), io);
+	if (typeof provider === 'string') return fail(provider);
+	// The variants are built and read in System One's shape. Luna's reply for a Choice or a Score is not read yet.
+	if (provider.shape !== 'typesafe')
 		return fail(
 			`The probe asks Jev only. Use a Jev version, such as ${DEFAULT_MODEL}.`,
 		);
@@ -722,7 +771,7 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 			'A probe sends the question against its state, so it needs a request with the state written out in the text.',
 		);
 	const found = keyFrom(provider.envKey, io.env, io.files);
-	if (!found)
+	if (!found && !provider.keyOptional)
 		return fail(
 			`probe_question needs ${keyPlaces(provider.envKey)}. Nothing was sent.`,
 		);
@@ -731,7 +780,13 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 	const results: ProbeResult[] = [];
 	for (const variant of variants) {
 		const reply = await ask(
-			{ fetch: io.fetch, key: found.key, wait: io.wait, signal },
+			{
+				fetch: io.fetch,
+				key: found?.key ?? '',
+				provider,
+				wait: io.wait,
+				signal,
+			},
 			variant.request,
 		);
 		// A report built from some of the variants would compare against repeats that never ran.
@@ -750,7 +805,7 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 			requests: results.length,
 			verdict: probed.verdict,
 			moved: probed.moved,
-			keySource: found.source,
+			keySource: found?.source ?? 'none: the host takes no key',
 			markdown: probed.markdown,
 		},
 		probed.markdown,
@@ -812,7 +867,7 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 		name: 'list_rules',
 		title: 'List rules',
 		description:
-			'List every rule with its code, name, what it catches, default level, its own page with an example, the vendor page behind it, and whether it runs offline here or only when check_with_jev asks the model.',
+			'List every rule with its code, name, what it catches, default level, its own page with an example, the vendor page behind it, and whether it runs offline here or only when ask_model asks the model.',
 		inputSchema: { type: 'object', properties: {} },
 		outputSchema: RULE_LIST_SCHEMA,
 		annotations: READ_ONLY,
@@ -835,10 +890,10 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 		call: (input) => explainRuleTool(input),
 	},
 	{
-		name: 'plan_jev',
+		name: 'plan_ask',
 		title: 'Plan a check with the model',
 		description:
-			'Say what check_with_jev would send for the given text or paths, and send nothing: how many requests, to which model, about how many input tokens, how many questions are held back for having a part built at runtime, and how many fall past maxCalls. Needs no key. Call it first when the user wants to know the cost of a check before paying for it.',
+			'Say what ask_model would send for the given text or paths, and send nothing: how many requests, to which model, about how many input tokens, how many questions are held back for having a part built at runtime, and how many fall past maxCalls. Needs no key. Call it first when the user wants to know the cost of a check before paying for it.',
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -846,18 +901,18 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 				filename: FILENAME_SCHEMA,
 				paths: PATHS_SCHEMA,
 				rules: RULES_SCHEMA,
-				...JEV_INPUTS,
+				...ASK_INPUTS,
 			},
 		},
 		outputSchema: REPORT_SCHEMA,
 		annotations: READ_ONLY,
-		call: planJevTool,
+		call: planAskTool,
 	},
 	{
-		name: 'check_with_jev',
+		name: 'ask_model',
 		title: 'Check with the model',
 		description:
-			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_jev first when the cost matters. The key is read from TYPESAFE_API_KEY or OPENAI_API_KEY in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
+			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_ask first when the cost matters. The key is read from the platform's own variable, TYPESAFE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, LLM_GATEWAY_API_KEY or LIQUID_API_KEY, in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Where the requests go is the platform the model id's spelling names, or DECISIONLINT_LE_ASK_ENDPOINT in that environment for a host the user runs, never an argument either. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -865,18 +920,18 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 				filename: FILENAME_SCHEMA,
 				paths: PATHS_SCHEMA,
 				rules: RULES_SCHEMA,
-				...JEV_INPUTS,
+				...ASK_INPUTS,
 			},
 		},
 		outputSchema: CHECKED_SCHEMA,
 		annotations: SENDS,
-		call: checkWithJevTool,
+		call: askModelTool,
 	},
 	{
 		name: 'probe_question',
 		title: 'Probe a question',
 		description:
-			"Send one question to Jev several times, as written and with its layout changed, options reversed, labels hidden, levels reversed, criteria removed, to see whether the answer holds. Returns a report as Markdown with a verdict and which variants moved the decision. The text must carry the state the question is asked against, and when it has more than one question, questionId names the one. Asks Jev only, about a dozen requests, with the user's TypeSafe key found the way check_with_jev finds it. It costs money, so call it only when the user asks to probe a question.",
+			"Send one question to Jev several times, as written and with its layout changed, options reversed, labels hidden, levels reversed, criteria removed, to see whether the answer holds. Returns a report as Markdown with a verdict and which variants moved the decision. The text must carry the state the question is asked against, and when it has more than one question, questionId names the one. Asks Jev only, about a dozen requests, with the user's TypeSafe key found the way ask_model finds it. It costs money, so call it only when the user asks to probe a question.",
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -902,14 +957,14 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 
 // What an agent reads once, before it has seen a tool: when to reach for this server.
 const INSTRUCTIONS =
-	"Lints questions written for a decision model, TypeSafe's Jev or OpenAI's Decisions API (gpt-6-luna), before they are sent. Call lint_text after writing or changing a question, in a request body or in code. Call fix_text for the mended text where the fix is certain, and explain_rule for a rule's page with an example before making the fixes it leaves to you. Those, lint_paths, list_rules and plan_jev send nothing and need no key. check_with_jev and probe_question send the questions to the vendor with the user's own API key and cost money: call them only when the user asks for a check with Jev or Luna, or for a probe. The server writes nothing.";
+	"Lints questions written for a decision model, TypeSafe's Jev or OpenAI's Decisions API (gpt-6-luna), before they are sent. Call lint_text after writing or changing a question, in a request body or in code. Call fix_text for the mended text where the fix is certain, and explain_rule for a rule's page with an example before making the fixes it leaves to you. Those, lint_paths, list_rules and plan_ask send nothing and need no key. ask_model and probe_question send the questions to the vendor with the user's own API key and cost money: call them only when the user asks for a check with Jev or Luna, or for a probe. The server writes nothing.";
 
 function initialize(params: Json, version: string): Json {
 	const asked = String(params.protocolVersion ?? '');
 	return {
 		protocolVersion: PROTOCOLS.includes(asked) ? asked : PROTOCOLS[0],
 		capabilities: { tools: {} },
-		serverInfo: { name: NAME, title: 'JevLint-LE', version },
+		serverInfo: { name: NAME, title: 'DecisionLint-LE', version },
 		instructions: INSTRUCTIONS,
 	};
 }

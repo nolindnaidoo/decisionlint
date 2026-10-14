@@ -24,7 +24,10 @@ export type Suppression = Readonly<{
 	 */
 	unused: () => ReadonlyArray<UnusedDirective>;
 }>;
-const DIRECTIVE = /jevlint-le-disable(-next-line|-line)?\b([^\n]*)/g;
+// The old name still silences, for ever: a comment in a repository is not
+// this tool's to update. A new comment is always written with the new name.
+const DIRECTIVE =
+	/(?:decisionlint|jevlint)-le-disable(-next-line|-line)?\b([^\n]*)/g;
 const CODE = /JEV\d{3}/g;
 const LINE_OFFSETS: Readonly<Record<string, number | undefined>> =
 	Object.freeze({
@@ -84,12 +87,12 @@ const onlyJevBacked = (directive: Directive): boolean =>
 	[...directive.codes].every((code) => code.startsWith('JEV3'));
 
 /**
- * The comment directives in a text: `jevlint-le-disable-next-line JEV004`,
- * `jevlint-le-disable-line`, or `jevlint-le-disable` for the whole file. No
+ * The comment directives in a text: `decisionlint-le-disable-next-line JEV004`,
+ * `decisionlint-le-disable-line`, or `decisionlint-le-disable` for the whole file. No
  * code list means every rule.
  */
 export function suppression(text: string): Suppression {
-	if (!text.includes('jevlint-le-disable')) return NONE;
+	if (!text.includes('-le-disable')) return NONE;
 	const starts = lineStarts(text);
 	const found = directives(text, starts);
 	const used = new Set<Directive>();

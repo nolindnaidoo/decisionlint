@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { TARGET_IDS } from '../lint/targets';
 import {
 	CONFIG_FILE,
 	CONFIG_KEYS,
@@ -7,7 +8,9 @@ import {
 	isExcluded,
 	LEVEL_ALIASES,
 	LEVELS,
+	OLD_CONFIG_FILE,
 	parseConfig,
+	readLintOptions,
 } from './projectConfig';
 
 const disk = (tree: Record<string, string>) => {
@@ -45,17 +48,30 @@ describe('a project settings file', () => {
 		['{ "rules": { "JEV004": "loud" } }', "'loud' is not a level"],
 		['{ "ignore": "JEV004:team" }', "'ignore' must be a list of strings"],
 		['{ "exclude": "fixtures" }', "'exclude' must be a list of strings"],
+		['{ "target": "jay" }', "'target' must be one of typesafe, openai"],
+		['{ "target": ["litellm"] }', "'target' must be one of"],
 		['[]', 'it must hold a JSON object'],
 		['{', 'it is not valid JSON'],
 	])('is refused when it reads %s', (text, reason) => {
 		expect(parseConfig(text)).toContain(reason);
 	});
 
-	it('is described by a schema with the same keys and levels', () => {
+	it("names the platform every request goes to, and leaves it out when it is the editor's empty string", () => {
+		expect(parseConfig('{ "target": "litellm" }')).toMatchObject({
+			target: 'litellm',
+		});
+		expect(readLintOptions({ target: '' })).not.toHaveProperty('target');
+	});
+
+	it('is described by a schema with the same keys, levels and targets', () => {
 		const schema = JSON.parse(
 			readFileSync('schemas/config.schema.json', 'utf8'),
 		);
 		expect(Object.keys(schema.properties)).toEqual(CONFIG_KEYS);
+		expect(schema.properties.target.enum).toEqual(TARGET_IDS);
+		const manifestTargets = JSON.parse(readFileSync('package.json', 'utf8'))
+			.contributes.configuration.properties['decisionlint-le.target'].enum;
+		expect(manifestTargets).toEqual(['', ...TARGET_IDS]);
 		expect(schema.properties.rules.additionalProperties.enum).toEqual([
 			...LEVELS,
 			...LEVEL_ALIASES.keys(),
@@ -71,46 +87,60 @@ describe('a project settings file', () => {
 describe('finding the file that applies', () => {
 	it('takes the nearest one, looking up from the file', () => {
 		const { fs } = disk({
-			'jevlint-le.json': '{}',
-			'app/jevlint-le.json': OFF,
+			'decisionlint-le.json': '{}',
+			'app/decisionlint-le.json': OFF,
 		});
 		const loader = createConfigLoader(fs);
-		expect(loader.for('app/src/q.ts')?.path).toBe('app/jevlint-le.json');
-		expect(loader.for('lib/q.ts')?.path).toBe('jevlint-le.json');
-		expect(loader.for('q.ts')?.path).toBe('jevlint-le.json');
+		expect(loader.for('app/src/q.ts')?.path).toBe('app/decisionlint-le.json');
+		expect(loader.for('lib/q.ts')?.path).toBe('decisionlint-le.json');
+		expect(loader.for('q.ts')?.path).toBe('decisionlint-le.json');
 	});
 
 	it('finds none when there is none', () => {
 		expect(createConfigLoader(disk({}).fs).for('app/src/q.ts')).toBeUndefined();
 	});
 
+	it("reads the file under the tool's old name where the new one is absent, and the new one first", () => {
+		const { fs } = disk({
+			'jevlint-le.json': OFF,
+			'app/jevlint-le.json': OFF,
+			'app/decisionlint-le.json': '{}',
+		});
+		const loader = createConfigLoader(fs);
+		expect(loader.for('lib/q.ts')?.path).toBe('jevlint-le.json');
+		expect(loader.for('app/q.ts')?.path).toBe('app/decisionlint-le.json');
+		expect(OLD_CONFIG_FILE).toBe('jevlint-le.json');
+	});
+
 	it('looks no higher than the boundary it is given', () => {
-		const { fs } = disk({ '/home/jevlint-le.json': OFF });
+		const { fs } = disk({ '/home/decisionlint-le.json': OFF });
 		const loader = createConfigLoader(fs);
 		expect(loader.for('/home/work/app/q.ts', '/home/work')).toBeUndefined();
 		expect(loader.for('/home/work/app/q.ts', '/home')?.path).toBe(
-			'/home/jevlint-le.json',
+			'/home/decisionlint-le.json',
 		);
 		expect(loader.for('/home/work/app/q.ts')?.path).toBe(
-			'/home/jevlint-le.json',
+			'/home/decisionlint-le.json',
 		);
 	});
 
 	it('keeps the separators the path came with, whatever the platform', () => {
 		const windows = createConfigLoader(
-			disk({ 'C:\\work\\jevlint-le.json': OFF }).fs,
+			disk({ 'C:\\work\\decisionlint-le.json': OFF }).fs,
 		);
 		expect(windows.for('C:\\work\\app\\q.ts')?.path).toBe(
-			'C:\\work\\jevlint-le.json',
+			'C:\\work\\decisionlint-le.json',
 		);
 		const forward = createConfigLoader(
-			disk({ 'work/jevlint-le.json': OFF }).fs,
+			disk({ 'work/decisionlint-le.json': OFF }).fs,
 		);
-		expect(forward.for('work/app/q.ts')?.path).toBe('work/jevlint-le.json');
+		expect(forward.for('work/app/q.ts')?.path).toBe(
+			'work/decisionlint-le.json',
+		);
 	});
 
 	it('reads a file once until told it changed', () => {
-		const { fs, reads } = disk({ 'jevlint-le.json': OFF });
+		const { fs, reads } = disk({ 'decisionlint-le.json': OFF });
 		const loader = createConfigLoader(fs);
 		loader.for('a.ts');
 		loader.for('b.ts');
@@ -122,10 +152,10 @@ describe('finding the file that applies', () => {
 
 	it('hands back what is wrong with a file it cannot use', () => {
 		const loader = createConfigLoader(
-			disk({ 'jevlint-le.json': '{ "rule": {} }' }).fs,
+			disk({ 'decisionlint-le.json': '{ "rule": {} }' }).fs,
 		);
 		expect(loader.for('a.ts')).toMatchObject({
-			path: 'jevlint-le.json',
+			path: 'decisionlint-le.json',
 			options: expect.stringContaining("'rule' is not a setting"),
 		});
 	});
@@ -134,7 +164,7 @@ describe('finding the file that applies', () => {
 describe('a settings file that cannot be read', () => {
 	it('is a file that cannot be used, not a crash', () => {
 		const loader = createConfigLoader({
-			isFile: (path) => path === '/work/jevlint-le.json',
+			isFile: (path) => path === '/work/decisionlint-le.json',
 			read: () => {
 				throw new Error('EACCES: permission denied');
 			},

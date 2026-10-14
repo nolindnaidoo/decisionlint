@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "JevLint-LE project settings",
+  "title": "DecisionLint-LE project settings",
   "description": "Lint settings for this project. The editor and the command line both read this file, so they report the same findings.",
   "type": "object",
   "additionalProperties": false,
@@ -27,6 +27,11 @@
       "description": "Files and folders not to lint, as patterns relative to this file. `**` crosses folders, `*` stays inside one, and a name with no slash matches at any depth: fixtures, **/*.generated.ts, test/data/**.",
       "type": "array",
       "items": { "type": "string" }
+    },
+    "target": {
+      "description": "The platform this project sends every request to, which sets the limits the rules check. Leave it out to read the platform from each request's model id, where the spelling says.",
+      "type": "string",
+      "enum": ["typesafe", "openai", "vercel", "litellm", "openrouter", "llmgateway", "edenai", "liquid", "llamacpp"]
     }
   }
 }

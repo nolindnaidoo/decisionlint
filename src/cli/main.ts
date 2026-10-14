@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Fetch } from '../jev/client';
+import type { Fetch } from '../ask/client';
 import { lines } from './lines';
 import { createStopSignal, stat } from './process';
 import { EXIT, run } from './run';
@@ -51,6 +51,6 @@ run(process.argv.slice(2), {
 		process.exitCode = status;
 	})
 	.catch((error: unknown) => {
-		process.stderr.write(`jevlint-le: ${String(error)}\n`);
+		process.stderr.write(`decisionlint-le: ${String(error)}\n`);
 		process.exitCode = EXIT.unusable;
 	});

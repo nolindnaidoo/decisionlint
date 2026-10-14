@@ -1,6 +1,6 @@
 import given from '../../fixtures/rule-examples.json';
-import { DEFAULT_MODEL } from '../jev/review';
-import { REQUEST_REVIEWS, REVIEWS } from '../jev/reviews';
+import { DEFAULT_MODEL } from '../ask/review';
+import { REQUEST_REVIEWS, REVIEWS } from '../ask/reviews';
 import { lintText } from '../lint/lint';
 import { RULE_CODES, RULES } from '../lint/rules';
 import type { LintOptions, RuleCode, Syntax } from '../types';
@@ -49,7 +49,7 @@ const wording = (code: string) => code > 'JEV100' && code < 'JEV300';
 
 function kind(code: RuleCode): string {
 	if (jevBacked(code))
-		return 'Asks Jev. It runs only under **Check This File with Jev** in the editor or `--jev` on the command line, with your key, and never while linting.';
+		return 'Asks the model. It runs only under an **Ask** command in the editor or `--ask` on the command line, with your key, and never while linting.';
 	if (wording(code))
 		return 'A wording rule. It matches patterns in English text, so it can miss a defect or flag a question that is fine.';
 	return 'An exact rule. It reads the shape of the question and does not guess.';
@@ -58,7 +58,7 @@ function kind(code: RuleCode): string {
 function level(code: RuleCode): string {
 	const { severity } = RULES[code];
 	if (severity !== 'off') return `On by default, as \`${severity}\`.`;
-	return `Off by default. Turn it on in \`jevlint-le.json\` with \`{ "rules": { "${code}": "warning" } }\`.`;
+	return `Off by default. Turn it on in \`decisionlint-le.json\` with \`{ "rules": { "${code}": "warning" } }\`.`;
 }
 
 function fixing(code: RuleCode, example: RuleExample | undefined): string {
@@ -118,15 +118,15 @@ function asked(code: RuleCode): string {
 
 function silence(code: RuleCode): string {
 	if (code === 'JEV010')
-		return 'Remove the comment it points at. To stop the rule itself, set it to `off` in `jevlint-le.json`.\n';
+		return 'Remove the comment it points at. To stop the rule itself, set it to `off` in `decisionlint-le.json`.\n';
 	return [
 		'In code, on the line above:',
 		'',
 		`${FENCE}ts`,
-		`// jevlint-le-disable-next-line ${code}`,
+		`// decisionlint-le-disable-next-line ${code}`,
 		FENCE,
 		'',
-		'In JSON, which has no comments, by question id in `jevlint-le.json`:',
+		'In JSON, which has no comments, by question id in `decisionlint-le.json`:',
 		'',
 		`${FENCE}json`,
 		`{ "ignore": ["${code}:your-question-id"] }`,

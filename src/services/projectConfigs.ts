@@ -6,6 +6,7 @@ import {
 	createConfigLoader,
 	folderOf,
 	isExcluded,
+	OLD_CONFIG_FILE,
 } from '../config/projectConfig';
 import type { LintOptions } from '../types';
 
@@ -20,7 +21,7 @@ export type Resolved =
 
 export type ProjectConfigs = Readonly<{
 	/**
-	 * The settings that apply to a document. A `jevlint-le.json` in its folder
+	 * The settings that apply to a document. A `decisionlint-le.json` in its folder
 	 * or one above it, no higher than the workspace folder, replaces the editor's own
 	 * settings, so the editor reports what the command line would. `editor` is
 	 * those settings, or the reason they cannot be used, which is the answer
@@ -41,7 +42,9 @@ type Deps = Readonly<{
 
 export function createProjectConfigs(deps: Deps): ProjectConfigs {
 	const loader = createConfigLoader(deps.fs);
-	const watcher = vscode.workspace.createFileSystemWatcher(`**/${CONFIG_FILE}`);
+	const watcher = vscode.workspace.createFileSystemWatcher(
+		`**/{${CONFIG_FILE},${OLD_CONFIG_FILE}}`,
+	);
 	const changed = (): void => {
 		loader.clear();
 		deps.onChange();

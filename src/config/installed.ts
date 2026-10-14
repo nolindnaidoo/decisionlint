@@ -1,7 +1,7 @@
 import { type ConfigFs, parent, under } from './projectConfig';
 
 /** The name this tool is published under on npm, and so the folder a project installs it in. */
-export const PACKAGE = 'jevlint-le';
+export const PACKAGE = 'decisionlint-le';
 
 /** A copy of this tool that a project has installed for itself. */
 export type Installed = Readonly<{

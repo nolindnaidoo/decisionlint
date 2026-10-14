@@ -1,6 +1,6 @@
 # Rename to DecisionLint-LE
 
-Status: steps 1 to 3 done on 2026-10-14, steps 4 to 6 pending. Ships as 1.0.0 with the every-platform
+Status: steps 1 to 4 done on 2026-10-14, steps 5 and 6 pending, each its own authorization. Ships as 1.0.0 with the every-platform
 work in `SPEC.md` under "Every provider". Nothing of 0.9.0 was published, so
 its new surfaces are named right here instead of aliased.
 
@@ -78,8 +78,14 @@ endpoint when its shape is `typesafe`.
 3. 1.0.0: the version in its four files, `CHANGELOG.md` with an old-to-new
    table, the readmes, `AGENTS.md`, `SPEC.md`, the rule pages. Every gate,
    the installed VSIX and the integration tests included.
-4. Rename the repository on GitHub, push, and update `letools-site`'s
-   registry and `OUTSIDE_FLEET` in the same window.
+4. Rename the repository on GitHub and push. Done on 2026-10-14: the
+   repository is `nolindnaidoo/decisionlint-le`, and the old URL redirects.
+   The site's registry, `letools-site`, stays on the old names until step 5:
+   its entries link to the published listings and its sync reads their
+   download counts, so a registry naming `decisionlint-le` before it is
+   published would link to pages that do not exist. It moves with the first
+   publish, together with the local directory, which the site's sync reads
+   by the registry id.
 5. Publish 1.0.0: Marketplace, Open VSX, npm (two packages), the MCP
    registry. Four authorizations, each its own.
 6. Bridge the old names, each its own authorization: `jevlint-le@0.9.0` and

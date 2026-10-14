@@ -1660,6 +1660,13 @@ describe('a project settings file in the editor', () => {
 
 	describe('a copy of the tool installed in the project', () => {
 		const LIBRARY = '/work/app/node_modules/jevlint-le/lib.js';
+		// A project copy one minor above this extension, whatever this one is, so
+		// the version bump of a release cannot make the copy stop being the newer.
+		const NEWER = manifest.version.replace(
+			/^(\d+)\.(\d+)\./,
+			(_: string, major: string, minor: string) =>
+				`${major}.${Number(minor) + 1}.`,
+		);
 		const installed = (version: string, main = true) => ({
 			'/work/app/node_modules/jevlint-le/package.json': JSON.stringify(
 				main ? { version, main: 'lib.js' } : { version },
@@ -1707,18 +1714,20 @@ describe('a project settings file in the editor', () => {
 				loaded.push(path);
 				return copy();
 			};
-			within(installed('0.9.0'), file());
+			within(installed(NEWER), file());
 			expect(messages()).toEqual(['From the project copy.']);
 			expect(loaded).toEqual([LIBRARY]);
-			expect(_state.statusBar.text).toBe('$(checklist) Jev 1 · project 0.9.0');
+			expect(_state.statusBar.text).toBe(
+				`$(checklist) Jev 1 · project ${NEWER}`,
+			);
 			expect(_state.statusBar.tooltip).toContain(
-				"Linting with this project's own jevlint-le 0.9.0",
+				`Linting with this project's own jevlint-le ${NEWER}`,
 			);
 		});
 
 		it('links a rule the extension has never heard of to the page its copy names', () => {
 			load = () => copy();
-			within(installed('0.9.0'), file());
+			within(installed(NEWER), file());
 			const [found] = diagnostics('file:///work/app/src/q.ts');
 			const code = found?.code as
 				| { value: string; target: unknown }
@@ -1730,7 +1739,7 @@ describe('a project settings file in the editor', () => {
 		it('does the fixing on save too', () => {
 			load = () => copy();
 			const document = file();
-			within(installed('0.9.0'), document);
+			within(installed(NEWER), document);
 			const provider = _state.provider as vscode.CodeActionProvider;
 			const [action] = provider.provideCodeActions(
 				document,
@@ -1749,7 +1758,7 @@ describe('a project settings file in the editor', () => {
 				return copy();
 			};
 			const document = file();
-			within(installed('0.9.0'), document);
+			within(installed(NEWER), document);
 			for (let i = 0; i < 5; i += 1) {
 				_state.listeners.change?.({ document });
 				vi.advanceTimersByTime(300);
@@ -1763,7 +1772,7 @@ describe('a project settings file in the editor', () => {
 				() => {
 					_state.trusted = false;
 					load = () => copy();
-					return installed('0.9.0');
+					return installed(NEWER);
 				},
 			],
 			[
@@ -1773,32 +1782,32 @@ describe('a project settings file in the editor', () => {
 					return installed('0.2.0', false);
 				},
 			],
-			['the editor could not load', () => installed('0.9.0')],
+			['the editor could not load', () => installed(NEWER)],
 			[
 				'the editor could not load',
 				() => {
 					load = () => copy({ api: 2 });
-					return installed('0.9.0');
+					return installed(NEWER);
 				},
 			],
 			[
 				'the editor could not load',
 				() => {
 					load = () => ({ api: 1 });
-					return installed('0.9.0');
+					return installed(NEWER);
 				},
 			],
 			[
 				'does not read this kind of file',
 				() => {
 					load = () => copy({ syntaxes: ['python'] });
-					return installed('0.9.0');
+					return installed(NEWER);
 				},
 			],
 		])('gives way to the bundled copy, and says it %s', (why, arrange) => {
 			within(arrange(), file());
 			expect(messages().join(' ')).toContain(BUNDLED);
-			expect(_state.statusBar.text).toMatch(/· project has 0\.\d\.0$/);
+			expect(_state.statusBar.text).toMatch(/· project has \d+\.\d+\.\d+$/);
 			expect(_state.statusBar.tooltip).toContain(why);
 			expect(_state.statusBar.tooltip).toContain(
 				`The editor is linting with its own ${manifest.version}`,
@@ -1812,14 +1821,14 @@ describe('a project settings file in the editor', () => {
 				return copy();
 			};
 			_state.trusted = false;
-			within(installed('0.9.0'), file());
+			within(installed(NEWER), file());
 			expect(loads).toBe(0);
 		});
 
 		it('takes over as soon as the workspace is trusted', () => {
 			load = () => copy();
 			_state.trusted = false;
-			within(installed('0.9.0'), file());
+			within(installed(NEWER), file());
 			expect(messages().join(' ')).toContain(BUNDLED);
 			_state.trusted = true;
 			_state.listeners.trust?.(undefined);
@@ -1862,7 +1871,7 @@ describe('a project settings file in the editor', () => {
 						throw new Error('broken copy');
 					},
 				});
-			within(installed('0.9.0'), file());
+			within(installed(NEWER), file());
 			expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
 			expect(_state.statusBar.tooltip).toContain(
 				'could not be linted: broken copy',

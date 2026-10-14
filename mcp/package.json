@@ -1,6 +1,6 @@
 {
   "name": "jevlint-le-mcp",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "mcpName": "io.github.nolindnaidoo/jevlint-le",
   "description": "Lint questions for TypeSafe's Jev and OpenAI's Luna offline, or ask the model itself with your key.",
   "keywords": [

@@ -35,12 +35,13 @@ const DECLARATORS = new Set([
 	'abstract',
 ]);
 const TYPE_ASSERTIONS = new Set(['as', 'satisfies']);
-const KEYWORD_LITERALS: Readonly<Record<string, (span: Span) => Node>> =
-	Object.freeze({
-		true: (span: Span): Node => ({ kind: 'boolean', value: true, span }),
-		false: (span: Span): Node => ({ kind: 'boolean', value: false, span }),
-		null: (span: Span): Node => ({ kind: 'null', span }),
-	});
+// A Map, because the key is an identifier from the file: `constructor` or
+// `valueOf` written as a value must read as unreadable, not as Object's method.
+const KEYWORD_LITERALS: ReadonlyMap<string, (span: Span) => Node> = new Map([
+	['true', (span: Span): Node => ({ kind: 'boolean', value: true, span })],
+	['false', (span: Span): Node => ({ kind: 'boolean', value: false, span })],
+	['null', (span: Span): Node => ({ kind: 'null', span })],
+]);
 
 const NO_CALLS: ReadonlySet<string> = new Set();
 
@@ -194,7 +195,7 @@ function readPrimary(
 	if (isPunct(token, '[')) return readArray(tokens, at);
 	if (isHelperCall(tokens, at)) return readCall(tokens, at);
 	if (token.kind !== 'ident') return undefined;
-	const keyword = KEYWORD_LITERALS[token.text];
+	const keyword = KEYWORD_LITERALS.get(token.text);
 	if (!keyword) return undefined;
 	return { node: keyword(spanOf(token)), next: at + 1 };
 }

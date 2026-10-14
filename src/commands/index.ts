@@ -4,6 +4,7 @@ import { diskDocument } from '../services/diskDocument';
 import type { Linter } from '../services/linter';
 import { blocked, caution, result } from '../ui/notifier';
 import { summarize } from '../ui/statusBar';
+import { guarded } from './guard';
 
 type Deps = Readonly<{
 	linter: Linter;
@@ -193,10 +194,17 @@ async function openSettings(): Promise<void> {
 
 export function registerCommands(deps: Deps): ReadonlyArray<vscode.Disposable> {
 	return [
-		vscode.commands.registerCommand(COMMANDS.lintFile, () => lintFile(deps)),
-		vscode.commands.registerCommand(COMMANDS.lintWorkspace, () =>
-			lintWorkspace(deps),
+		vscode.commands.registerCommand(
+			COMMANDS.lintFile,
+			guarded('Linting this file', () => lintFile(deps)),
 		),
-		vscode.commands.registerCommand(COMMANDS.openSettings, openSettings),
+		vscode.commands.registerCommand(
+			COMMANDS.lintWorkspace,
+			guarded('Linting the workspace', () => lintWorkspace(deps)),
+		),
+		vscode.commands.registerCommand(
+			COMMANDS.openSettings,
+			guarded('Opening the settings', openSettings),
+		),
 	];
 }

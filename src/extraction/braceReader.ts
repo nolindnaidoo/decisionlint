@@ -37,7 +37,8 @@ export type Reader = Readonly<{
  * brace: Rust and Go so far. Everything else about reading one is shared.
  */
 export type Dialect = Readonly<{
-	keywords: Readonly<Record<string, (span: Span) => Node>>;
+	/** A Map, because the key is an identifier from the file and a plain object answers `constructor`. */
+	keywords: ReadonlyMap<string, (span: Span) => Node>;
 	typeAt: (tokens: ReadonlyArray<Token>, at: number) => TypePrefix | undefined;
 	/** True where a brace can hold a plain list, as in Go's `[]string{"a", "b"}`. */
 	braceLists: boolean;
@@ -413,7 +414,7 @@ export function createReader(
 		const unwrapped = dialect.unwrap(reader, at) ?? readOwnCall(at);
 		if (unwrapped) return unwrapped;
 		if (token.kind !== 'ident') return readNumber(at);
-		const keyword = dialect.keywords[token.text];
+		const keyword = dialect.keywords.get(token.text);
 		return keyword && { node: keyword(spanOf(token)), next: at + 1 };
 	};
 

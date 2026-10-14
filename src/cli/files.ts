@@ -1,7 +1,8 @@
 import { syntaxForPath } from '../lint/lint';
 
 export type Entry = Readonly<{
-	kind: 'file' | 'dir';
+	/** `other` is a pipe, a socket or a device: something a read could wait on for ever. */
+	kind: 'file' | 'dir' | 'other';
 	size: number;
 	/** True when the path is a symbolic link to what `kind` says. */
 	link?: boolean;
@@ -70,8 +71,14 @@ function walk(
 	return [...names].sort().flatMap((name) => {
 		const path = join(dir, name);
 		const entry = attempt(() => files.stat(path), path, unread);
-		if (entry?.kind !== 'dir')
-			return entry && syntaxForPath(path) ? [path] : [];
+		if (!entry || (!syntaxForPath(path) && entry.kind !== 'dir')) return [];
+		if (entry.kind === 'file') return [path];
+		// Something that is not a file or a folder, under a name the tool would
+		// read: named, never opened, because the read might never return.
+		if (entry.kind === 'other') {
+			unread.push(path);
+			return [];
+		}
 		// A linked folder can lead back to one above it, and then the search never ends.
 		if (entry.link || SKIPPED_DIRS.has(name)) return [];
 		return walk(path, files, unread);
@@ -94,6 +101,8 @@ export function findFiles(paths: ReadonlyArray<string>, files: Files): Found {
 			found.push(...walk(path, files, unread));
 			continue;
 		}
+		if (entry.kind === 'other')
+			return { ok: false, error: `Not a regular file: ${path}` };
 		if (!syntaxForPath(path))
 			return { ok: false, error: `Not a file type jevlint-le reads: ${path}` };
 		found.push(path);

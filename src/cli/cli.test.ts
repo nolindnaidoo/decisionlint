@@ -19,16 +19,24 @@ const RUNTIME = `const r = { questions: { a: { type: 'noul', instructions: build
 const STATED = `{ "state": { "note": "Wheel wobbles." }, "model": "jev-1.13.0", "questions": { "a": { "type": "noul", "instructions": "Is there one?" }, "b": { "type": "noul", "instructions": "Are there two?" } } }`;
 const KEY = { TYPESAFE_API_KEY: 'apikey_secret_value' };
 
+// One answer per question asked, as TypeSafe answers; the given ones override a no.
+const answerAll = (body: string): Record<string, { noul: number }> =>
+	Object.fromEntries(
+		Object.keys(JSON.parse(body).questions ?? {}).map((id) => [
+			id,
+			{ noul: 0 },
+		]),
+	);
 const jevSays = (
 	answers: Record<string, { noul: number }> = {},
 	status = 200,
 ) =>
-	vi.fn(async () => ({
+	vi.fn(async (_url: string, init: { body: string }) => ({
 		ok: status === 200,
 		status,
 		json: async () => ({
 			model: 'jev-1.13.0',
-			answers,
+			answers: { ...answerAll(init.body), ...answers },
 			usage: { input_tokens: 310 },
 		}),
 		text: async () => '',
@@ -676,6 +684,43 @@ describe('a disk that fails', () => {
 		expect(result.status).toBe(EXIT.passed);
 	});
 
+	it('names a path that is not a regular file, and never opens it', async () => {
+		// A named pipe with a .json name would block the read for as long as nobody writes to it.
+		const opened: string[] = [];
+		const result = await cli(
+			['.'],
+			{ 'src/q.json': CLEAN, 'src/pipe.json': '' },
+			'',
+			{
+				files: (files) => ({
+					...files,
+					stat: (path) =>
+						path === 'src/pipe.json'
+							? { kind: 'other', size: 0 }
+							: files.stat(path),
+					read: (path) => {
+						opened.push(path);
+						return files.read(path);
+					},
+				}),
+			},
+		);
+		expect(opened).not.toContain('src/pipe.json');
+		expect(result.status).toBe(EXIT.passed);
+		expect(result.out).toContain('1 path could not be read: src/pipe.json.');
+	});
+
+	it('refuses a named path that is not a regular file', async () => {
+		const result = await cli(['src/pipe.json'], { 'src/pipe.json': '' }, '', {
+			files: (files) => ({
+				...files,
+				stat: () => ({ kind: 'other', size: 0 }),
+			}),
+		});
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain('Not a regular file: src/pipe.json');
+	});
+
 	it('still reads a linked folder that is named outright', async () => {
 		const result = await cli(['up'], { 'up/q.json': BAD }, '', {
 			files: (files) => ({
@@ -687,6 +732,44 @@ describe('a disk that fails', () => {
 			}),
 		});
 		expect(result.status).toBe(EXIT.failed);
+	});
+});
+
+describe('a file that begins with a byte order mark', () => {
+	const YES_NO = `{ "questions": { "q": { "type": "noul", "instructions": "Has it shipped?", "criteria": { "yes": "Gone.", "no": "Here." } } } }`;
+
+	it('is reported at the columns an editor shows, which do not count the mark', async () => {
+		const plain = await cli(['--format', 'compact', 'a.json'], {
+			'a.json': YES_NO,
+		});
+		const marked = await cli(['--format', 'compact', 'a.json'], {
+			'a.json': `\uFEFF${YES_NO}`,
+		});
+		expect(plain.out).toContain('a.json:1:');
+		expect(marked.out).toBe(plain.out);
+	});
+
+	it('keeps its mark when --fix writes it back', async () => {
+		const tree = { 'a.json': `\uFEFF${YES_NO}` };
+		const result = await cli(['--fix', 'a.json'], tree);
+		expect(result.status).toBe(EXIT.passed);
+		expect(tree['a.json']).toBe(
+			`\uFEFF${YES_NO.replace('"yes"', '"true"').replace('"no"', '"false"')}`,
+		);
+	});
+
+	it('is read from standard input without the mark', async () => {
+		const plain = await cli(
+			['--format', 'compact', '--stdin-filename', 'a.json'],
+			{},
+			YES_NO,
+		);
+		const marked = await cli(
+			['--format', 'compact', '--stdin-filename', 'a.json'],
+			{},
+			`\uFEFF${YES_NO}`,
+		);
+		expect(marked.out).toBe(plain.out);
 	});
 });
 
@@ -1358,24 +1441,9 @@ describe('the MCP server', () => {
 
 	it.each([
 		[
-			'an unknown tool',
-			call(1, 'lint_everything', {}),
-			'Unknown tool: lint_everything',
-		],
-		[
-			'text that is not a string',
-			call(1, 'lint_text', { text: 5 }),
-			"'text' must be a string",
-		],
-		[
 			'a file type it does not read',
 			call(1, 'lint_text', { text: 'x', filename: 'a.md' }),
 			'Not a file type',
-		],
-		[
-			'no paths',
-			call(1, 'lint_paths', { paths: [] }),
-			"'paths' must be a list",
 		],
 		[
 			'a path that is not there',
@@ -1393,11 +1461,6 @@ describe('the MCP server', () => {
 			'Unknown rule: JEV999',
 		],
 		[
-			'a rule code that is not a string',
-			call(1, 'explain_rule', { code: 4 }),
-			"'code' must be a string",
-		],
-		[
 			'text to fix in a file type it does not read',
 			call(1, 'fix_text', { text: BAD, filename: 'q.toml' }),
 			'Not a file type',
@@ -1406,16 +1469,6 @@ describe('the MCP server', () => {
 			'a check given text and paths together',
 			call(1, 'check_with_jev', { text: BAD, paths: ['.'] }),
 			"Pass 'text' or 'paths', not both",
-		],
-		[
-			'a check with a limit of zero',
-			call(1, 'check_with_jev', { text: BAD, maxCalls: 0 }),
-			"'maxCalls' must be a whole number above zero",
-		],
-		[
-			'a plan with a model that is not a string',
-			call(1, 'plan_jev', { text: BAD, model: 7 }),
-			"'model' must be a model id",
 		],
 		[
 			'a probe of a question with no state beside it',
@@ -1446,6 +1499,100 @@ describe('the MCP server', () => {
 		expect(reply.result.isError).toBe(true);
 		expect(reply.result.content[0].text).toContain(reason);
 	});
+
+	// The spec draws the line here: a call the server cannot even route is a
+	// protocol error, and a tool that ran and could not do what it was asked is a
+	// failed call. An agent reads both, but a host counts only the first against the server.
+	it.each([
+		[
+			'an unknown tool',
+			call(1, 'lint_everything', {}),
+			'Unknown tool: lint_everything',
+		],
+		[
+			'a call with no tool name',
+			{ jsonrpc: '2.0', id: 1, method: 'tools/call', params: {} },
+			"'name' must be a string",
+		],
+		[
+			'arguments that are not an object',
+			{
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'tools/call',
+				params: { name: 'lint_text', arguments: 'x' },
+			},
+			"'arguments' must be an object",
+		],
+		[
+			'a required argument left out',
+			call(1, 'lint_text', {}),
+			"'text' is required",
+		],
+		[
+			'text that is not a string',
+			call(1, 'lint_text', { text: 5 }),
+			"'text' must be a string",
+		],
+		[
+			'paths that are not a list',
+			call(1, 'lint_paths', { paths: 'samples' }),
+			"'paths' must be an array",
+		],
+		[
+			'no paths',
+			call(1, 'lint_paths', { paths: [] }),
+			"'paths' must have at least 1 entry",
+		],
+		[
+			'a path that is not a string',
+			call(1, 'lint_paths', { paths: [3] }),
+			"'paths' must hold only strings",
+		],
+		[
+			'rules that are not an object',
+			call(1, 'lint_text', { text: BAD, rules: 'off' }),
+			"'rules' must be an object",
+		],
+		[
+			'a rule code that is not a string',
+			call(1, 'explain_rule', { code: 4 }),
+			"'code' must be a string",
+		],
+		[
+			'a check with a limit of zero',
+			call(1, 'check_with_jev', { text: BAD, maxCalls: 0 }),
+			"'maxCalls' must be at least 1",
+		],
+		[
+			'a check with a limit that is not whole',
+			call(1, 'check_with_jev', { text: BAD, maxCalls: 1.5 }),
+			"'maxCalls' must be an integer",
+		],
+		[
+			'a plan with a model that is not a string',
+			call(1, 'plan_jev', { text: BAD, model: 7 }),
+			"'model' must be a string",
+		],
+		[
+			'a plan with sendState that is not a boolean',
+			call(1, 'plan_jev', { text: BAD, sendState: 'yes' }),
+			"'sendState' must be true or false",
+		],
+	])(
+		'refuses %s as invalid params, before any tool runs',
+		async (_name, message, reason) => {
+			const [reply, pinged] = await talk([
+				message,
+				{ jsonrpc: '2.0', id: 2, method: 'ping' },
+			]);
+			expect(reply.result).toBeUndefined();
+			expect(reply.id).toBe(1);
+			expect(reply.error.code).toBe(-32602);
+			expect(reply.error.message).toContain(reason);
+			expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
+		},
+	);
 
 	it('answers JSON that is not a request, and goes on serving', async () => {
 		const result = await cli(
@@ -1494,6 +1641,96 @@ describe('the MCP server', () => {
 		expect(failed.result.isError).toBe(true);
 		expect(failed.result.content[0].text).toContain('the disk went away');
 		expect(pinged.result).toEqual({});
+	});
+
+	it.each([
+		'constructor',
+		'toString',
+		'valueOf',
+		'hasOwnProperty',
+		'__proto__',
+	])('answers a method named %s as unknown, like any other', async (method) => {
+		const result = await cli(
+			['--mcp'],
+			{},
+			[
+				JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: { x: 1 } }),
+				JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'ping' }),
+			].join('\n'),
+		);
+		const [unknown, pinged] = result.out
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(unknown).toEqual({
+			jsonrpc: '2.0',
+			id: 1,
+			error: { code: -32601, message: `Unknown method: ${method}` },
+		});
+		expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
+	});
+
+	it.each([
+		['no version', { id: 11, method: 'ping' }, 11],
+		['the wrong version', { jsonrpc: '1.0', id: 12, method: 'ping' }, 12],
+		['a version that is not text', { jsonrpc: 2, id: 13, method: 'ping' }, 13],
+	])(
+		'refuses a frame with %s and goes on serving',
+		async (_name, frame, id) => {
+			const result = await cli(
+				['--mcp'],
+				{},
+				[
+					JSON.stringify(frame),
+					JSON.stringify({ jsonrpc: '2.0', id: 99, method: 'ping' }),
+				].join('\n'),
+			);
+			const [refused, pinged] = result.out
+				.trim()
+				.split('\n')
+				.map((line) => JSON.parse(line));
+			expect(refused).toEqual({
+				jsonrpc: '2.0',
+				id,
+				error: { code: -32600, message: 'Not a JSON-RPC 2.0 request' },
+			});
+			expect(pinged).toEqual({ jsonrpc: '2.0', id: 99, result: {} });
+		},
+	);
+
+	it('refuses a request line over the size limit and goes on serving', async () => {
+		const out: string[] = [];
+		const io: Io = {
+			files: disk({}),
+			stdin: async () => '',
+			lines: async function* () {
+				yield { oversized: true, bytes: 20_000_000 };
+				yield JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'ping' });
+			},
+			out: (text) => out.push(text),
+			err: () => {},
+			version: '9.9.9',
+			env: {},
+			terminal: false,
+			fetch: offline(),
+			wait: async () => {},
+			stopSignal: () => new AbortController().signal,
+		};
+		expect(await run(['--mcp'], io)).toBe(EXIT.passed);
+		const [refused, pinged] = out
+			.join('')
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(refused).toEqual({
+			jsonrpc: '2.0',
+			id: null,
+			error: {
+				code: -32600,
+				message: 'Request too large: 20000000 bytes, the limit is 16777216.',
+			},
+		});
+		expect(pinged).toEqual({ jsonrpc: '2.0', id: 2, result: {} });
 	});
 
 	it('answers bad JSON and an unknown method with protocol errors', async () => {
@@ -1753,6 +1990,20 @@ describe('checking with Jev', () => {
 		expect(result.out).toContain('Jev answered 0 of 2 requests');
 	});
 
+	it('names Luna, not Jev, when a run against OpenAI falls short', async () => {
+		const result = await cli(
+			['--jev', '--jev-model', 'gpt-6-luna', '.'],
+			{ 'a.ts': VAGUE, 'b.ts': HEAVY },
+			'',
+			world(jevSays({}, 401), { OPENAI_API_KEY: 'sk-test' }),
+		);
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain(
+			'OpenAI rejected the API key (401). Luna answered 0 of 2 requests.',
+		);
+		expect(result.err).not.toContain('Jev answered');
+	});
+
 	it('stops sending after a failure', async () => {
 		const fetch = jevSays({}, 401);
 		await cli(
@@ -1774,14 +2025,14 @@ describe('checking with Jev', () => {
 
 	it('does not call a stopped run finished, or a network failure', async () => {
 		const stop = new AbortController();
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: { body: string }) => {
 			stop.abort();
 			return {
 				ok: true,
 				status: 200,
 				json: async () => ({
 					model: 'jev-1.13.0',
-					answers: {},
+					answers: answerAll(init.body),
 					usage: { input_tokens: 310 },
 				}),
 				text: async () => '',
@@ -1896,7 +2147,7 @@ describe('the files other tools run this through', () => {
 		expect(hook).toContain(`entry: npx --yes jevlint-le@${version} `);
 		expect(hook).toContain(`rev: v${version}`);
 		const listed = /files: \\\.\(([^)]+)\)\$/.exec(hook)?.[1]?.split('|');
-		expect(listed?.sort()).toEqual(Object.keys(EXTENSIONS).sort());
+		expect(listed?.sort()).toEqual([...EXTENSIONS.keys()].sort());
 		// A named file of another type exits 2, so the hook must never be handed one.
 		expect(hook).toContain('--no-error-on-unmatched-pattern');
 	});
@@ -1913,4 +2164,78 @@ describe('the files other tools run this through', () => {
 		const script = action.slice(action.indexOf('      run: |'));
 		expect(script).not.toContain('${{');
 	});
+});
+
+describe('a file whose extension names a property of Object.prototype', () => {
+	const NOUL = `{ "questions": { "q": { "type": "noul", "instructions": "Has it shipped?" } } }`;
+
+	it('is refused by name, as any other file type the tool does not read', async () => {
+		const result = await cli(['a.constructor'], { 'a.constructor': NOUL });
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain(
+			'Not a file type jevlint-le reads: a.constructor',
+		);
+	});
+
+	it('is passed over in a directory, as any other file type is', async () => {
+		const result = await cli(['.'], {
+			'a.constructor': NOUL,
+			'b.json': NOUL,
+		});
+		expect(result.status).toBe(EXIT.passed);
+		expect(result.out).not.toContain('a.constructor');
+		expect(result.out).not.toContain('could not be read');
+	});
+
+	it('is refused by the server, with the reason', async () => {
+		const result = await cli(
+			['--mcp'],
+			{},
+			JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'tools/call',
+				params: {
+					name: 'lint_text',
+					arguments: { text: NOUL, filename: 'x.constructor' },
+				},
+			}),
+		);
+		const [reply] = result.out
+			.trim()
+			.split('\n')
+			.map((line) => JSON.parse(line));
+		expect(reply.result.isError).toBe(true);
+		expect(reply.result.content[0].text).toBe(
+			'Not a file type jevlint-le reads: x.constructor',
+		);
+	});
+});
+
+describe('text handed to the server', () => {
+	const over = `{ "questions": { "q": { "type": "noul", "instructions": "${'a'.repeat(1_000_001)}" } } }`;
+
+	it.each(['lint_text', 'fix_text', 'plan_jev', 'probe_question'])(
+		'is held to the size limit files are held to, by %s',
+		async (name) => {
+			const result = await cli(
+				['--mcp'],
+				{},
+				JSON.stringify({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'tools/call',
+					params: { name, arguments: { text: over } },
+				}),
+			);
+			const [reply] = result.out
+				.trim()
+				.split('\n')
+				.map((line) => JSON.parse(line));
+			expect(reply.result.isError).toBe(true);
+			expect(reply.result.content[0].text).toBe(
+				"'text' is over the size limit of 1000000 bytes.",
+			);
+		},
+	);
 });

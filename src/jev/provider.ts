@@ -24,12 +24,46 @@ export type Provider = Readonly<{
 	pricedOn: string;
 	/** The request as the vendor's API wants it. */
 	toBody: (request: ReviewRequest) => unknown;
-	/** The answers as `runReview` reads them, or why the body is not an answer. */
-	fromBody: (body: unknown) => Reply | Failure;
+	/** The answers as `runReview` reads them, or why the body is not an answer to `request`. */
+	fromBody: (body: unknown, request: ReviewRequest) => Reply | Failure;
 }>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const garbled = (detail: string): Failure => ({ kind: 'garbled', detail });
+
+// The field TypeSafe's reference requires on an answer of each type, which is
+// also the one this code reads. A Map, because the key comes from the request.
+const ANSWER_FIELD: ReadonlyMap<string, 'noul' | 'choice' | 'score'> = new Map([
+	['noul', 'noul'],
+	['choice', 'choice'],
+	['score', 'score'],
+]);
+
+/**
+ * Why `answers` is not Jev's answer to `request`, or undefined when it is.
+ * TypeSafe's API reference returns one answer per question, under the same
+ * ids, each carrying its type's value. A 200 whose body answers fewer, or
+ * answers without the value, is a proxy, a sign-in page or a bug, and read as
+ * answers it would report a clean check that never ran.
+ */
+function unanswered(
+	answers: Record<string, unknown>,
+	request: ReviewRequest,
+): string | undefined {
+	for (const [id, asked] of Object.entries(request.questions)) {
+		const answer = answers[id];
+		if (!isRecord(answer)) return `no answer for '${id}'`;
+		const type = isRecord(asked) ? asked.type : undefined;
+		const field = typeof type === 'string' ? ANSWER_FIELD.get(type) : undefined;
+		if (!field) continue;
+		const wanted = field === 'choice' ? 'string' : 'number';
+		if (typeof answer[field] !== wanted)
+			return `the answer for '${id}' has no ${field}`;
+	}
+	return undefined;
+}
 
 type Noul = Readonly<{
 	instructions: string;
@@ -62,9 +96,11 @@ const TYPESAFE: Provider = Object.freeze({
 	pricePerMillionTokens: 0.042,
 	pricedOn: '2026-10-04',
 	toBody: (request) => request,
-	fromBody: (body) => {
+	fromBody: (body, request) => {
 		if (!isRecord(body) || !isRecord(body.answers))
-			return { kind: 'garbled', detail: 'the answer was not a Jev reply' };
+			return garbled('the answer was not a Jev reply');
+		const missing = unanswered(body.answers, request);
+		if (missing) return garbled(missing);
 		const usage = isRecord(body.usage) ? body.usage.input_tokens : undefined;
 		return {
 			model: typeof body.model === 'string' ? body.model : '',
@@ -91,9 +127,11 @@ const OPENAI: Provider = Object.freeze({
 			toPredicate(name, question as Noul),
 		),
 	}),
+	// OpenAI's contract for a missing answer is not published, and a refusal is a
+	// legitimate non-answer there, so only the shape is checked.
 	fromBody: (body) => {
 		if (!isRecord(body) || !Array.isArray(body.answers))
-			return { kind: 'garbled', detail: 'the answer was not a Luna reply' };
+			return garbled('the answer was not a Luna reply');
 		const answers: Record<string, { noul?: number }> = {};
 		for (const answer of body.answers) {
 			if (!isRecord(answer) || typeof answer.name !== 'string') continue;

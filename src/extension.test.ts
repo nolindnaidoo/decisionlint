@@ -19,6 +19,16 @@ const manifest = JSON.parse(
 const BARE_CHOICE = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } };`;
 
 type Doc = vscode.TextDocument & { text: string };
+type Init = { body: string };
+
+// One answer per question asked, as TypeSafe answers; the given ones override a no.
+const answerAll = (body: string): Record<string, unknown> =>
+	Object.fromEntries(
+		Object.keys(JSON.parse(body).questions ?? {}).map((id) => [
+			id,
+			{ noul: 0 },
+		]),
+	);
 
 function doc(
 	text: string,
@@ -36,17 +46,19 @@ function doc(
 	return self as unknown as Doc;
 }
 
-function start(...documents: Doc[]): void {
+function start(...documents: Doc[]): vscode.ExtensionContext {
 	_state.textDocuments = documents;
 	_state.activeTextEditor = documents[0]
 		? { document: documents[0] }
 		: undefined;
-	activate({
+	const context = {
 		subscriptions: [],
 		secrets: _secrets,
 		asAbsolutePath: (relative: string) => `/ext/${relative}`,
 		extension: { packageJSON: { version: manifest.version } },
-	} as unknown as vscode.ExtensionContext);
+	} as unknown as vscode.ExtensionContext;
+	activate(context);
+	return context;
 }
 
 function diagnostics(name = 'file:///a.ts'): vscode.Diagnostic[] {
@@ -79,26 +91,48 @@ describe('configuration', () => {
 		);
 	});
 
-	it('falls back to defaults on values of the wrong type', () => {
+	it('falls back to defaults on values of the wrong type, outside the lint settings', () => {
 		_state.config = {
-			rules: 'nope',
-			fallbackOptions: 3,
-			ignore: null,
 			include: '',
 			maxFileSizeBytes: -1,
 		};
 		const config = getConfiguration();
-		expect(config.lint.rules).toEqual({});
-		expect(config.lint.fallbackOptions).toEqual(
-			CONFIG_DEFAULTS.fallbackOptions,
-		);
+		expect(config.lint).toMatchObject({
+			rules: {},
+			fallbackOptions: CONFIG_DEFAULTS.fallbackOptions,
+		});
 		expect(config.include).toBe(CONFIG_DEFAULTS.include);
 		expect(config.maxFileSizeBytes).toBe(CONFIG_DEFAULTS.maxFileSizeBytes);
 	});
 
-	it('drops rule entries that name no rule or no severity', () => {
-		_state.config = { rules: { JEV004: 'off', JEV999: 'off', JEV001: 'loud' } };
-		expect(getConfiguration().lint.rules).toEqual({ JEV004: 'off' });
+	it("reads the lint settings with the settings file's reader, and refuses what it refuses", () => {
+		_state.config = { rules: { JEV004: 'off', JEV999: 'off' } };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: rules: 'JEV999' is not a rule code or a rule name.",
+		);
+		_state.config = { rules: { JEV001: 'loud' } };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
+		);
+		_state.config = { ignore: 'JEV004:team' };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: 'ignore' must be a list of strings.",
+		);
+		// A lint setting of the wrong shape is refused, not defaulted: a default
+		// would show findings the author believes are off.
+		_state.config = { rules: 'nope' };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: 'rules' must be an object of rule code to level.",
+		);
+		_state.config = { fallbackOptions: 3 };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: 'fallbackOptions' must be a list of strings.",
+		);
+		// A rule by its name and a level by its alias, as the file takes them.
+		_state.config = { rules: { 'no-fallback-option': 'warn' } };
+		expect(getConfiguration().lint).toMatchObject({
+			rules: { JEV004: 'warning' },
+		});
 	});
 
 	// A command missing from the table is one nobody knows they can bind.
@@ -196,6 +230,23 @@ describe('diagnostics', () => {
 			affectsConfiguration: (section: string) => section === 'jevlint-le',
 		});
 		expect(diagnostics()).toHaveLength(0);
+	});
+
+	it('stops linting and says why when a rule entry in the settings names no rule, as a settings file would', () => {
+		// Dropped quietly, a typo'd code would leave the rule on with no word.
+		_state.config = { rules: { JEV04: 'off' } };
+		start(doc(BARE_CHOICE));
+		expect(diagnostics()).toEqual([]);
+		expect(_state.statusBar).toMatchObject({
+			text: '$(warning) Jev not linted',
+			tooltip:
+				"jevlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
+		});
+		_state.config = {};
+		_state.listeners.config?.({
+			affectsConfiguration: (section: string) => section === 'jevlint-le',
+		});
+		expect(diagnostics()).toHaveLength(1);
 	});
 });
 
@@ -407,6 +458,19 @@ describe('commands', () => {
 		expect(found?.range.start.line).toBe(1);
 	});
 
+	it('reads a file from disk at the columns the editor shows, byte order mark or not', async () => {
+		start();
+		const plain = doc(BARE_CHOICE, 'file:///plain.ts');
+		// Node keeps the mark as the first character; the editor never shows it.
+		const marked = doc(`\uFEFF${BARE_CHOICE}`, 'file:///marked.ts');
+		for (const document of [plain, marked])
+			_state.documents.set(document.uri.toString(), document);
+		_state.files = [plain.uri, marked.uri];
+		await run(COMMANDS.lintWorkspace);
+		const [found] = diagnostics('file:///marked.ts');
+		expect(found?.range).toEqual(diagnostics('file:///plain.ts')[0]?.range);
+	});
+
 	it('lints the unsaved text of a file that is open, not what is on disk', async () => {
 		const open = doc(BARE_CHOICE, 'file:///good.ts');
 		start(open);
@@ -506,12 +570,12 @@ describe('check with Jev', () => {
 	const FROM_JEV = 'file:///a.ts#jevlint-le-jev';
 	const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 	const jevSays = (answers: Record<string, { noul: number }>, status = 200) =>
-		vi.fn(async () => ({
+		vi.fn(async (_url: string, init: Init) => ({
 			ok: status === 200,
 			status,
 			json: async () => ({
 				model: 'jev-1.13.0',
-				answers,
+				answers: { ...answerAll(init.body), ...answers },
 				usage: { input_tokens: 310 },
 			}),
 			text: async () => '',
@@ -682,6 +746,29 @@ describe('check with Jev', () => {
 		expect(_state.modals[0]?.split('\n')[2]).toBe(
 			'Skipped: 1 built at runtime.',
 		);
+	});
+
+	it('keeps to the vendor and model it started with when the setting changes mid-run', async () => {
+		const fetch = jevSays({});
+		vi.stubGlobal('fetch', fetch);
+		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
+		start(doc(VAGUE));
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		// The user switches the model while the confirmation is on screen. The
+		// run was planned, priced and keyed for Jev, so that is what it asks.
+		_state.onModal = () => {
+			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
+		};
+		await run(JEV_COMMANDS.checkWithJev);
+		expect(_state.modals[0]).toContain('to TypeSafe?');
+		expect(fetch).toHaveBeenCalledTimes(1);
+		const [url, init] = fetch.mock.calls[0] as unknown as [
+			string,
+			{ body: string; headers: Record<string, string> },
+		];
+		expect(url).toContain('api.typesafe.ai');
+		expect(JSON.parse(init.body).model).toBe('jev-1.13.0');
+		expect(init.headers.Authorization).toBe('Bearer k');
 	});
 
 	it('does not ask unless the user has switched the question on', async () => {
@@ -1020,6 +1107,78 @@ describe('probe a question', () => {
 		expect(_state.messages.at(-1)).toContain(reason);
 	});
 
+	it('keeps to the model it started with when the setting changes mid-run', async () => {
+		const fetch = answering(Array(5).fill('damaged'));
+		vi.stubGlobal('fetch', fetch);
+		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		cursorIn(document, 'What went wrong');
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.onModal = () => {
+			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
+		};
+		await run(PROBE_COMMAND);
+		expect(fetch).toHaveBeenCalledTimes(5);
+		for (const sent of fetch.mock.calls as unknown as [
+			string,
+			{ body: string },
+		][]) {
+			expect(sent[0]).toContain('api.typesafe.ai');
+			expect(JSON.parse(sent[1].body).model).toBe('jev-1.13.0');
+		}
+	});
+
+	it('runs one probe at a time', async () => {
+		let answer: (() => void) | undefined;
+		const fetch = vi.fn(
+			() =>
+				new Promise((resolve) => {
+					answer = () =>
+						resolve({
+							ok: true,
+							status: 200,
+							json: async () => ({
+								model: 'jev-1.13.0',
+								answers: {
+									q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
+								},
+								usage: { input_tokens: 300 },
+							}),
+							text: async () => '',
+						});
+				}),
+		);
+		vi.stubGlobal('fetch', fetch);
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		cursorIn(document, 'What went wrong');
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		const first = run(PROBE_COMMAND);
+		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+		await run(PROBE_COMMAND);
+		expect(_state.messages.at(-1)).toContain('A probe is already running');
+		expect(fetch).toHaveBeenCalledTimes(1);
+		for (let i = 0; i < 5; i += 1) {
+			await vi.waitFor(() => expect(answer).toBeDefined());
+			const settle = answer;
+			answer = undefined;
+			settle?.();
+		}
+		await first;
+		expect(fetch).toHaveBeenCalledTimes(5);
+		expect(_state.shown).toHaveLength(1);
+	});
+
+	it('is made with the extension and disposed with it, report page included', () => {
+		const context = start(doc(REQUEST, 'file:///a.ts', 'json'));
+		// The page's change event is the one emitter the extension owns. Made at
+		// import, it would outlive a deactivation and be shared by the next one.
+		expect(_state.emitters).toHaveLength(1);
+		for (const subscription of context.subscriptions) subscription.dispose();
+		expect(_state.emitters.map((emitter) => emitter.disposed)).toEqual([true]);
+	});
+
 	it('asks first when the question is switched on, and sends nothing on no', async () => {
 		const fetch = answering([]);
 		vi.stubGlobal('fetch', fetch);
@@ -1037,17 +1196,43 @@ describe('probe a question', () => {
 	});
 });
 
+describe('a command whose body throws', () => {
+	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
+
+	it.each([
+		[COMMANDS.lintFile, 'Linting this file'],
+		[JEV_COMMANDS.checkWithJev, 'The check with Jev'],
+		[PROBE_COMMAND, 'The probe'],
+	])('%s says so, instead of doing nothing', async (command, what) => {
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		_state.activeTextEditor = {
+			document,
+			selection: { active: new vscode.Position(0, 0) },
+		};
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		// After activation, so the first lint of the open file is not what throws.
+		(document as { getText: () => string }).getText = () => {
+			throw new Error('the document is gone');
+		};
+		await run(command);
+		expect(_state.messages.at(-1)).toBe(
+			`JevLint-LE: ${what} could not finish: the document is gone`,
+		);
+	});
+});
+
 describe('how much it says', () => {
 	const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 	const reply = (cancel = false) =>
-		vi.fn(async () => {
+		vi.fn(async (_url: string, init: Init) => {
 			if (cancel) _state.cancel?.();
 			return {
 				ok: true,
 				status: 200,
 				json: async () => ({
 					model: 'jev-1.13.0',
-					answers: {},
+					answers: answerAll(init.body),
 					usage: { input_tokens: 1 },
 				}),
 				text: async () => '',
@@ -1157,12 +1342,12 @@ describe('the editor context menu', () => {
 describe('when the editor fails', () => {
 	const TWO = `const r = { questions: { a: { type: 'noul', instructions: 'Is the order large?' }, b: { type: 'noul', instructions: 'Is the parcel heavy?' } } };`;
 	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
-	const reply = (answers: unknown) => ({
+	const reply = (init: Init, answers: Record<string, unknown>) => ({
 		ok: true,
 		status: 200,
 		json: async () => ({
 			model: 'jev-1.13.0',
-			answers,
+			answers: { ...answerAll(init.body), ...answers },
 			usage: { input_tokens: 300 },
 		}),
 		text: async () => '',
@@ -1184,7 +1369,9 @@ describe('when the editor fails', () => {
 	it('drops what Jev said when the settings it was filtered by change', async () => {
 		vi.stubGlobal(
 			'fetch',
-			vi.fn(async () => reply({ JEV302: { noul: 0.9 } })),
+			vi.fn(async (_url: string, init: Init) =>
+				reply(init, { JEV302: { noul: 0.9 } }),
+			),
 		);
 		start(doc(TWO));
 		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
@@ -1196,11 +1383,11 @@ describe('when the editor fails', () => {
 
 	it('shows nothing from Jev about text that was edited during the run', async () => {
 		const document = doc(TWO);
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: Init) => {
 			// The user types while the first answer is on its way back.
 			document.text = `// edited\n${TWO}`;
 			_state.listeners.change?.({ document });
-			return reply({ JEV302: { noul: 0.9 } });
+			return reply(init, { JEV302: { noul: 0.9 } });
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(document);
@@ -1218,9 +1405,9 @@ describe('when the editor fails', () => {
 		const document = doc(TWO);
 		vi.stubGlobal(
 			'fetch',
-			vi.fn(async () => {
+			vi.fn(async (_url: string, init: Init) => {
 				_state.listeners.close?.(document);
-				return reply({ JEV302: { noul: 0.9 } });
+				return reply(init, { JEV302: { noul: 0.9 } });
 			}),
 		);
 		start(document);
@@ -1232,9 +1419,9 @@ describe('when the editor fails', () => {
 	it('does not start a second Jev check of a file while one is running', async () => {
 		let answer: (() => void) | undefined;
 		const fetch = vi.fn(
-			() =>
+			(_url: string, init: Init) =>
 				new Promise((resolve) => {
-					answer = () => resolve(reply({}));
+					answer = () => resolve(reply(init, {}));
 				}),
 		);
 		vi.stubGlobal('fetch', fetch);
@@ -1258,9 +1445,9 @@ describe('when the editor fails', () => {
 
 	it('says a Jev check was cancelled, and how much of it ran', async () => {
 		// The user presses cancel while the first answer is on its way back.
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: Init) => {
 			_state.cancel?.();
-			return reply({ JEV302: { noul: 0.9 } });
+			return reply(init, { JEV302: { noul: 0.9 } });
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
@@ -1271,11 +1458,13 @@ describe('when the editor fails', () => {
 	});
 
 	it('does not call a cancelled request a network failure', async () => {
-		const fetch = vi.fn(async (_url: string, init: { signal: AbortSignal }) => {
-			_state.cancel?.();
-			init.signal.throwIfAborted();
-			return reply({});
-		});
+		const fetch = vi.fn(
+			async (_url: string, init: Init & { signal: AbortSignal }) => {
+				_state.cancel?.();
+				init.signal.throwIfAborted();
+				return reply(init, {});
+			},
+		);
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
 		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
@@ -1285,9 +1474,9 @@ describe('when the editor fails', () => {
 	});
 
 	it('shows no probe report for a probe that was cancelled part way', async () => {
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: Init) => {
 			_state.cancel?.();
-			return reply({
+			return reply(init, {
 				q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
 			});
 		});
@@ -1303,8 +1492,10 @@ describe('when the editor fails', () => {
 	it('still tells the user what a probe found when the report cannot be opened', async () => {
 		vi.stubGlobal(
 			'fetch',
-			vi.fn(async () =>
-				reply({ q: { type: 'choice', choice: 'damaged', confidence: 0.6 } }),
+			vi.fn(async (_url: string, init: Init) =>
+				reply(init, {
+					q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
+				}),
 			),
 		);
 		probing();
@@ -1334,7 +1525,7 @@ describe('when the editor fails', () => {
 	});
 
 	it('falls back to the environment key when the keychain cannot be read', async () => {
-		const fetch = vi.fn(async () => reply({}));
+		const fetch = vi.fn(async (_url: string, init: Init) => reply(init, {}));
 		vi.stubGlobal('fetch', fetch);
 		vi.stubEnv('TYPESAFE_API_KEY', 'from-env');
 		start(doc(TWO));
@@ -1409,6 +1600,13 @@ describe('a project settings file in the editor', () => {
 		);
 	};
 	const file = () => doc(NO_FALLBACK, 'file:///work/app/src/q.ts');
+
+	it('replaces editor settings that cannot be used, so the file still lints', () => {
+		_state.config = { rules: { JEV04: 'off' } };
+		within({ '/work/app/jevlint-le.json': '{}' }, file());
+		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
+		expect(_state.statusBar.text).not.toContain('not linted');
+	});
 
 	it('replaces the editor settings, so the editor reports what the command line would', () => {
 		_state.config = { rules: { JEV004: 'error' } };
@@ -1596,6 +1794,18 @@ describe('a project settings file in the editor', () => {
 			within(installed(manifest.version), file());
 			expect(loads).toBe(0);
 			expect(_state.statusBar.text).toBe('$(checklist) Jev 1');
+		});
+
+		it('names a copy whose manifest cannot be read, and lints with its own', () => {
+			within({ '/work/app/node_modules/jevlint-le/package.json': '{' }, file());
+			expect(messages().join(' ')).toContain(BUNDLED);
+			// A copy that is there and cannot be named is not "none installed", so it is said.
+			expect(_state.statusBar.text).toBe(
+				'$(checklist) Jev 1 · project copy unreadable',
+			);
+			expect(_state.statusBar.tooltip).toContain(
+				'its package.json is not JSON',
+			);
 		});
 
 		it('does not stop the editor linting when the project has none', () => {

@@ -5,8 +5,8 @@ import {
 	EXTENSIONS,
 	MAX_FILE_SIZE_BYTES,
 } from '../lint/lint';
-import { RULE_CODES } from '../lint/rules';
-import type { LintOptions, RuleCode, Severity } from '../types';
+import type { LintOptions } from '../types';
+import { readLintOptions } from './projectConfig';
 
 export const SECTION = 'jevlint-le';
 
@@ -14,7 +14,8 @@ export const SECTION = 'jevlint-le';
 export type NotificationsLevel = 'all' | 'important' | 'silent';
 
 export type Configuration = Readonly<{
-	lint: LintOptions;
+	/** The lint settings, or the sentence that says why they cannot be used, as for a settings file. */
+	lint: LintOptions | string;
 	include: string;
 	exclude: string;
 	maxFileSizeBytes: number;
@@ -31,12 +32,12 @@ export type Configuration = Readonly<{
 	}>;
 }>;
 
-/** Must equal the defaults declared in package.json. `config.test.ts` holds the two together. */
+/** Must equal the defaults declared in package.json. `extension.test.ts` holds the two together. */
 export const CONFIG_DEFAULTS = Object.freeze({
 	rules: Object.freeze({}),
 	fallbackOptions: DEFAULT_FALLBACK_OPTIONS,
 	ignore: Object.freeze([] as string[]),
-	include: `**/*.{${Object.keys(EXTENSIONS).join(',')}}`,
+	include: `**/*.{${[...EXTENSIONS.keys()].join(',')}}`,
 	exclude: '**/{node_modules,dist,out,build,coverage,.git}/**',
 	maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
 	notificationsLevel: 'important' as NotificationsLevel,
@@ -61,23 +62,6 @@ function readKey(value: unknown): string {
 	return typeof value === 'string' ? value.trim() : '';
 }
 
-const SEVERITIES: ReadonlySet<string> = new Set([
-	'off',
-	'hint',
-	'info',
-	'warning',
-	'error',
-]);
-const CODES: ReadonlySet<string> = new Set(RULE_CODES);
-
-function readStrings(
-	value: unknown,
-	fallback: ReadonlyArray<string>,
-): ReadonlyArray<string> {
-	if (!Array.isArray(value)) return fallback;
-	return value.filter((item): item is string => typeof item === 'string');
-}
-
 function readString(value: unknown, fallback: string): string {
 	return typeof value === 'string' && value.trim() ? value : fallback;
 }
@@ -88,31 +72,23 @@ function readPositive(value: unknown, fallback: number): number {
 		: fallback;
 }
 
-// A typo in settings must not switch a rule off or invent a severity, so an
-// entry that is not a known code with a known level is dropped.
-function readRules(value: unknown): LintOptions['rules'] {
-	if (!value || typeof value !== 'object' || Array.isArray(value))
-		return CONFIG_DEFAULTS.rules;
-	const valid = Object.entries(value).filter(
-		([code, level]) =>
-			CODES.has(code) && typeof level === 'string' && SEVERITIES.has(level),
-	);
-	return Object.freeze(Object.fromEntries(valid)) as Partial<
-		Record<RuleCode, Severity | 'off'>
-	>;
+// The settings file's reader, so the two refuse the same things in the same
+// words. An entry dropped quietly here once left a typo'd rule on with no word.
+function readLint(
+	settings: vscode.WorkspaceConfiguration,
+): LintOptions | string {
+	const read = readLintOptions({
+		rules: settings.get('rules'),
+		fallbackOptions: settings.get('fallbackOptions'),
+		ignore: settings.get('ignore'),
+	});
+	return typeof read === 'string' ? `${SECTION} settings: ${read}` : read;
 }
 
 export function getConfiguration(): Configuration {
 	const settings = vscode.workspace.getConfiguration(SECTION);
 	return Object.freeze({
-		lint: Object.freeze({
-			rules: readRules(settings.get('rules')),
-			fallbackOptions: readStrings(
-				settings.get('fallbackOptions'),
-				CONFIG_DEFAULTS.fallbackOptions,
-			),
-			ignore: readStrings(settings.get('ignore'), CONFIG_DEFAULTS.ignore),
-		}),
+		lint: readLint(settings),
 		notificationsLevel: readLevel(settings.get('notificationsLevel')),
 		include: readString(settings.get('include'), CONFIG_DEFAULTS.include),
 		exclude: readString(settings.get('exclude'), CONFIG_DEFAULTS.exclude),

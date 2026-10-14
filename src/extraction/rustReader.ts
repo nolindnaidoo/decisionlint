@@ -44,11 +44,12 @@ const KEYWORDS = new Set([
 	'const',
 	'static',
 ]);
-const FIELD_ALIASES: Readonly<Record<string, string>> = Object.freeze({
-	kind: 'type',
-	qtype: 'type',
-	question_type: 'type',
-});
+// A Map: the key is a field name from the file.
+const FIELD_ALIASES: ReadonlyMap<string, string> = new Map([
+	['kind', 'type'],
+	['qtype', 'type'],
+	['question_type', 'type'],
+]);
 // Calls that change how a value is held and not what it is.
 const WRAPPERS = new Set([
 	'Some',
@@ -203,15 +204,15 @@ function skipConversions(tokens: ReadonlyArray<Token>, at: number): number {
 }
 
 const RUST: Dialect = Object.freeze({
-	keywords: Object.freeze({
-		true: (span: Span): Node => ({ kind: 'boolean', value: true, span }),
-		false: (span: Span): Node => ({ kind: 'boolean', value: false, span }),
-		null: (span: Span): Node => ({ kind: 'null', span }),
-		None: (span: Span): Node => ({ kind: 'null', span }),
-	}),
+	keywords: new Map([
+		['true', (span: Span): Node => ({ kind: 'boolean', value: true, span })],
+		['false', (span: Span): Node => ({ kind: 'boolean', value: false, span })],
+		['null', (span: Span): Node => ({ kind: 'null', span })],
+		['None', (span: Span): Node => ({ kind: 'null', span })],
+	]),
 	typeAt,
 	braceLists: false,
-	fieldKey: (name: string) => FIELD_ALIASES[name] ?? name,
+	fieldKey: (name: string) => FIELD_ALIASES.get(name) ?? name,
 	unwrap,
 	skipConversions,
 	patternsLookLikeLiterals: true,

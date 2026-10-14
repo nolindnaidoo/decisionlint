@@ -12,9 +12,9 @@ measured to fail. Linting uses no network and no API key. One command, run by
 the user with their own key, asks the model to check a file. No filesystem
 writes outside an accepted quick fix.
 
-**Status:** released as 0.2.0 on 2026-10-05, after 0.1.0 on 2026-10-04. The name
-appears in `package.json`, the `jevlint-le.*` settings and commands, the
-`jevlint-le-disable` directive and the diagnostic source.
+**Status:** released; the current version is the top heading of `CHANGELOG.md`.
+The name appears in `package.json`, the `jevlint-le.*` settings and commands,
+the `jevlint-le-disable` directive and the diagnostic source.
 
 ## Architecture
 
@@ -75,8 +75,9 @@ cli/
   format.ts              stylish, compact, JSON, GitHub annotation, SARIF and JUnit output
   run.ts                 run(argv, io) -> exit status. Everything but the process
   jev.ts                 --jev: the plan across files under one call limit, and the run
-  mcp.ts                 the MCP server: five read-only tools over the same
-                         linting, the fixes and the rule pages
+  mcp.ts                 the MCP server: eight tools, six read-only over the
+                         same linting, the fixes and the rule pages, and two
+                         that send with the user's key
   main.ts                the process: real filesystem, streams and exit code
   mcpMain.ts             the server-only process, published as jevlint-le-mcp
 services/linter.ts       diagnostics collection, per-document results, debounce
@@ -118,6 +119,13 @@ family's files, copied unchanged from `regex-le`.
 
 ## Invariants
 
+- **Text from a document, a setting or an argument never indexes a plain
+  object.** A frozen object literal answers `constructor`, `toString`,
+  `valueOf`, `hasOwnProperty` and `__proto__` with Object.prototype's member,
+  and that member is truthy: the Noul key fix once renamed a `constructor`
+  key to `function Object() { [native code] }`, and a question typed
+  `valueOf` threw inside the reader. Every table keyed by such text is a
+  `Map`. `lint.test.ts` drives each prototype name through each position.
 - **The reader refuses rather than guesses.** A value that is not a literal is
   `unreadable`. An object with a spread, a computed key or a method is
   `partial`. A rule that needs such a value does not run, and `JEV000` says so.
@@ -167,6 +175,13 @@ family's files, copied unchanged from `regex-le`.
 - **A settings file that cannot be used stops linting.** Falling back to
   defaults would show findings CI does not, or hide ones it does. The editor
   clears the file's findings and says why. The command line exits 2.
+- **The editor's lint settings go through the settings file's reader.**
+  `jevlint-le.rules`, `fallbackOptions` and `ignore` are read by
+  `readLintOptions` in `config/projectConfig.ts`, so a rule entry that names
+  no rule or no level, or a list that is not one, stops linting with the same
+  sentence a `jevlint-le.json` would give, and a rule may be named by its
+  name. An entry dropped quietly once left a typo'd rule on with no word.
+  `extension.test.ts` reads the status bar for it.
 - **The settings file is parsed in one place**, `config/projectConfig.ts`, and
   its schema must list the same keys and levels. A test holds them together.
 - **A silencing comment is never written into a string or into strict JSON.**
@@ -176,6 +191,16 @@ family's files, copied unchanged from `regex-le`.
   `showDocumentError` and `cancel` exist because a path the mock cannot fail
   is a path no test has run. Five defects were found the day they were added.
   A new call into the editor that can fail gets its switch and its test.
+- **A command that throws says so.** Every command body runs under
+  `commands/guard.ts`, which turns a throw into a `blocked` message naming
+  the command and the reason. Left to the editor, the rejection goes to a log
+  no user reads and the command looks broken. `extension.test.ts` makes the
+  document throw under three commands.
+- **One paid run per file, one probe at a time.** A second Check with Jev on
+  a file that is being checked, or a second probe while one runs, is refused
+  with `blocked` and sends nothing: it would pay for the same answers and
+  race the first to show them. `extension.test.ts` starts the second from
+  inside the first's network wait, for both commands.
 - **A run the user stopped never reads as one that finished.** The Jev check
   says how many requests were answered of how many planned. A cancelled probe
   makes no report. A request cut off by a cancel is not a network failure.
@@ -385,7 +410,12 @@ family's files, copied unchanged from `regex-le`.
   request.
 - **What the user agrees to is what is sent.** `reviewer.plan` and
   `reviewer.review` both come from one `prepare`, so the request count in the
-  confirmation cannot drift from the run.
+  confirmation cannot drift from the run. A paid command reads the
+  configuration once, before its first await, and hands that one reading to
+  the key lookup, the plan, the confirmation and the run. Read again after
+  the modal, a model switched while it was on screen would send the Jev key
+  to OpenAI. `extension.test.ts` switches the model from inside the modal for
+  both commands.
 - **A probe changes layout, never wording.** A reworded question changes its
   meaning too, and then a moved answer proves nothing.
 - **State is sent only when the user turns `jev.sendState` on,** and only a
@@ -395,9 +425,14 @@ family's files, copied unchanged from `regex-le`.
   when any part is built at runtime, and the run counts what it held back.
 - **No test calls TypeSafe.** `fetch` is stubbed. The scripts under `scripts/`
   that do call it are run by hand, and each has a `--dry-run` and a call limit.
-- **A reply is a Jev reply or it is a failure.** `jev/client.ts` checks the
-  shape before reading it. A 200 from a proxy read as "no answers" would
-  report a clean check that never ran.
+- **A reply is a Jev reply or it is a failure.** `jev/provider.ts` checks the
+  body against the request before reading it: TypeSafe's API reference
+  returns one answer per question, under the same ids, each carrying its
+  type's value, so a body that answers fewer questions than were asked, or
+  answers one without its value, is `garbled`, naming the question. A 200
+  from a proxy read as "no answers" would report a clean check that never
+  ran. `provider.test.ts` drives each shape; every test fixture answers what
+  was asked, as the vendor does.
 - **Every request has a time limit, and a stop ends a wait at once.** A
   stalled connection would otherwise hold a CI job until it was killed.
   Only `busy` and `server` failures are retried.
@@ -406,7 +441,13 @@ family's files, copied unchanged from `regex-le`.
   One run per document at a time.
 - **The MCP server answers everything and exits only when its input closes.**
   A tool that throws is a failed call. A line that is not a request is a
-  protocol error.
+  protocol error. A line over `MAX_LINE_BYTES` in `cli/lines.ts` is dropped as
+  it arrives and answered by its length, so one frame with no newline cannot
+  grow until the process dies; `lines.test.ts` drives the limit from each side. So is a call the server cannot route: an unknown tool, or
+  arguments that do not fit the tool's input schema, are refused with
+  `-32602` before any tool runs, and a tool that ran and could not do what
+  it was asked is a failed call with `isError`. `cli.test.ts` holds one table
+  of each.
 - **What the command line could not read is named, never passed over.** An
   unreadable folder or file and a file the reader failed on go in
   `totals.unread`. A linked folder is not followed, because it can lead back
@@ -423,9 +464,11 @@ family's files, copied unchanged from `regex-le`.
   code from the project. `services/engines.ts` is the one place that decides,
   and `extension.test.ts` fails if an untrusted workspace loads anything.
 - **The editor never stops linting for want of a project copy.** No copy, an
-  untrusted workspace, a copy too old, one that fails to load or one that
-  does not read the file's language all fall back to the bundled linter. Every
-  fallback but "none installed" is named in the status bar with its reason.
+  untrusted workspace, a copy too old, one that fails to load, one whose
+  manifest cannot be read or one that does not read the file's language all
+  fall back to the bundled linter. Every fallback but "none installed" is
+  named in the status bar with its reason; `extension.test.ts` reads the
+  status bar for each.
 - **`src/lib.ts` is a promise.** The npm package exports it and editors of
   other versions load it. Add names freely. Change or remove one only by
   raising `api`, which makes older editors fall back instead of misreading.
@@ -435,7 +478,15 @@ family's files, copied unchanged from `regex-le`.
   found it and must not index `RULES` with a foreign code.
 - **Check with Jev and the probe never use a project's copy.** They spend the
   user's key, so they run the code the user installed as an extension.
-- **File size is counted in bytes in both places.**
+- **A byte order mark is not text.** Node keeps it as the first character of
+  a UTF-8 file and the editor never shows it. Every reader from disk, the
+  command line's files and standard input and the editor's workspace run,
+  drops it before linting, so a finding on the first line has the same column
+  as in the open file, and `--fix` writes it back. `cli.test.ts` and
+  `extension.test.ts` each lint a marked file beside the same file unmarked.
+- **File size is counted in bytes in every place.** The editor, the command
+  line's files and standard input, and the server's `text` argument are all
+  held to `MAX_FILE_SIZE_BYTES`, so no entry point is the way around another.
 - **The pinned model and the call limit are defined once,** in
   `jev/review.ts`. The editor's defaults and the command line's read them.
   The model is `MEASURED_ON` from `lint/limits.ts`, where the offline rules

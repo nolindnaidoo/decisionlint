@@ -15,7 +15,7 @@ export const api = 1;
 
 /** The kinds of file this copy reads, as `lint` and `fix` name them. */
 export const syntaxes: ReadonlyArray<string> = Object.freeze([
-	...new Set(Object.values(EXTENSIONS)),
+	...new Set(EXTENSIONS.values()),
 ]);
 
 /** Every rule this copy has, by code: its name, default level, its own page and the vendor page behind it. */

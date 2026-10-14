@@ -104,28 +104,40 @@ export const MAX_FILE_SIZE_BYTES = 1_000_000;
 /**
  * Every file extension the tool reads and the reader it needs. The editor's
  * `include` setting and the command line's directory search both come from
- * this, and `cli.test.ts` holds the setting to it.
+ * this, and `cli.test.ts` holds the setting to it. A Map, because the key
+ * is a file name's tail and a plain object would read `a.constructor`.
  */
-export const EXTENSIONS: Readonly<Record<string, Syntax>> = Object.freeze({
-	json: 'js',
-	jsonc: 'js',
-	js: 'js',
-	jsx: 'js',
-	mjs: 'js',
-	cjs: 'js',
-	ts: 'js',
-	tsx: 'js',
-	mts: 'js',
-	cts: 'js',
-	py: 'python',
-	rs: 'rust',
-	go: 'go',
-});
+export const EXTENSIONS: ReadonlyMap<string, Syntax> = new Map([
+	['json', 'js'],
+	['jsonc', 'js'],
+	['js', 'js'],
+	['jsx', 'js'],
+	['mjs', 'js'],
+	['cjs', 'js'],
+	['ts', 'js'],
+	['tsx', 'js'],
+	['mts', 'js'],
+	['cts', 'js'],
+	['py', 'python'],
+	['rs', 'rust'],
+	['go', 'go'],
+]);
+
+/**
+ * The byte order mark. Node keeps it as the first character of a UTF-8 file
+ * and an editor never shows it, so a reader from disk drops it before linting
+ * or every column on the first line is one too many.
+ */
+export const BOM = '\uFEFF';
+export const withoutBom = (text: string): string =>
+	text.startsWith(BOM) ? text.slice(1) : text;
 
 /** The reader for a file path, or undefined when the tool does not read that type. */
 export function syntaxForPath(path: string): Syntax | undefined {
 	const dot = path.lastIndexOf('.');
-	return dot === -1 ? undefined : EXTENSIONS[path.slice(dot + 1).toLowerCase()];
+	return dot === -1
+		? undefined
+		: EXTENSIONS.get(path.slice(dot + 1).toLowerCase());
 }
 
 const NO_HELPERS: ReadonlySet<string> = new Set();
@@ -147,15 +159,15 @@ const LANGUAGES: Readonly<Record<Syntax, Language>> = Object.freeze({
 	go: { tokenize: tokenizeGo, read: readGoNodes },
 });
 
-const LANGUAGE_IDS: Readonly<Record<string, Syntax>> = Object.freeze({
-	python: 'python',
-	rust: 'rust',
-	go: 'go',
-});
+const LANGUAGE_IDS: ReadonlyMap<string, Syntax> = new Map([
+	['python', 'python'],
+	['rust', 'rust'],
+	['go', 'go'],
+]);
 
 /** The reader for an editor language id. Anything not listed is read as JavaScript, which covers JSON. */
 export function syntaxFor(languageId: string): Syntax {
-	return LANGUAGE_IDS[languageId] ?? 'js';
+	return LANGUAGE_IDS.get(languageId) ?? 'js';
 }
 
 // A question defined under a name and used in a request is reached twice: at
@@ -271,8 +283,9 @@ export function lintText(
 	options: LintOptions = DEFAULT_OPTIONS,
 	syntax: Syntax = 'js',
 ): LintResult {
-	// The library is called from untyped code, where a file extension is an easy thing to pass here.
-	if (!(syntax in TRIGGERS)) {
+	// The library is called from untyped code, where a file extension is an easy
+	// thing to pass here. `in` would admit `constructor`, so only own keys count.
+	if (!Object.hasOwn(TRIGGERS, syntax)) {
 		throw new Error(
 			`Unknown syntax ${JSON.stringify(syntax)}. Use one of: ${Object.keys(TRIGGERS).join(', ')}.`,
 		);

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { LintOptions, ReportedFinding } from '../types';
+import { fixText } from './fixAll';
 import { MEASURED_ON } from './limits';
-import { DEFAULT_OPTIONS, lintText } from './lint';
+import { DEFAULT_OPTIONS, lintText, syntaxFor, syntaxForPath } from './lint';
 
 function codes(
 	text: string,
@@ -996,5 +997,107 @@ describe('JEV006 on a list of options wrapped in a one-option map', () => {
 			"criteria: { 'billing': null, 'technical': null, 'other': null }",
 		);
 		expect(codes(mended)).toEqual([]);
+	});
+});
+
+describe('text that names a property of Object.prototype', () => {
+	const NAMES = [
+		'constructor',
+		'toString',
+		'valueOf',
+		'hasOwnProperty',
+		'__proto__',
+	];
+
+	it.each(NAMES)('reports a Noul criteria key %s and offers no fix', (key) => {
+		const text = request(
+			`"q": { "type": "noul", "instructions": "Has it shipped?", "criteria": { "${key}": "It left.", "false": "Still here." } }`,
+		);
+		const [found] = lintText(text).findings;
+		expect(found).toMatchObject({ code: 'JEV006', fix: undefined });
+		expect(fixText(text, DEFAULT_OPTIONS)).toEqual({ text, fixed: 0 });
+	});
+
+	it.each(NAMES)(
+		'reads a question of type %s as any other unknown type',
+		(type) => {
+			// Alone in its map, a type that is no slip from a real one is some other program's data.
+			const alone = (name: string) =>
+				request(
+					`"q": { "type": "${name}", "instructions": "Has it shipped?" }`,
+				);
+			expect(lintText(alone(type))).toEqual(lintText(alone('gizmo')));
+			// Beside a real question, it is a question with a type the API does not have.
+			const beside = request(
+				`${CLEAN_NOUL}, "q": { "type": "${type}", "instructions": "Has it shipped?" }`,
+			);
+			expect(finding(beside, 'JEV007').message).toContain(
+				`Question type "${type}" does not exist`,
+			);
+		},
+	);
+
+	it.each(NAMES)(
+		'reads a bare JavaScript name %s as a value it cannot see',
+		(name) => {
+			const text = `const r = { questions: { q: { type: 'noul', instructions: ${name}, criteria: ${name} } } };`;
+			expect(codes(text)).toEqual(['JEV000']);
+			expect(lintText(text).unreadableCount).toBe(1);
+		},
+	);
+
+	it.each([
+		[
+			'python',
+			(name: string) =>
+				`q = {"type": "noul", "instructions": "Has it shipped?", "criteria": ${name}}`,
+		],
+		[
+			'rust',
+			(name: string) =>
+				`let q = json!({"type": "noul", "instructions": "Has it shipped?", "criteria": ${name}});`,
+		],
+		[
+			'go',
+			(name: string) =>
+				`q := map[string]any{"type": "noul", "instructions": "Has it shipped?", "criteria": ${name}}`,
+		],
+	] as const)(
+		'reads a bare %s name as a value it cannot see',
+		(syntax, write) => {
+			for (const name of NAMES) {
+				const result = lintText(write(name), DEFAULT_OPTIONS, syntax);
+				expect(
+					result.findings.map((finding) => finding.code),
+					name,
+				).toEqual(['JEV000']);
+			}
+		},
+	);
+});
+
+describe('the file types the tool reads', () => {
+	it('are resolved from the extension alone, and from no inherited name', () => {
+		expect(syntaxForPath('request.jev.json')).toBe('js');
+		expect(syntaxForPath('A.JSON')).toBe('js');
+		expect(syntaxForPath('triage.py')).toBe('python');
+		expect(syntaxForPath('noext')).toBeUndefined();
+		expect(syntaxForPath('.env')).toBeUndefined();
+		for (const name of ['constructor', '__proto__', 'hasOwnProperty'])
+			expect(syntaxForPath(`a.${name}`), name).toBeUndefined();
+	});
+
+	it('read an editor language id that is not theirs as JavaScript', () => {
+		expect(syntaxFor('python')).toBe('python');
+		expect(syntaxFor('json')).toBe('js');
+		expect(syntaxFor('constructor')).toBe('js');
+	});
+
+	it('refuse a syntax named for a property of Object.prototype', () => {
+		expect(() =>
+			lintText('{}', DEFAULT_OPTIONS, 'constructor' as never),
+		).toThrow(
+			'Unknown syntax "constructor". Use one of: js, python, rust, go.',
+		);
 	});
 });

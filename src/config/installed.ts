@@ -12,17 +12,36 @@ export type Installed = Readonly<{
 	library: string | undefined;
 }>;
 
+/**
+ * A copy that is there, under `node_modules`, and cannot be named: its
+ * manifest could not be read. Not the same as no copy, which is the one
+ * fallback the status bar says nothing about.
+ */
+export type UnreadableCopy = Readonly<{
+	dir: string;
+	/** What is wrong with its `package.json`, as the end of a sentence. */
+	problem: string;
+}>;
+
 type Manifest = Readonly<{ version: string; main: string | undefined }>;
 
-function manifestIn(fs: ConfigFs, path: string): Manifest | undefined {
+// The manifest, or what is wrong with it.
+function manifestIn(fs: ConfigFs, path: string): Manifest | string {
+	let text: string;
 	try {
-		const { version, main } = JSON.parse(fs.read(path));
-		if (typeof version !== 'string') return undefined;
-		return { version, main: typeof main === 'string' ? main : undefined };
+		text = fs.read(path);
 	} catch {
-		// A manifest that cannot be read or parsed is a copy that cannot be named.
-		return undefined;
+		return 'could not be read';
 	}
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(text);
+	} catch {
+		return 'is not JSON';
+	}
+	const { version, main } = (parsed ?? {}) as Partial<Record<string, unknown>>;
+	if (typeof version !== 'string') return 'has no version';
+	return { version, main: typeof main === 'string' ? main : undefined };
 }
 
 /**
@@ -34,14 +53,14 @@ export function findInstalled(
 	file: string,
 	stop: string | undefined,
 	fs: ConfigFs,
-): Installed | undefined {
+): Installed | UnreadableCopy | undefined {
 	let dir = parent(file);
 	while (true) {
 		const packageDir = under(dir, 'node_modules', PACKAGE);
 		const manifest = under(packageDir, 'package.json');
 		if (fs.isFile(manifest)) {
 			const read = manifestIn(fs, manifest);
-			if (!read) return undefined;
+			if (typeof read === 'string') return { dir: packageDir, problem: read };
 			return {
 				dir: packageDir,
 				version: read.version,

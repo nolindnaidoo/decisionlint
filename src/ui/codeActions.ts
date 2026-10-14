@@ -69,17 +69,18 @@ function toFix(
 	return action;
 }
 
-// Strict JSON has no comments, so a finding there is silenced in the settings file.
-const COMMENTS: Readonly<Record<string, string>> = Object.freeze({
-	jsonc: '//',
-	javascript: '//',
-	javascriptreact: '//',
-	typescript: '//',
-	typescriptreact: '//',
-	rust: '//',
-	go: '//',
-	python: '#',
-});
+// Strict JSON has no comments, so a finding there is silenced in the settings
+// file. A Map, because the key is the editor's language id and not this code's.
+const COMMENTS: ReadonlyMap<string, string> = new Map([
+	['jsonc', '//'],
+	['javascript', '//'],
+	['javascriptreact', '//'],
+	['typescript', '//'],
+	['typescriptreact', '//'],
+	['rust', '//'],
+	['go', '//'],
+	['python', '#'],
+]);
 
 function inserting(
 	document: vscode.TextDocument,
@@ -103,7 +104,7 @@ function toSilencers(
 	diagnostic: vscode.Diagnostic,
 	finding: ReportedFinding,
 ): ReadonlyArray<vscode.CodeAction> {
-	const comment = COMMENTS[document.languageId];
+	const comment = COMMENTS.get(document.languageId);
 	// Inside a string a comment would become part of the JSON. And a comment to
 	// silence the report of an unused comment would be one more of them.
 	if (!comment || finding.inString || finding.code === 'JEV010') return [];

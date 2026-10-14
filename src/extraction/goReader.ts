@@ -36,10 +36,11 @@ const KEYWORDS = new Set([
 ]);
 // Types whose literals are plain data, with no field names of their own.
 const BUILT_IN = new Set(['string', 'any', 'bool', 'int', 'int64', 'float64']);
-const FIELD_ALIASES: Readonly<Record<string, string>> = Object.freeze({
-	kind: 'type',
-	questiontype: 'type',
-});
+// A Map: the key is a field name from the file.
+const FIELD_ALIASES: ReadonlyMap<string, string> = new Map([
+	['kind', 'type'],
+	['questiontype', 'type'],
+]);
 
 type TypeEnd = Readonly<{ end: number; name: Token | undefined }>;
 
@@ -108,17 +109,17 @@ function readSprintf(reader: Reader, at: number): Parsed | undefined {
 }
 
 const GO: Dialect = Object.freeze({
-	keywords: Object.freeze({
-		true: (span: Span): Node => ({ kind: 'boolean', value: true, span }),
-		false: (span: Span): Node => ({ kind: 'boolean', value: false, span }),
-		nil: (span: Span): Node => ({ kind: 'null', span }),
-	}),
+	keywords: new Map([
+		['true', (span: Span): Node => ({ kind: 'boolean', value: true, span })],
+		['false', (span: Span): Node => ({ kind: 'boolean', value: false, span })],
+		['nil', (span: Span): Node => ({ kind: 'null', span })],
+	]),
 	typeAt,
 	braceLists: true,
 	// Exported fields are capitalised. The API's names are not.
 	fieldKey: (name: string) => {
 		const lower = name.toLowerCase();
-		return FIELD_ALIASES[lower] ?? lower;
+		return FIELD_ALIASES.get(lower) ?? lower;
 	},
 	unwrap: readSprintf,
 	skipConversions: (_tokens: ReadonlyArray<Token>, at: number) => at,

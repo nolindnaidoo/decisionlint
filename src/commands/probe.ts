@@ -11,6 +11,7 @@ import { providerFor } from '../jev/provider';
 import { DEFAULT_MODEL } from '../jev/review';
 import { readQuestions, syntaxFor } from '../lint/lint';
 import { blocked, caution } from '../ui/notifier';
+import { guarded } from './guard';
 import {
 	failureMessage,
 	findKey,
@@ -74,8 +75,8 @@ async function runProbe(
 	target: Target,
 	key: string,
 	signal: AbortSignal,
+	model: string,
 ): Promise<Probed> {
-	const model = deps.getConfiguration().jev.model;
 	const variants = buildProbe(target.state, target.question, model);
 	const results: ProbeResult[] = [];
 	const cancelled = (): Probed => ({
@@ -99,7 +100,9 @@ async function runProbe(
 	return { kind: 'done', results };
 }
 
-async function probeQuestion(deps: Deps): Promise<void> {
+type ShowReport = (id: string, markdown: string) => Promise<boolean>;
+
+async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor) {
 		blocked('No file is open.');
@@ -109,8 +112,11 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		refuseUntrusted('A probe sends a question and its state to TypeSafe');
 		return;
 	}
+	// Read once, before the first await, so the key, the count the user agrees
+	// to and the requests all name the same model.
+	const config = deps.getConfiguration();
 	// The variants are built and read in Jev's shape. Luna's reply for a Choice or a Score is not read yet.
-	const provider = providerFor(deps.getConfiguration().jev.model);
+	const provider = providerFor(config.jev.model);
 	if (provider.id !== 'typesafe') {
 		blocked(
 			`The probe asks Jev only. Set jevlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
@@ -125,13 +131,12 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		blocked(target);
 		return;
 	}
-	const found = await findKey(deps, provider);
+	const found = await findKey(deps, provider, config);
 	if ('missing' in found) {
 		reportNoKey(found.missing, provider);
 		return;
 	}
 	const { key } = found;
-	const config = deps.getConfiguration();
 	const count = buildProbe(
 		target.state,
 		target.question,
@@ -154,7 +159,7 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		(_progress, token) => {
 			const abort = new AbortController();
 			token.onCancellationRequested(() => abort.abort());
-			return runProbe(deps, target, key, abort.signal);
+			return runProbe(deps, target, key, abort.signal, config.jev.model);
 		},
 	);
 	if (probed.kind === 'failed') {
@@ -171,23 +176,31 @@ async function probeQuestion(deps: Deps): Promise<void> {
 		return;
 	}
 	const report = summarize(target.id, target.question.type, probed.results);
-	const opened = await showReport(target.id, report.markdown);
+	const opened = await show(target.id, report.markdown);
 	// The requests are already paid for, so the answer is given whatever happens to the page.
 	if (!opened)
 		blocked(`${report.verdict} The full report could not be opened.`);
 }
 
 const REPORT_SCHEME = 'jevlint-le-probe';
-const reports = new Map<string, string>();
 const KEPT_REPORTS = 20;
-const changed = new vscode.EventEmitter<vscode.Uri>();
+
+/** The report pages, served from memory, and the event that tells an open one to reload. */
+type Pages = Readonly<{
+	reports: Map<string, string>;
+	changed: vscode.EventEmitter<vscode.Uri>;
+}>;
 
 /**
  * Shows the report as a rendered page. It is served from memory under its own
  * scheme, so it is read-only and closing it never asks to save, which an
  * untitled document full of Markdown source did.
  */
-async function showReport(id: string, markdown: string): Promise<boolean> {
+async function showReport(
+	{ reports, changed }: Pages,
+	id: string,
+	markdown: string,
+): Promise<boolean> {
 	const uri = vscode.Uri.parse(`${REPORT_SCHEME}:Probe of ${id}.md`);
 	// A page is read when it is opened, so only the latest few need keeping.
 	reports.delete(uri.toString());
@@ -213,12 +226,38 @@ async function showReport(id: string, markdown: string): Promise<boolean> {
 export function registerProbeCommand(
 	deps: Deps,
 ): ReadonlyArray<vscode.Disposable> {
+	// Made here and disposed with the command, not at import: an emitter made
+	// at import outlives a deactivation and is shared with the next activation.
+	const pages: Pages = {
+		reports: new Map(),
+		changed: new vscode.EventEmitter<vscode.Uri>(),
+	};
+	// A second probe would pay for a second set of answers and race the first for the page.
+	let probing = false;
+	const oneAtATime = async (): Promise<void> => {
+		if (probing) {
+			blocked('A probe is already running. Wait for its report.');
+			return;
+		}
+		probing = true;
+		try {
+			await probeQuestion(deps, (id, markdown) =>
+				showReport(pages, id, markdown),
+			);
+		} finally {
+			probing = false;
+		}
+	};
 	return [
-		vscode.commands.registerCommand(PROBE_COMMAND, () => probeQuestion(deps)),
+		vscode.commands.registerCommand(
+			PROBE_COMMAND,
+			guarded('The probe', oneAtATime),
+		),
 		vscode.workspace.registerTextDocumentContentProvider(REPORT_SCHEME, {
-			onDidChange: changed.event,
+			onDidChange: pages.changed.event,
 			provideTextDocumentContent: (uri: vscode.Uri) =>
-				reports.get(uri.toString()) ?? '',
+				pages.reports.get(uri.toString()) ?? '',
 		}),
+		pages.changed,
 	];
 }

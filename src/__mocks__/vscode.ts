@@ -28,6 +28,10 @@ export const _state = {
 	trusted: true,
 	/** What the user clicks in a modal. Undefined is a dismissal. */
 	answer: 'Send' as string | undefined,
+	/** Runs while a modal is on screen, before it is answered: what the user does meanwhile. */
+	onModal: undefined as (() => void) | undefined,
+	/** Every event emitter made since the last reset, to check each is disposed. */
+	emitters: [] as { disposed: boolean }[],
 	modals: [] as string[],
 	/** Documents the extension opened to show the user something. */
 	shown: [] as string[],
@@ -70,6 +74,8 @@ export function _reset(): void {
 	_state.input = undefined;
 	_state.trusted = true;
 	_state.answer = 'Send';
+	_state.onModal = undefined;
+	_state.emitters = [];
 	_state.modals = [];
 	_state.shown = [];
 	_state.secretsError = undefined;
@@ -311,6 +317,7 @@ export const window = {
 			_state.modals.push(
 				options.detail ? `${message}\n${options.detail}` : message,
 			);
+			_state.onModal?.();
 			return _state.answer;
 		}
 		_state.messages.push(message);
@@ -370,12 +377,20 @@ export const lm: {
 
 export class EventEmitter<T> {
 	private listeners: ((value: T) => void)[] = [];
+	disposed = false;
+	constructor() {
+		_state.emitters.push(this);
+	}
 	event = (listener: (value: T) => void) => {
 		this.listeners.push(listener);
 		return disposable();
 	};
 	fire(value: T): void {
 		for (const listener of this.listeners) listener(value);
+	}
+	dispose(): void {
+		this.disposed = true;
+		this.listeners = [];
 	}
 }
 

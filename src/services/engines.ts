@@ -91,8 +91,16 @@ export function createEngines(deps: Deps): Engines {
 	return Object.freeze({
 		for: (document: vscode.TextDocument): Engine => {
 			const installed = deps.installedFor(document);
-			// No copy in the project, or the same one the extension carries.
-			if (!installed || installed.version === deps.own) return bundled();
+			// No copy in the project: the one fallback that is not worth a note.
+			if (!installed) return bundled();
+			// A copy is there and cannot be named, which the invariant says is said.
+			if ('problem' in installed)
+				return bundled({
+					short: 'project copy unreadable',
+					detail: `This project installs jevlint-le in ${installed.dir}, but its package.json ${installed.problem}. The editor is linting with its own ${deps.own}, so findings here can differ from the project's command line.`,
+				});
+			// The same copy the extension carries.
+			if (installed.version === deps.own) return bundled();
 			// Loading it runs code from the project, which an untrusted one has not been allowed to do.
 			if (!vscode.workspace.isTrusted)
 				return instead(installed, 'is not used in an untrusted workspace');

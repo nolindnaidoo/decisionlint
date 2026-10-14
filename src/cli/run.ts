@@ -9,6 +9,7 @@ import { providerFor } from '../jev/provider';
 import { DEFAULT_MODEL } from '../jev/review';
 import { fixText } from '../lint/fixAll';
 import {
+	BOM,
 	DEFAULT_FALLBACK_OPTIONS,
 	lintText,
 	MAX_FILE_SIZE_BYTES,
@@ -26,13 +27,14 @@ import {
 	type Totals,
 } from './format';
 import { failureMessage, planJev, runJev } from './jev';
+import type { Line } from './lines';
 import { serve } from './mcp';
 
 export type Io = Readonly<{
 	files: Files;
 	stdin: () => Promise<string>;
-	/** Standard input a line at a time, for the MCP server. */
-	lines: () => AsyncIterable<string>;
+	/** Standard input a line at a time, for the MCP server. A line past the size limit arrives as its length. */
+	lines: () => AsyncIterable<Line>;
 	out: (text: string) => void;
 	err: (text: string) => void;
 	version: string;
@@ -160,7 +162,19 @@ function readOrNothing(files: Files, path: string): string | undefined {
 	}
 }
 
-export type Source = Readonly<{ path: string; text: string }>;
+export type Source = Readonly<{
+	path: string;
+	/** Without the byte order mark the file may begin with, which columns must not count. */
+	text: string;
+	/** The file began with a byte order mark, which `--fix` writes back. */
+	bom?: true;
+}>;
+
+function sourceOf(path: string, raw: string): Source {
+	return raw.startsWith(BOM)
+		? { path, text: raw.slice(1), bom: true }
+		: { path, text: raw };
+}
 /** What a run did not read, and so cannot speak for. */
 export type Left = Readonly<{
 	/** Files a settings file leaves out. */
@@ -189,7 +203,7 @@ export function gatherPaths(
 	for (const path of found.paths.filter(small)) {
 		// A file that vanished or may not be read is named and the run goes on.
 		try {
-			sources.push({ path, text: files.read(path) });
+			sources.push(sourceOf(path, files.read(path)));
 		} catch {
 			unread.push(path);
 		}
@@ -221,7 +235,7 @@ async function gather(options: CliOptions, io: Io): Promise<Gathered> {
 	if (Buffer.byteLength(text, 'utf8') > MAX_FILE_SIZE_BYTES)
 		return `Standard input is over the size limit of ${MAX_FILE_SIZE_BYTES} bytes.`;
 	return {
-		sources: [{ path: name, text }],
+		sources: [sourceOf(name, text)],
 		left: { skipped: [], unread: [] },
 	};
 }
@@ -249,7 +263,7 @@ function fixSources(
 			continue;
 		}
 		try {
-			files.write(source.path, result.text);
+			files.write(source.path, source.bom ? BOM + result.text : result.text);
 		} catch {
 			// Files before this one are already written, so the run says where it stopped.
 			return `Could not write ${source.path}. Files before it were fixed.`;
@@ -391,6 +405,11 @@ export async function run(
 		options.quiet,
 	);
 	if (typeof linted === 'string') return unusable(linted);
+	// Every file failed in the reader: nothing was checked, and the run must not pass.
+	if (!linted.reports.length && linted.failed.length)
+		return unusable(
+			`No files could be linted. Not readable: ${linted.failed.join(', ')}.`,
+		);
 	const fixed = mended ? { fixed: mended.fixed } : {};
 	const { reports } = linted;
 	const left: Left = {
@@ -441,14 +460,16 @@ const sending = (jev: JevTotals): string =>
 	].join(' ');
 
 // A run that checked part of what it was asked to must not pass as the whole.
+// `who` is the model's name, Jev or Luna, so the sentence names the one asked.
 function shortfall(
 	jev: JevTotals,
+	who: string,
 	failure: string | undefined,
 	stopped: boolean,
 ): string | undefined {
 	const of = `${jev.answered} of ${plural(jev.planned, 'request')}`;
-	if (failure) return `${failure}. Jev answered ${of}.`;
-	if (stopped) return `Stopped. Jev answered ${of}.`;
+	if (failure) return `${failure}. ${who} answered ${of}.`;
+	if (stopped) return `Stopped. ${who} answered ${of}.`;
 	if (jev.overLimit)
 		return `${plural(jev.overLimit, 'request')} over the --jev-max-calls limit not sent. Raise the limit to check every question.`;
 	return undefined;
@@ -474,12 +495,13 @@ async function runWithJev(
 		return fails(totals, options.maxWarnings) ? EXIT.failed : EXIT.passed;
 	}
 	if (plan.totals.planned) say(sending(plan.totals));
+	const provider = providerFor(plan.totals.model);
 	const ran = await runJev(
 		plan,
 		{
 			fetch: io.fetch,
 			wait: io.wait,
-			key: (io.env[providerFor(plan.totals.model).envKey] ?? '').trim(),
+			key: (io.env[provider.envKey] ?? '').trim(),
 			signal: io.stopSignal(),
 		},
 		options.quiet,
@@ -488,8 +510,8 @@ async function runWithJev(
 	io.out(render(options, io, ran.reports, totals));
 	const failure =
 		ran.failure &&
-		`${failureMessage(ran.failure.kind, providerFor(plan.totals.model))} (${ran.failure.detail})`;
-	const short = shortfall(ran.totals, failure, ran.stopped);
+		`${failureMessage(ran.failure.kind, provider)} (${ran.failure.detail})`;
+	const short = shortfall(ran.totals, provider.model, failure, ran.stopped);
 	if (short) {
 		say(short);
 		return EXIT.unusable;

@@ -72,7 +72,7 @@ export function activate(
 		wait: (ms: number) =>
 			new Promise<void>((resolve) => setTimeout(resolve, ms)),
 	};
-	const reviewer = createReviewer({ getConfiguration, ...network });
+	const reviewer = createReviewer(network);
 
 	const showActive = (): void => {
 		const document = active();

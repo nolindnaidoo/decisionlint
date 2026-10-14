@@ -35,7 +35,11 @@ const shown = () => _state.diagnostics.get('file:///a.ts') ?? [];
 function linter() {
 	return createLinter({
 		getConfiguration,
-		lintOptionsFor: () => ({ options: getConfiguration().lint }),
+		lintOptionsFor: () => {
+			const lint = getConfiguration().lint;
+			if (typeof lint === 'string') throw new Error(lint);
+			return { options: lint };
+		},
 		onResult: () => {},
 	});
 }

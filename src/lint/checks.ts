@@ -165,13 +165,14 @@ const checkTerseInstructions: Check = (question) => {
 	];
 };
 
-// What people write when they mean true and false.
-const NOUL_KEY_FIXES: Readonly<Record<string, string>> = Object.freeze({
-	yes: 'true',
-	y: 'true',
-	no: 'false',
-	n: 'false',
-});
+// What people write when they mean true and false. A Map, because the key is
+// text from the document, and a plain object answers `constructor` with a function.
+const NOUL_KEY_FIXES: ReadonlyMap<string, string> = new Map([
+	['yes', 'true'],
+	['y', 'true'],
+	['no', 'false'],
+	['n', 'false'],
+]);
 
 function noulShape(question: Question): ReadonlyArray<Finding> {
 	const criteria = question.criteria;
@@ -191,7 +192,7 @@ function noulShape(question: Question): ReadonlyArray<Finding> {
 	return criteria.props
 		.filter((entry) => !NOUL_CRITERIA_KEYS.has(entry.key))
 		.map((entry) => {
-			const name = NOUL_KEY_FIXES[entry.key.toLowerCase()];
+			const name = NOUL_KEY_FIXES.get(entry.key.toLowerCase());
 			return {
 				...report(
 					'JEV006',

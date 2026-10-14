@@ -89,6 +89,20 @@ const closedEarly = spawnSync(
 );
 assert.strictEqual(closedEarly.stdout, '', 'crashed when its reader closed the pipe');
 
+// A path that is not a regular file is refused by name and never opened. A
+// named pipe with nobody writing to it would otherwise block the read for ever.
+if (process.platform !== 'win32') {
+	const pipe = join(mkdtempSync(join(tmpdir(), 'jevlint-le-')), 'pipe.json');
+	assert.strictEqual(spawnSync('mkfifo', [pipe]).status, 0, 'mkfifo failed');
+	const piped = spawnSync(process.execPath, [bin, pipe], {
+		encoding: 'utf8',
+		env,
+		timeout: 10_000,
+	});
+	assert.strictEqual(piped.status, 2, `hung or crashed on a named pipe: ${piped.signal ?? piped.stderr}`);
+	assert.match(piped.stderr, /Not a regular file: /);
+}
+
 // The Jev checks, as far as they go with nothing sent: the plan, and the refusal without a key.
 const plan = cli(['--jev-plan', '--format', 'json', 'clean.ts']);
 assert.strictEqual(plan.status, 0, plan.err);

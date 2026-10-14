@@ -157,5 +157,6 @@ removes or alters one raises `api`.
 
 ## What it does not do
 
-The MCP server never calls Jev. The probe that re-sends one question with its
-layout changed is in the VS Code extension of the same name.
+Nothing here reaches the network unless asked to: `--jev` on the command
+line, and `check_with_jev` and `probe_question` on the server, each with your
+key. Linting, fixing and the rule pages are offline.

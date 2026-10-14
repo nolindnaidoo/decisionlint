@@ -111,7 +111,7 @@ async function attempt(
 		});
 		// A proxy or a login page can answer 200 with something that is not a reply.
 		// Reading that as "no findings" would report a clean check that never ran.
-		return provider.fromBody(body);
+		return provider.fromBody(body, request);
 	};
 	return answered()
 		.catch((error: unknown): Failure => {

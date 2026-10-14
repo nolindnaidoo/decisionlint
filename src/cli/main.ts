@@ -1,26 +1,9 @@
-import {
-	existsSync,
-	lstatSync,
-	readdirSync,
-	readFileSync,
-	statSync,
-	writeFileSync,
-} from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createInterface } from 'node:readline';
 import type { Fetch } from '../jev/client';
-import type { Entry } from './files';
+import { lines } from './lines';
+import { createStopSignal, stat } from './process';
 import { EXIT, run } from './run';
-
-function stat(path: string): Entry | undefined {
-	const found = statSync(path, { throwIfNoEntry: false });
-	if (!found) return undefined;
-	return {
-		kind: found.isDirectory() ? 'dir' : 'file',
-		size: found.size,
-		link: lstatSync(path).isSymbolicLink(),
-	};
-}
 
 async function stdin(): Promise<string> {
 	const chunks: Buffer[] = [];
@@ -38,14 +21,6 @@ function version(): string {
 	return String(JSON.parse(readFileSync(path, 'utf8')).version);
 }
 
-// Listening for the interrupt is what stops it ending the process, so it is
-// listened for only once requests are being sent. A second one ends it.
-function stopSignal(): AbortSignal {
-	const stop = new AbortController();
-	process.once('SIGINT', () => stop.abort());
-	return stop.signal;
-}
-
 // A reader that closes early, such as `head`, is not an error of this tool's.
 // Unheard, the pipe's error ends the process with a stack trace and status 1,
 // which a script reads as "a finding failed the run".
@@ -61,7 +36,7 @@ run(process.argv.slice(2), {
 		write: (path, text) => writeFileSync(path, text),
 	},
 	stdin,
-	lines: () => createInterface({ input: process.stdin }),
+	lines: () => lines(process.stdin),
 	out: (text) => process.stdout.write(text),
 	err: (text) => process.stderr.write(text),
 	version: version(),
@@ -70,7 +45,7 @@ run(process.argv.slice(2), {
 	columns: process.stdout.columns,
 	fetch: ((url, init) => fetch(url, init)) as Fetch,
 	wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-	stopSignal,
+	stopSignal: createStopSignal(process),
 })
 	.then((status) => {
 		process.exitCode = status;

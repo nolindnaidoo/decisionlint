@@ -81,6 +81,18 @@ export function parseConfig(text: string | undefined): LintOptions | string {
 	const unknown = Object.keys(config).find((key) => !CONFIG_KEYS.includes(key));
 	if (unknown)
 		return `'${unknown}' is not a setting. Use ${CONFIG_KEYS.join(', ')}.`;
+	return readLintOptions(config);
+}
+
+/**
+ * The lint settings in `config`, checked as the file is checked, or the
+ * reason they cannot be used. The editor's own `jevlint-le.*` settings are
+ * read through here too, so a typo'd rule code is refused in both places and
+ * never dropped quietly, leaving the rule on.
+ */
+export function readLintOptions(
+	config: Readonly<Record<string, unknown>>,
+): LintOptions | string {
 	const rules = readRules(config.rules);
 	if (typeof rules === 'string') return rules;
 	const {

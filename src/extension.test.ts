@@ -81,26 +81,48 @@ describe('configuration', () => {
 		);
 	});
 
-	it('falls back to defaults on values of the wrong type', () => {
+	it('falls back to defaults on values of the wrong type, outside the lint settings', () => {
 		_state.config = {
-			rules: 'nope',
-			fallbackOptions: 3,
-			ignore: null,
 			include: '',
 			maxFileSizeBytes: -1,
 		};
 		const config = getConfiguration();
-		expect(config.lint.rules).toEqual({});
-		expect(config.lint.fallbackOptions).toEqual(
-			CONFIG_DEFAULTS.fallbackOptions,
-		);
+		expect(config.lint).toMatchObject({
+			rules: {},
+			fallbackOptions: CONFIG_DEFAULTS.fallbackOptions,
+		});
 		expect(config.include).toBe(CONFIG_DEFAULTS.include);
 		expect(config.maxFileSizeBytes).toBe(CONFIG_DEFAULTS.maxFileSizeBytes);
 	});
 
-	it('drops rule entries that name no rule or no severity', () => {
-		_state.config = { rules: { JEV004: 'off', JEV999: 'off', JEV001: 'loud' } };
-		expect(getConfiguration().lint.rules).toEqual({ JEV004: 'off' });
+	it("reads the lint settings with the settings file's reader, and refuses what it refuses", () => {
+		_state.config = { rules: { JEV004: 'off', JEV999: 'off' } };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: rules: 'JEV999' is not a rule code or a rule name.",
+		);
+		_state.config = { rules: { JEV001: 'loud' } };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
+		);
+		_state.config = { ignore: 'JEV004:team' };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: 'ignore' must be a list of strings.",
+		);
+		// A lint setting of the wrong shape is refused, not defaulted: a default
+		// would show findings the author believes are off.
+		_state.config = { rules: 'nope' };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: 'rules' must be an object of rule code to level.",
+		);
+		_state.config = { fallbackOptions: 3 };
+		expect(getConfiguration().lint).toBe(
+			"jevlint-le settings: 'fallbackOptions' must be a list of strings.",
+		);
+		// A rule by its name and a level by its alias, as the file takes them.
+		_state.config = { rules: { 'no-fallback-option': 'warn' } };
+		expect(getConfiguration().lint).toMatchObject({
+			rules: { JEV004: 'warning' },
+		});
 	});
 
 	// A command missing from the table is one nobody knows they can bind.
@@ -198,6 +220,23 @@ describe('diagnostics', () => {
 			affectsConfiguration: (section: string) => section === 'jevlint-le',
 		});
 		expect(diagnostics()).toHaveLength(0);
+	});
+
+	it('stops linting and says why when a rule entry in the settings names no rule, as a settings file would', () => {
+		// Dropped quietly, a typo'd code would leave the rule on with no word.
+		_state.config = { rules: { JEV04: 'off' } };
+		start(doc(BARE_CHOICE));
+		expect(diagnostics()).toEqual([]);
+		expect(_state.statusBar).toMatchObject({
+			text: '$(warning) Jev not linted',
+			tooltip:
+				"jevlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
+		});
+		_state.config = {};
+		_state.listeners.config?.({
+			affectsConfiguration: (section: string) => section === 'jevlint-le',
+		});
+		expect(diagnostics()).toHaveLength(1);
 	});
 });
 
@@ -1545,6 +1584,13 @@ describe('a project settings file in the editor', () => {
 		);
 	};
 	const file = () => doc(NO_FALLBACK, 'file:///work/app/src/q.ts');
+
+	it('replaces editor settings that cannot be used, so the file still lints', () => {
+		_state.config = { rules: { JEV04: 'off' } };
+		within({ '/work/app/jevlint-le.json': '{}' }, file());
+		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
+		expect(_state.statusBar.text).not.toContain('not linted');
+	});
 
 	it('replaces the editor settings, so the editor reports what the command line would', () => {
 		_state.config = { rules: { JEV004: 'error' } };

@@ -95,7 +95,7 @@
         "jevlint-le.rules": {
           "type": "object",
           "default": {},
-          "markdownDescription": "Severity per rule code. Values: `off`, `hint`, `info`, `warning`, `error`. A rule not listed keeps its default. Example: `{ \"JEV004\": \"off\" }`.",
+          "markdownDescription": "Severity per rule, by code or name. Values: `off`, `hint`, `info`, `warning`, `error`. A rule not listed keeps its default. An entry that names no rule or no level stops linting and says why, as it would in a `jevlint-le.json`. Example: `{ \"JEV004\": \"off\" }`.",
           "additionalProperties": {
             "type": "string",
             "enum": [

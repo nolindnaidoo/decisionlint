@@ -175,6 +175,13 @@ family's files, copied unchanged from `regex-le`.
 - **A settings file that cannot be used stops linting.** Falling back to
   defaults would show findings CI does not, or hide ones it does. The editor
   clears the file's findings and says why. The command line exits 2.
+- **The editor's lint settings go through the settings file's reader.**
+  `jevlint-le.rules`, `fallbackOptions` and `ignore` are read by
+  `readLintOptions` in `config/projectConfig.ts`, so a rule entry that names
+  no rule or no level, or a list that is not one, stops linting with the same
+  sentence a `jevlint-le.json` would give, and a rule may be named by its
+  name. An entry dropped quietly once left a typo'd rule on with no word.
+  `extension.test.ts` reads the status bar for it.
 - **The settings file is parsed in one place**, `config/projectConfig.ts`, and
   its schema must list the same keys and levels. A test holds them together.
 - **A silencing comment is never written into a string or into strict JSON.**

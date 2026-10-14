@@ -518,7 +518,7 @@ will not press by accident.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `jevlint-le.rules` | `{}` | Severity per rule: `off`, `hint`, `info`, `warning`, `error` |
+| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as it would in a `jevlint-le.json` |
 | `jevlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |

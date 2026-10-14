@@ -216,7 +216,7 @@ Scores sent with no levels.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `jevlint-le.rules` | `{}` | Severity per rule code: `off`, `hint`, `info`, `warning`, `error` |
+| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `jevlint-le.json` |
 | `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |

@@ -48,6 +48,11 @@ would have caught it. Nothing new to configure.
   unreadable` rather than passed over as none installed. The project-copy
   lookup remembers at most 512 folders, and the probe report page is disposed
   with the extension.
+- **A rule entry in the editor settings that names no rule or no level stops
+  linting and says why**, in the status bar and the Lint command, as the same
+  entry in a `jevlint-le.json` always has. Before, the entry was dropped and
+  the rule stayed on with no word. `jevlint-le.rules` also takes a rule by its
+  name and `warn` for `warning`, as the file does.
 - **The documents are held to the code.** The settings tables, the tool
   tables and counts, the README's example pins and every test file a document
   names are read by a test, and nine stale sentences were corrected.

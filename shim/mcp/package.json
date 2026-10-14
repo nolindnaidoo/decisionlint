@@ -1,0 +1,51 @@
+{
+  "name": "jevlint-le-mcp",
+  "version": "0.9.0",
+  "description": "Renamed to decisionlint-mcp. This package only forwards to it: install decisionlint-mcp.",
+  "keywords": [
+    "decisionlint",
+    "decisionlint-mcp",
+    "jevlint",
+    "jev",
+    "typesafe",
+    "luna",
+    "openai",
+    "mcp",
+    "mcp-server",
+    "modelcontextprotocol",
+    "nolindnaidoo"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Nolin Naidoo",
+    "url": "https://nolindnaidoo.com"
+  },
+  "homepage": "https://www.npmjs.com/package/decisionlint-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nolindnaidoo/decisionlint.git",
+    "directory": "shim/mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/nolindnaidoo/decisionlint/issues"
+  },
+  "type": "commonjs",
+  "bin": {
+    "jevlint-le-mcp": "server.js"
+  },
+  "files": [
+    "server.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "decisionlint-mcp": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "jevlint-le",
+  "displayName": "JevLint-LE (now DecisionLint)",
+  "description": "Renamed to DecisionLint, which lints the questions sent to every decision-model platform. This version only points at it: install DecisionLint.",
+  "version": "0.9.0",
+  "publisher": "nolindnaidoo",
+  "license": "MIT",
+  "author": {
+    "name": "nolindnaidoo",
+    "url": "https://nolindnaidoo.com"
+  },
+  "icon": "icon.png",
+  "homepage": "https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nolindnaidoo/decisionlint.git",
+    "directory": "shim/extension"
+  },
+  "bugs": {
+    "url": "https://github.com/nolindnaidoo/decisionlint/issues"
+  },
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "keywords": [
+    "decisionlint",
+    "jevlint",
+    "jev",
+    "typesafe",
+    "luna",
+    "openai",
+    "decision model",
+    "lint"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {}
+}

@@ -1,0 +1,55 @@
+{
+  "name": "jevlint-le",
+  "version": "0.9.0",
+  "description": "Renamed to decisionlint. This package only forwards to it: install decisionlint.",
+  "keywords": [
+    "decisionlint",
+    "jevlint",
+    "jev",
+    "typesafe",
+    "luna",
+    "gpt-6-luna",
+    "openai",
+    "decisions-api",
+    "lint",
+    "linter",
+    "cli",
+    "mcp",
+    "nolindnaidoo"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Nolin Naidoo",
+    "url": "https://nolindnaidoo.com"
+  },
+  "homepage": "https://www.npmjs.com/package/decisionlint",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nolindnaidoo/decisionlint.git",
+    "directory": "shim/npm"
+  },
+  "bugs": {
+    "url": "https://github.com/nolindnaidoo/decisionlint/issues"
+  },
+  "type": "commonjs",
+  "main": "lib.js",
+  "bin": {
+    "jevlint-le": "cli.js"
+  },
+  "files": [
+    "cli.js",
+    "lib.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "decisionlint": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

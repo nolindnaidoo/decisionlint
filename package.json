@@ -349,6 +349,7 @@
     "check:jev-release": "bun scripts/check-jev-release.ts",
     "cli": "bun run build:npm && node npm/cli.js",
     "test:cli": "bun run build:npm && node scripts/e2e-cli.js",
+    "test:shims": "node scripts/e2e-shims.js",
     "build:npm": "node scripts/build-npm.js",
     "hooks:install": "node scripts/install-hooks.js",
     "prepare": "node scripts/install-hooks.js",

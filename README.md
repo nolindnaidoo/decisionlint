@@ -131,7 +131,7 @@ Each finding links to [its own page](https://github.com/nolindnaidoo/decisionlin
   with its `OfPredicate`, `OfChoice` and `OfScore` questions.
 - A request pasted as JSON into a string, in any of these languages.
 - Any other language: have your program write the request it sends to a
-  `.ask.json` file and open that. Every check runs on it, and nothing in it
+  `.jev.json` file and open that. Every check runs on it, and nothing in it
   is built at runtime, so nothing is skipped.
 - `jev/ask` rules in an `oxlint-plugin-jev` config.
 
@@ -343,14 +343,14 @@ When the copy's `package.json` cannot be read there is no version to show, so
 the status bar says `project copy unreadable`, again with the reason in its
 tooltip.
 
-**Check This File with Jev** and the probe always run the extension's own
+The **Ask** commands and the probe always run the extension's own
 code, whatever the project installs.
 
 ![The command line reporting three findings on a small request](assets/demo-cli.gif)
 
 ```bash
 npx decisionlint-le src/                 # a directory, searched for files it reads
-npx decisionlint-le request.ask.json     # one file
+npx decisionlint-le request.jev.json     # one file
 npx decisionlint-le --format github .    # annotations on a pull request
 ```
 
@@ -389,7 +389,7 @@ Jev, and it never uses the network, unless you pass `--ask`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/decisionlint-le@v0.9.0
+- uses: nolindnaidoo/decisionlint-le@v1.0.0
   with:
     paths: src
 ```
@@ -411,7 +411,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/decisionlint-le
-  rev: v0.9.0
+  rev: v1.0.0
   hooks:
     - id: decisionlint-le
 ```
@@ -480,7 +480,7 @@ lists every rule with what it means, and `explain_rule` returns a rule's own
 page, with an example that is flagged and one that is not. Those send
 nothing and need no key.
 
-The other three are the editor's **Check This File with Jev** and **Probe**
+The other three are the editor's **Ask** commands and **Probe**
 for an agent. `ask_model` asks Jev, or Luna with `model: gpt-6-luna`,
 to check the questions in text or in files, and returns the lint report with
 the model's findings added. `plan_ask` says what that would send, and sends

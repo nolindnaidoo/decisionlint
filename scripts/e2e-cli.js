@@ -53,7 +53,7 @@ assert.match(clean.out, /^0 findings/);
 const all = cli(['.', '--format', 'json']);
 const report = JSON.parse(all.out);
 const paths = report.files.map((file) => file.path);
-assert.ok(paths.includes('triage.ask.json') && paths.includes('triage.py'));
+assert.ok(paths.includes('triage.jev.json') && paths.includes('triage.py'));
 assert.ok(!paths.some((path) => path.includes('node_modules')), 'read node_modules');
 
 const piped = cli(

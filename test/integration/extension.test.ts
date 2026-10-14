@@ -8,7 +8,7 @@ const EXTENSION_ID = 'nolindnaidoo.decisionlint-le';
 // What each sample is written to trigger, in document order. The samples are
 // the fixture: change one and this table together.
 const EXPECTED: Readonly<Record<string, ReadonlyArray<string>>> = {
-	'triage.ask.json': [
+	'triage.jev.json': [
 		'JEV001',
 		'JEV004',
 		'JEV008',
@@ -53,8 +53,8 @@ const EXPECTED: Readonly<Record<string, ReadonlyArray<string>>> = {
 		'JEV009',
 	],
 	'clean.ts': [],
-	'missing-state.ask.json': [],
-	'wording.ask.json': [
+	'missing-state.jev.json': [],
+	'wording.jev.json': [
 		'JEV101',
 		'JEV102',
 		'JEV105',
@@ -220,9 +220,9 @@ describe('DecisionLint-LE in a real editor', function () {
 	});
 
 	it('underlines the thing each finding is about', async () => {
-		const editor = await open('triage.ask.json');
-		const uri = sample('triage.ask.json');
-		await untilCodes(uri, EXPECTED['triage.ask.json'] ?? []);
+		const editor = await open('triage.jev.json');
+		const uri = sample('triage.jev.json');
+		await untilCodes(uri, EXPECTED['triage.jev.json'] ?? []);
 		const texts = ours(uri).map(
 			(diagnostic) =>
 				`${codeOf(diagnostic)} ${editor.document.getText(diagnostic.range)}`,
@@ -240,9 +240,9 @@ describe('DecisionLint-LE in a real editor', function () {
 	});
 
 	it('applies the fallback quick fix and leaves valid JSON', async () => {
-		const editor = await open('triage.ask.json');
-		const uri = sample('triage.ask.json');
-		await untilCodes(uri, EXPECTED['triage.ask.json'] ?? []);
+		const editor = await open('triage.jev.json');
+		const uri = sample('triage.jev.json');
+		await untilCodes(uri, EXPECTED['triage.jev.json'] ?? []);
 		const target = ours(uri).find(
 			(diagnostic) => codeOf(diagnostic) === 'JEV004',
 		);
@@ -341,16 +341,16 @@ describe('DecisionLint-LE in a real editor', function () {
 
 	it('runs a wording rule that is off by default once it is switched on', async () => {
 		const settings = vscode.workspace.getConfiguration('decisionlint-le');
-		const uri = sample('wording.ask.json');
-		await open('wording.ask.json');
-		await untilCodes(uri, EXPECTED['wording.ask.json'] ?? []);
+		const uri = sample('wording.jev.json');
+		await open('wording.jev.json');
+		await untilCodes(uri, EXPECTED['wording.jev.json'] ?? []);
 		await settings.update(
 			'rules',
 			{ JEV104: 'warning' },
 			vscode.ConfigurationTarget.Global,
 		);
 		try {
-			await untilCodes(uri, [...(EXPECTED['wording.ask.json'] ?? []), 'JEV104']);
+			await untilCodes(uri, [...(EXPECTED['wording.jev.json'] ?? []), 'JEV104']);
 		} finally {
 			await settings.update(
 				'rules',
@@ -401,7 +401,7 @@ describe('DecisionLint-LE in a real editor', function () {
 	});
 
 	it('leaves the samples on disk untouched', async () => {
-		const bytes = await vscode.workspace.fs.readFile(sample('triage.ask.json'));
+		const bytes = await vscode.workspace.fs.readFile(sample('triage.jev.json'));
 		assert.ok(
 			!Buffer.from(bytes).toString('utf8').includes('"model": "jev-1'),
 			'unexpected content',

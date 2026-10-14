@@ -1,6 +1,6 @@
 {
   "name": "decisionlint-le-mcp",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "mcpName": "io.github.nolindnaidoo/decisionlint-le",
   "description": "Lint questions for TypeSafe's Jev and OpenAI's Luna offline, or ask the model itself with your key.",
   "keywords": [

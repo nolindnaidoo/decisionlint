@@ -1,6 +1,6 @@
 # Lints the Jev questions in a repository and annotates the pull request.
 #
-#   - uses: nolindnaidoo/decisionlint-le@v0.9.0
+#   - uses: nolindnaidoo/decisionlint-le@v1.0.0
 #     with:
 #       paths: src
 #
@@ -19,7 +19,7 @@ inputs:
   version:
     description: The decisionlint-le version to run. Defaults to the one this action was released with.
     required: false
-    default: 0.9.0
+    default: 1.0.0
   format:
     description: How findings are printed. github annotates the pull request. sarif is for code scanning.
     required: false

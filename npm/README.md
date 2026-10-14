@@ -19,13 +19,13 @@ line.
 
 ```bash
 npx decisionlint-le src/                 # a directory, searched for files it reads
-npx decisionlint-le request.ask.json     # one file
+npx decisionlint-le request.jev.json     # one file
 npx decisionlint-le --format github .    # annotations on a pull request
 ```
 
 It reads JSON, JavaScript, TypeScript, Python, Rust and Go, in TypeSafe's
 request shape and in OpenAI's Decisions API shape. For any other language,
-have your program write the request it sends to a `.ask.json` file and lint
+have your program write the request it sends to a `.jev.json` file and lint
 that.
 
 It exits 0 when the run passes, 1 when a finding fails it, and 2 when it
@@ -151,10 +151,10 @@ on the MCP registry as `io.github.nolindnaidoo/decisionlint-le`.
 ## As a library
 
 ```js
-const jevlint = require('decisionlint-le');
+const decisionlint = require('decisionlint-le');
 
-const { findings } = jevlint.lint(text, options, 'js');
-const { text: mended, fixed } = jevlint.fix(text, options, 'js');
+const { findings } = decisionlint.lint(text, options, 'js');
+const { text: mended, fixed } = decisionlint.fix(text, options, 'js');
 ```
 
 `lint` and `fix` are pure: no filesystem, no network. `options` takes the

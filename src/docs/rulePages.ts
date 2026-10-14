@@ -49,7 +49,7 @@ const wording = (code: string) => code > 'JEV100' && code < 'JEV300';
 
 function kind(code: RuleCode): string {
 	if (jevBacked(code))
-		return 'Asks Jev. It runs only under **Check This File with Jev** in the editor or `--ask` on the command line, with your key, and never while linting.';
+		return 'Asks the model. It runs only under an **Ask** command in the editor or `--ask` on the command line, with your key, and never while linting.';
 	if (wording(code))
 		return 'A wording rule. It matches patterns in English text, so it can miss a defect or flag a question that is fine.';
 	return 'An exact rule. It reads the shape of the question and does not guess.';

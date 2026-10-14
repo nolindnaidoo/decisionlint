@@ -35,7 +35,7 @@ you type, read straight out of source code, with no key and no calls.
 
 Checks that need the meaning of a question and not its shape, such as two
 options that overlap, cannot be done from text patterns. Those are available
-on demand through the **Check This File with Jev** command.
+on demand through the **Ask Jev About This File** command.
 
 ## Scope
 
@@ -53,8 +53,8 @@ around them.
 
 - Linting makes no network request and needs no API key. This is an LE family
   extension and that is the family's promise. The one exception is the
-  **Check This File with Jev** command, which the user runs on purpose with
-  their own key. See "Check with Jev".
+  **Ask Jev About This File** command, which the user runs on purpose with
+  their own key. See "Ask a model".
 - No filesystem writes outside edits the user accepts through a quick fix,
   fix on save, or `--fix` on the command line.
 - Refuse rather than guess. A question the reader cannot see whole is reported
@@ -212,7 +212,7 @@ Scores sent with no levels.
   `decisionlint-le-disable-line`, or `decisionlint-le-disable` for the file. No code list means
   every rule. JSON has no comments, so the `ignore` setting takes
   `CODE:questionId` entries.
-- **JSON schema** for request bodies, applied to files named `*.ask.json`. It
+- **JSON schema** for request bodies, applied to files named `*.jev.json`. It
   describes and completes fields and requires `state`, `model` and
   `questions`. It does not validate question types or criteria shapes, because
   the linter reports those with a reason and two reports on one token is noise.
@@ -563,9 +563,9 @@ on real code.
 - **A notice for skipped languages.** A question that is not English gets no
   wording findings and nothing says so.
 
-## Check with Jev
+## Ask a model
 
-Built. A command, **Check This File with Jev**, that sends each question in
+Built. A command, **Ask Jev About This File**, that sends each question in
 the active file to Jev and asks it about defects no pattern can see. It is the
 only part of the extension that uses the network, it runs only when the user
 runs it, and it uses the user's own API key.
@@ -600,7 +600,7 @@ check on every pair of up to ten questions, and `JEV312`.
 
 **The key.** `DecisionLint-LE: Set TypeSafe API Key` stores it in the operating
 system keychain through VS Code's secret storage. It can also be typed into
-the `decisionlint-le.ask.apiKey` setting, by the owner's decision: a settings
+the `decisionlint-le.ask.keys` setting, by the owner's decision: a settings
 field is where people look. A settings file is plain text, so that setting
 has application scope, which means it can be set only in user settings and
 never in a workspace, where it would be committed with the repository, and
@@ -633,7 +633,7 @@ errs high.
 **After an edit** the findings are removed. They were about text that has
 changed.
 
-**The model is pinned** to `jev-1.13.0` in `decisionlint-le.ask.model`, because the
+**The model is pinned** to `jev-1.13.0` in `decisionlint-le.ask.models`, because the
 cutoffs below were set on that version.
 
 ### How the cutoffs were set
@@ -824,7 +824,7 @@ the samples' `node_modules` and expects its finding.
 Not built: a setting to force the bundled copy, and loading from a global
 install.
 
-### Check with Jev from the command line
+### Asking from the command line
 
 Built, in 0.2.0. `--ask` runs the Jev-backed checks after linting, through
 `jev/review.ts`, the same code the editor's command runs. The two send
@@ -1235,10 +1235,10 @@ shape rule reports a Decisions mistake in OpenAI's own field names, and a
 mistyped `predicate` is caught and fixed; a shape mistake in the AI SDK's
 form cannot be told from a foreign client and is left alone.
 
-**Asking Luna.** `--ask-model gpt-6-luna`, or `decisionlint-le.ask.model` in the
+**Asking Luna.** `--ask-model gpt-6-luna`, or `decisionlint-le.ask.models` in the
 editor, sends the same checks to OpenAI's Decisions API with the key in
 `OPENAI_API_KEY`, or in the keychain through **Set OpenAI API Key**, or in
-`decisionlint-le.ask.openaiApiKey`. `jev/provider.ts` is the one file that knows
+`decisionlint-le.ask.keys`. `ask/provider.ts` is the one file that knows
 the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
@@ -1291,7 +1291,7 @@ The platforms differ in three ways the rules do not yet know:
    `openai/gpt-6-luna-decisions` and a dated `-20261006`. Other platforms
    use tier suffixes (`d1:free`), `@cf/` paths, Azure deployment names,
    Ollama tags and Hugging Face repo ids. `JEV001` knows two aliases and
-   `JEV013` one version pattern, and `jev/provider.ts` picks the host by
+   `JEV013` one version pattern, and `ask/provider.ts` picks the host by
    matching the id against `gpt-6-luna`.
 3. **The path and the model id do not say which shape a request is in.**
    Ollaya serves TypeSafe bodies on `/v1/decisions`, Eden AI on
@@ -1332,8 +1332,8 @@ OpenRouter writes it, and `jev-latest` becomes `jev-1.13.0`. `JEV013`
 compares the version out of any spelling. A Hugging Face repo id, an Ollama
 tag or a deployment name is not a Jev id, so neither rule reads it.
 
-**D4. Check with Jev reaches any target, and never guesses a host.**
-`jev/provider.ts` becomes a provider built from a target row: the wire
+**D4. An Ask command reaches any target, and never guesses a host.**
+`ask/provider.ts` becomes a provider built from a target row: the wire
 shape, the endpoint and the name of the environment variable that holds the
 key. A vendor with a fixed host, TypeSafe, OpenAI, Liquid, OpenRouter, LLM
 Gateway and Vercel, needs nothing set. A runtime the user hosts, llama.cpp,
@@ -1374,7 +1374,7 @@ version is finished in one pull request with its changelog dated.
 | Phase | Builds | Done when |
 |---|---|---|
 | P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `JEV001` and `JEV013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `JEV003`, an unknown target changes nothing |
-| P2 | `jev/provider.ts` from the target table, `jev.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
+| P2 | `ask/provider.ts` from the target table, `jev.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
 | P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go is still to do |
 | P4 | A URL in the file resolves the target, over the model id and under the setting; the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
 

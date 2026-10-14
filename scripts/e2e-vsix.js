@@ -107,21 +107,21 @@ exports.run = async function run() {
 
 	// Opening a JSON file must activate the extension on its own. Nothing here calls activate().
 	const folder = vscode.workspace.workspaceFolders[0].uri;
-	const json = vscode.Uri.joinPath(folder, 'triage.ask.json');
+	const json = vscode.Uri.joinPath(folder, 'triage.jev.json');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(json));
 	const expectedJson = ['JEV001', 'JEV004', 'JEV008', 'JEV006', 'JEV006', 'JEV007', 'JEV006', 'JEV005'];
 	await until(
 		() => JSON.stringify(codes(json)) === JSON.stringify(expectedJson),
-		() => 'triage.ask.json has ' + JSON.stringify(codes(json)),
+		() => 'triage.jev.json has ' + JSON.stringify(codes(json)),
 	);
 	assert.strictEqual(ext.isActive, true, 'opening a JSON file did not activate the extension');
 
-	// The contributed schema must be the one applied to *.ask.json. The linter
+	// The contributed schema must be the one applied to *.jev.json. The linter
 	// owns question validation, so the schema is proved by something only it
 	// reports: a request body with no state. Checked while the file is the
 	// visible editor, because the JSON service only reports on documents that
 	// are showing.
-	const bare = vscode.Uri.joinPath(folder, 'missing-state.ask.json');
+	const bare = vscode.Uri.joinPath(folder, 'missing-state.jev.json');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(bare));
 	await until(
 		() => vscode.languages.getDiagnostics(bare).some((d) => d.source !== 'decisionlint-le' && /state/.test(d.message)),

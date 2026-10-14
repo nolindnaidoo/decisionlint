@@ -1118,7 +1118,7 @@ describe('the MCP server', () => {
 		expect(
 			body(json).files[0].findings.map((f: { code: string }) => f.code),
 		).toEqual(['JEV004', 'JEV006']);
-		expect(body(json).files[0].path).toBe('request.ask.json');
+		expect(body(json).files[0].path).toBe('request.jev.json');
 		expect(body(python).totals.unreadable).toBe(1);
 	});
 

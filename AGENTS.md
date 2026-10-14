@@ -276,7 +276,7 @@ family's files, copied unchanged from `regex-le`.
   before running it on someone's machine. Hot exit must stay on in
   `assets/demo/editor/settings.json`, or closing the window stops on a save
   dialog.
-- **The schema does not validate what a rule validates.** In a `*.ask.json`
+- **The schema does not validate what a rule validates.** In a `*.jev.json`
   file both would underline the same token. The schema describes fields and
   requires the top-level keys. Rules own everything about a question.
 - **A finding underlines the thing that is wrong.** An unknown type points at
@@ -651,7 +651,7 @@ bun run validate -- --dry-run   # what would be sent to Jev, no key needed
 - `bun run package && bun run test:e2e-vsix` installs the VSIX into a clean
   profile and checks that it activates on its own when a JSON file opens, that
   every file the manifest points at shipped, and that the contributed schema
-  validates `*.ask.json`. It is the only test of the artifact users install.
+  validates `*.jev.json`. It is the only test of the artifact users install.
 - The integration tests edit samples in memory and revert. They never save.
 
 ## Not done

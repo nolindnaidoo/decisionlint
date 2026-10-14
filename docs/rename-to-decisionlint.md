@@ -1,6 +1,6 @@
 # Rename to DecisionLint-LE
 
-Status: in progress since 2026-10-14. Ships as 1.0.0 with the every-platform
+Status: steps 1 to 3 done on 2026-10-14, steps 4 to 6 pending. Ships as 1.0.0 with the every-platform
 work in `SPEC.md` under "Every provider". Nothing of 0.9.0 was published, so
 its new surfaces are named right here instead of aliased.
 
@@ -35,7 +35,7 @@ its new surfaces are named right here instead of aliased.
 | `jevlint-le.jev.model` | `decisionlint-le.ask.models` (one id per platform) | nothing, unpublished shape |
 | `jevlint-le.jev.apiKey`, `.openaiApiKey` | `decisionlint-le.ask.keys` (one per platform) | nothing |
 | `jevlint-le.jev.endpoint`, `.shape` | `decisionlint-le.ask.endpoint`, `.endpointShape`, `.endpointModel` | nothing, unpublished |
-| `jevlint-le.checkWithJev` | `decisionlint-le.ask.<platform>`, one per platform with a fixed host, plus `ask.endpoint` | nothing |
+| `jevlint-le.checkWithJev` | `decisionlint-le.askJev`, `askLuna`, `askOpenRouter`, `askVercel`, `askLlmGateway`, `askLiquid`, `askEndpoint` | nothing |
 | `--jev`, `--jev-plan`, `--jev-model`, `--jev-max-calls`, `--jev-send-state` | `--ask`, `--ask-plan`, `--ask-model`, `--ask-max-calls`, `--ask-send-state`, and `--ask-platform` | nothing. The command line's flags are read from the help, and 1.0 is where they change |
 | `--jev-endpoint`, `--jev-shape`, `JEVLINT_LE_JEV_*` | `--ask-endpoint`, `--ask-shape`, `DECISIONLINT_LE_ASK_*` | nothing, unpublished |
 | `check_with_jev`, `plan_jev` | `ask_model`, `plan_ask`, with a `platform` argument | nothing. The server's tools change with its name |
@@ -62,7 +62,8 @@ publishes, with the model id it sends by default and the key it reads:
 
 Each key is held three ways, as the TypeSafe key was: typed into
 `decisionlint-le.ask.keys`, user settings only and out of Settings Sync; in
-the keychain through one **Set API Key** command that asks which platform;
+the keychain through the platform's own **Set ... API Key** command, one per
+slot, because a picker would need the editor mock to grow for one dialog;
 or in the environment variable the platform names. **Clear API Keys**
 removes every slot. The probe asks in Jev's shape only and so runs through
 Ask Jev, Ask via OpenRouter, Ask via LLM Gateway, Ask Liquid d1, or the

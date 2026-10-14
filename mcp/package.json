@@ -2,7 +2,7 @@
   "name": "decisionlint-mcp",
   "version": "1.0.0",
   "mcpName": "io.github.nolindnaidoo/decisionlint",
-  "description": "Lint questions for TypeSafe's Jev and OpenAI's Luna offline, or ask the model itself with your key.",
+  "description": "Lint questions for Jev, Luna and any decision-model platform, or ask the model with your key.",
   "keywords": [
     "mcp",
     "modelcontextprotocol",
@@ -23,7 +23,21 @@
     "decisionlint",
     "decisionlint-mcp",
     "nolindnaidoo",
-    "letools"
+    "letools",
+    "openrouter",
+    "vercel-ai-gateway",
+    "ai-gateway",
+    "litellm",
+    "llm-gateway",
+    "eden-ai",
+    "liquid-ai",
+    "llama.cpp",
+    "vllm",
+    "ollaya",
+    "microsoft-decision-1",
+    "cloudflare",
+    "decision-model",
+    "decision-linter"
   ],
   "license": "MIT",
   "author": {

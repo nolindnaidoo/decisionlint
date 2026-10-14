@@ -359,9 +359,17 @@ family's files, copied unchanged from `regex-le`.
 - **A project's own type is not the API's shape.** In Rust and Go, criteria
   held in a named type are unreadable, a struct with a field the API lacks is
   partial, and a struct with no `type` field is never reported as missing
-  one. Each of these was a false finding on public code first.
-- **A name means a question type only when it holds exactly one of the three
-  words** (`typeInName`), and a typed struct is a question only when it has an
+  one. Each of these was a false finding on public code first. The APIs'
+  fields are TypeSafe's and OpenAI's: OpenAI's Go SDK writes `Name`, `Input`,
+  `Choices` of `{Value, Description}`, `Levels` of `{Label, Description}`,
+  and each question of a list as a one-member `OfPredicate`, `OfChoice` or
+  `OfScore` union, which `requests.ts` unwraps. `Predicate` in a type's name
+  is the yes/no type. A literal made only of an option's or level's fields
+  is not a project's own shape. Added on 2026-10-14 from the vendor's guide,
+  with the run over public Go code still to do.
+- **A name means a question type only when it holds exactly one of the four
+  words** (`typeInName`: `noul`, `choice`, `score`, and OpenAI's `predicate`
+  for the first), and a typed struct is a question only when it has an
   `instructions` or `criteria` field. `Answer::Noul { noul }` has neither.
 - **JSON in a string is read only when the string has no escapes.** Then a
   position in the value is a position in the file. With escapes it is not,
@@ -371,10 +379,18 @@ family's files, copied unchanged from `regex-le`.
 - **No reshape fix in Rust or Go.** Turning a list into a map is spelt
   differently for every type, so none is offered.
 - **A Python class is a question on one of two grounds.** Its name is imported
-  from `typesafe_sdk`, or its arguments are exactly the keywords
-  `instructions` and `criteria`. A `Choice(title=..., value=...)` from another
-  library is neither. Do not loosen the second without a run over public
-  code.
+  from `typesafe_sdk` or LangChain's `langchain_typesafe`, or its arguments
+  are exactly the keywords `instructions` and `criteria`. A
+  `Choice(title=..., value=...)` from another library is neither. Do not
+  loosen the second without a run over public code. LangChain's
+  `NoulCriteria(true=..., false=...)` is read as the criteria map it stands
+  for, under a name imported for it and under the module, and under no other
+  name.
+- **A model id inside `*.decisionModel('...')` is a model reference.** The
+  JavaScript reader keeps the AI SDK's factory call as the inner literal of
+  the expression it cannot read, and `requests.ts` takes its one string
+  argument as the model and nothing else: a factory given a variable or two
+  arguments names no model. Which provider made the factory is not read.
 - **A value under a runtime key is kept as `loose`.** Its key is gone, so it
   has no id and joins no map, but a question written there is still linted.
   Only the Python reader does this.

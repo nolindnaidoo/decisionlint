@@ -77,15 +77,21 @@ check runs on the tree and does not know which reader made it.
 | **S2** | `oxlint-plugin-jev` config | A `jev/ask` rule whose options hold a `rules` array. Each entry with a `question` is a Noul question, identified by its `id` |
 | **S3** | JavaScript and TypeScript object literals | The same shape as S1, anywhere in the file, including inside call arguments and callbacks. A question object outside a map is recognized on its own |
 | **S5** | Python dict literals | The same shape as S1. `True`, `False` and `None` are read, adjacent and bracketed strings are joined, and an f-string with a slot is unreadable. A dict assigned to a name ending in `questions` is read as a question map |
-| **S6** | Python SDK classes | `Noul(...)`, `Choice(...)`, `Score(...)` under a name imported from `typesafe_sdk` or `typesafe_ai`, including `import ... as`. Under any other import, only a call whose arguments are exactly the keywords `instructions` and `criteria` |
+| **S6** | Python SDK classes | `Noul(...)`, `Choice(...)`, `Score(...)` under a name imported from `typesafe_sdk`, `typesafe_ai` or LangChain's `langchain_typesafe`, including `import ... as`. LangChain's `NoulCriteria(true=..., false=...)` is read as the criteria map it stands for. Under any other import, only a call whose arguments are exactly the keywords `instructions` and `criteria` |
 | **S7** | Python `system_one(...)` | The first two positional arguments are `state` and `questions`. Keywords are read by name |
 | **S8** | Rust | The JSON inside `json!`. A struct or enum variant whose name holds one question type and which has an `instructions` or `criteria` field with a value that could be read. A `::noul(...)`, `::choice(...)` or `::score(...)` call whose first argument is a string, read for its wording only. `Some(x)`, `String::from(x)`, `.to_string()`, `.into()` and `vec![...]` are seen through, and a list of pairs or `BTreeMap::from([...])` is read as a map |
-| **S9** | Go | A map with string keys. A struct with a `Type` or `Kind` field, given as a string or as a constant named for the type. A struct named for a question type. Field names are read lowercased. `[]string{...}` is a list |
+| **S9** | Go | A map with string keys. A struct with a `Type` or `Kind` field, given as a string or as a constant named for the type. A struct named for a question type, `Predicate` included. Field names are read lowercased. `[]string{...}` is a list. OpenAI's Go SDK, `openai.DecisionNewParams{Questions: []...{{OfPredicate: &...{Name, Instructions}}}}`, is read through its one-member unions, with `Choices` of `{Value, Description}` and `Levels` of `{Label, Description}` as the API's own fields |
 | **S10** | JSON inside a string | A string that opens with `{` and names `questions`, `instructions` or `criteria`, in any language above. Only a string with no escapes is read, so every position maps back to the file |
 | **S4** | SDK helper calls | `noul(...)`, `choice(...)`, `score(...)`, read only for the names the file imports from `@typesafe-ai/sdk`. Method calls, declarations and aliased imports are not read |
 
 A `model` property whose value is a literal alias is found anywhere in the
 file, which covers both request bodies and `new TypeSafeClient({ model })`.
+So is one named through the AI SDK's factory,
+`model: typeSafeAi.decisionModel('jev-latest')` or
+`gateway.decisionModel('typesafe-ai/jev')`: the id inside the call is the
+model, and its spelling can name the platform. Which provider made the
+factory is not read, so a question sent through `anthropic.decisionModel(...)`
+to a language model is linted as any other.
 
 ### What cannot be read
 

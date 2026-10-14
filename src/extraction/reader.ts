@@ -96,12 +96,28 @@ function isHelperCall(tokens: ReadonlyArray<Token>, at: number): boolean {
 	return !(isPunct(after, ':') && !isPunct(prev, '?'));
 }
 
+// The AI SDK names a model through a provider's factory,
+// `typeSafeAi.decisionModel('jev-latest')`. The call is read so the id in it
+// is seen as a model id; which provider made it is not.
+const MODEL_FACTORY = 'decisionModel';
+
+function isModelFactoryCall(tokens: ReadonlyArray<Token>, at: number): boolean {
+	const token = tokens[at];
+	return (
+		token?.kind === 'ident' &&
+		token.text === MODEL_FACTORY &&
+		isPunct(tokens[at - 1], '.') &&
+		isPunct(tokens[at + 1], '(')
+	);
+}
+
 function readFound(
 	tokens: ReadonlyArray<Token>,
 	at: number,
 ): Parsed | undefined {
 	if (isPunct(tokens[at], '{')) return readObject(tokens, at);
-	if (isHelperCall(tokens, at)) return readCall(tokens, at);
+	if (isHelperCall(tokens, at) || isModelFactoryCall(tokens, at))
+		return readCall(tokens, at);
 	return undefined;
 }
 

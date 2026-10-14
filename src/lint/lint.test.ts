@@ -188,6 +188,40 @@ describe("a model id in another platform's spelling", () => {
 	});
 });
 
+describe("a model named through the AI SDK's factory", () => {
+	const decide = (factory: string, questions: string) =>
+		`import { experimental_decide as decide } from 'ai';\nconst r = await decide({ model: ${factory}, state, questions: { ${questions} } });`;
+
+	it('fires JEV001 on an alias inside decisionModel(), and pins it there', () => {
+		const text = decide(`typeSafeAi.decisionModel('jev-latest')`, CLEAN_NOUL);
+		const pin = finding(text, 'JEV001');
+		expect(text.slice(pin.span.start, pin.span.end)).toBe(`'jev-latest'`);
+		expect(apply(text, pin)).toContain(`decisionModel('jev-1.13.0')`);
+	});
+
+	it("holds the request to the platform the factory's id names", () => {
+		const levels = Array.from(
+			{ length: 11 },
+			(_, i) =>
+				`"${['Nothing works', 'Starts then stops', 'Runs with faults', 'Runs with one fault', 'Runs but is slow', 'Runs at normal speed', 'Runs faster than expected', 'Handles double the load', 'Handles every load tried', 'Has never failed', 'Cannot be made to fail'][i]}"`,
+		).join(', ');
+		const text = decide(
+			`gateway.decisionModel('typesafe-ai/jev')`,
+			`"damage": { "type": "score", "instructions": "Rate the damage", "levels": [${levels}] }`,
+		);
+		expect(finding(text, 'JEV003').message).toBe(
+			'This Score has 11 levels. Vercel AI Gateway accepts at most 10.',
+		);
+	});
+
+	it('reads nothing from a factory given anything but one string', () => {
+		expect(codes(decide(`openai.decisionModel(MODEL)`, CLEAN_NOUL))).toEqual(
+			[],
+		);
+		expect(codes(decide(`pickModel('jev-latest')`, CLEAN_NOUL))).toEqual([]);
+	});
+});
+
 describe('the target of a request', () => {
 	const levels = [
 		'Nothing works',

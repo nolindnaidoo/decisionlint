@@ -21,6 +21,8 @@ type Names = Readonly<{
 	classes: ReadonlyMap<string, QuestionType>;
 	/** Names the SDK module is imported under, for `typesafe_sdk.Noul(...)`. */
 	modules: ReadonlySet<string>;
+	/** Local names of LangChain's `NoulCriteria`, whose keywords are a Noul's `true` and `false`. */
+	criteria: ReadonlySet<string>;
 }>;
 
 type Source = Readonly<{
@@ -49,19 +51,29 @@ const KEYWORD_LITERALS: ReadonlyMap<string, (span: Span) => Node> = new Map([
 	['None', (span: Span): Node => ({ kind: 'null', span })],
 ]);
 
-const FROM_IMPORT =
-	/^[ \t]*from[ \t]+typesafe_(?:sdk|ai)[\w.]*[ \t]+import[ \t]+(\([^)]*\)|[^\n]*)/gm;
-const MODULE_IMPORT =
-	/^[ \t]*import[ \t]+(typesafe_(?:sdk|ai))(?:[ \t]+as[ \t]+(\w+))?/gm;
+// TypeSafe's own module, and LangChain's wrapper of it, which re-exports the
+// three classes and adds `NoulCriteria`.
+const SDK_MODULE = '(?:typesafe_(?:sdk|ai)|langchain_typesafe)';
+const FROM_IMPORT = new RegExp(
+	String.raw`^[ \t]*from[ \t]+${SDK_MODULE}[\w.]*[ \t]+import[ \t]+(\([^)]*\)|[^\n]*)`,
+	'gm',
+);
+const MODULE_IMPORT = new RegExp(
+	String.raw`^[ \t]*import[ \t]+(${SDK_MODULE})(?:[ \t]+as[ \t]+(\w+))?`,
+	'gm',
+);
+const CRITERIA_CLASS = 'NoulCriteria';
 
 function importedNames(text: string): Names {
 	const classes = new Map<string, QuestionType>();
+	const criteria = new Set<string>();
 	for (const match of text.matchAll(FROM_IMPORT)) {
 		const list = (match[1] ?? '').replace(/#[^\n]*/g, '').replace(/[()]/g, '');
 		for (const entry of list.split(',')) {
 			const [name, , alias] = entry.trim().split(/\s+/);
 			const type = CLASS_TYPES.get(name ?? '');
 			if (type) classes.set(alias ?? (name as string), type);
+			if (name === CRITERIA_CLASS) criteria.add(alias ?? name);
 		}
 	}
 	const modules = new Set(
@@ -69,7 +81,7 @@ function importedNames(text: string): Names {
 			(match) => match[2] ?? (match[1] as string),
 		),
 	);
-	return { classes, modules };
+	return { classes, modules, criteria };
 }
 
 function isIdent(token: Token | undefined, text: string): boolean {
@@ -270,9 +282,43 @@ function readOwnCall(source: Source, at: number): Parsed | undefined {
 	};
 }
 
+/**
+ * LangChain's `NoulCriteria(true=..., false=...)` as the `{true, false}` map
+ * TypeSafe's API takes, read only under a name the file imports for it, bare
+ * or through the module. Any other call of that name is someone else's.
+ */
+function readCriteriaCall(
+	source: Source,
+	at: number,
+): Parsed<ObjectNode> | undefined {
+	const { tokens, names } = source;
+	const token = tokens[at];
+	if (token?.kind !== 'ident' || !isPunct(tokens[at + 1], '('))
+		return undefined;
+	const qualified = isPunct(tokens[at - 1], '.');
+	const trusted = qualified
+		? token.text === CRITERIA_CLASS &&
+			names.modules.has(tokens[at - 2]?.text ?? '') &&
+			!isPunct(tokens[at - 3], '.')
+		: names.criteria.has(token.text);
+	const list = trusted ? readList(source, at + 1, ')', true) : undefined;
+	if (!list) return undefined;
+	return {
+		node: {
+			kind: 'object',
+			props: list.named,
+			partial: list.partial || list.items.length > 0,
+			span: { start: token.start, end: list.end },
+		},
+		next: list.next,
+	};
+}
+
 function readCallAt(source: Source, at: number): Parsed | undefined {
 	const question = readQuestionCall(source, at);
 	if (question) return question;
+	const criteria = readCriteriaCall(source, at);
+	if (criteria) return criteria;
 	if (isRequestCall(source.tokens, at)) return readRequestCall(source, at);
 	return readOwnCall(source, at);
 }
@@ -323,7 +369,12 @@ function readPrimary(source: Source, at: number): Parsed | undefined {
 	if (token.kind !== 'ident') return readNumber(tokens, at);
 	const keyword = KEYWORD_LITERALS.get(token.text);
 	if (keyword) return { node: keyword(spanOf(token)), next: at + 1 };
-	return readCallAt(source, at);
+	// `ts.Noul(...)`: read from the class name, whose reader checks that `ts` is the module.
+	const qualified =
+		isPunct(tokens[at + 1], '.') &&
+		tokens[at + 2]?.kind === 'ident' &&
+		source.names.modules.has(token.text);
+	return readCallAt(source, qualified ? at + 2 : at);
 }
 
 /** The literal a name is bound to, read where it is defined. */

@@ -65,7 +65,10 @@ export type Listed = Readonly<{
 }>;
 
 const QUESTION_FIELDS = new Set(['instructions', 'criteria']);
-// The names the API uses. A struct with any other field is the project's own shape.
+// The names the APIs use. A struct with any other field is the project's own
+// shape. TypeSafe's are the first six. OpenAI's Go SDK writes the rest:
+// `Name`, `Input`, `Choices` of `{Value, Description}`, `Levels` of `{Label,
+// Description}`, and a question wrapped as `{OfPredicate: &...}`.
 const WIRE_FIELDS = new Set([
 	'type',
 	'instructions',
@@ -73,15 +76,35 @@ const WIRE_FIELDS = new Set([
 	'questions',
 	'state',
 	'model',
+	'name',
+	'input',
+	'choices',
+	'levels',
+	'value',
+	'label',
+	'description',
+	'ofpredicate',
+	'ofchoice',
+	'ofscore',
 ]);
-const TYPE_WORDS: ReadonlyArray<QuestionType> = ['noul', 'choice', 'score'];
+// The fields of one option or level in OpenAI's lists. A literal made only of
+// these says its type through the list it sits in, not through a name.
+const ENTRY_FIELDS = new Set(['value', 'label', 'description']);
+// The words a type's name says its question type with. OpenAI's SDKs say
+// `Predicate` for the yes/no type. A Map, because the key is the file's.
+const TYPE_WORDS: ReadonlyMap<string, QuestionType> = new Map([
+	['noul', 'noul'],
+	['choice', 'choice'],
+	['score', 'score'],
+	['predicate', 'noul'],
+]);
 const LITERAL_KINDS = new Set(['string', 'array', 'object', 'null']);
 
-/** The one question type a name mentions, as in `NoulQuestion` or `TypeChoice`. */
+/** The one question type a name mentions, as in `NoulQuestion`, `TypeChoice` or `DecisionNewParamsQuestionPredicate`. */
 export function typeInName(name: string): QuestionType | undefined {
 	const lower = name.toLowerCase();
-	const found = TYPE_WORDS.filter((word) => lower.includes(word));
-	return found.length === 1 ? found[0] : undefined;
+	const found = [...TYPE_WORDS].filter(([word]) => lower.includes(word));
+	return found.length === 1 ? found[0]?.[1] : undefined;
 }
 
 /** The index of the `:` that ends a key starting at `at`, or undefined when no key starts there. */
@@ -352,8 +375,12 @@ export function createReader(
 					fields.length > 0 &&
 					!type &&
 					!props.some((prop) => prop.key === 'type');
+				const entry =
+					fields.length > 0 &&
+					fields.every((prop) => ENTRY_FIELDS.has(prop.key));
 				const ownShape =
-					typeUnseen || fields.some((prop) => !WIRE_FIELDS.has(prop.key));
+					(typeUnseen && !entry) ||
+					fields.some((prop) => !WIRE_FIELDS.has(prop.key));
 				const node: Node = listed
 					? { kind: 'array', items, partial, span }
 					: {

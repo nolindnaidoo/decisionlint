@@ -136,6 +136,32 @@ describe('Go', () => {
 		expect(codes(text, 'go')).toEqual([]);
 	});
 
+	it("reads OpenAI's Go SDK through its one-member unions, in OpenAI's shape", () => {
+		const text = `res, err := client.Decisions.New(context.Background(), openai.DecisionNewParams{
+	Model: "gpt-6-luna",
+	Input: "The parcel came late.",
+	Questions: []openai.DecisionNewParamsQuestionUnion{
+		{OfPredicate: &openai.DecisionNewParamsQuestionPredicate{Name: "late", Instructions: "Did the parcel arrive after the promised day?"}},
+		{OfChoice: &openai.DecisionNewParamsQuestionChoice{Name: "team", Instructions: "Which team takes it?", Choices: []openai.DecisionNewParamsQuestionChoiceChoice{{Value: "billing", Description: "Charges"}, {Value: "delivery", Description: "Parcels"}}}},
+		{OfScore: &openai.DecisionNewParamsQuestionScore{Name: "mood", Instructions: "How put out is the customer?", Levels: []openai.DecisionNewParamsQuestionScoreLevel{{Label: "calm", Description: "Relaxed about it"}, {Label: "angry", Description: "Says they will go elsewhere"}}}},
+	},
+})`;
+		expect(go(text)).toEqual([
+			'late noul request',
+			'team choice request',
+			'mood score request',
+		]);
+		const found = readQuestions(text, 'go');
+		expect(found.questions.map((question) => question.dialect)).toEqual([
+			'openai',
+			'openai',
+			'openai',
+		]);
+		expect(found.maps[0]?.model?.value).toBe('gpt-6-luna');
+		// No fallback among the choices. Nothing else: the shape is the API's own.
+		expect(codes(text, 'go')).toEqual(['JEV004']);
+	});
+
 	it('is not fooled by raw strings, runes, comments or blocks', () => {
 		const text = `// {"type": "noul", "instructions": "no"}
 func f(c rune) string { if c == '{' { return "}" }; for _, choice := range choices { use(choice) }; return \`{\` }

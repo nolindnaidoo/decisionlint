@@ -302,3 +302,43 @@ describe('fixes on Python', () => {
 		);
 	});
 });
+
+describe("LangChain's TypeSafe classes", () => {
+	const LANGCHAIN =
+		'from langchain_typesafe import TypeSafeClassifier, Noul, Choice, Score, NoulCriteria\n';
+
+	it('reads the classes under names imported from langchain_typesafe, and NoulCriteria as a map', () => {
+		const text = `${LANGCHAIN}clf = TypeSafeClassifier()
+out = clf.invoke({"state": note, "questions": {
+    "late": Noul(instructions="Did the parcel arrive after the promised day?", criteria=NoulCriteria(true="Past the promised day", false="On or before it")),
+    "team": Choice(instructions="Which team takes it?", criteria={"billing": "Charges", "delivery": "Parcels", "other": "Anything else"}),
+}})`;
+		const found = read(text);
+		expect(
+			found.questions.map((question) => [
+				question.id,
+				question.type,
+				question.inRequest,
+				question.criteria?.kind,
+			]),
+		).toEqual([
+			['late', 'noul', true, 'object'],
+			['team', 'choice', true, 'object'],
+		]);
+		expect(codes(text)).toEqual([]);
+	});
+
+	it('reports a NoulCriteria whose yes and no say nothing, through the module too', () => {
+		const text = `import langchain_typesafe as lc
+q = {"questions": {"late": lc.Noul(instructions="Is the parcel late?", criteria=lc.NoulCriteria(true="yes", false="no"))}}`;
+		// One finding per criterion that says nothing.
+		expect(codes(text)).toEqual(['JEV011', 'JEV011']);
+	});
+
+	it("leaves another library's NoulCriteria unread", () => {
+		const text = `${SDK}from mylib import NoulCriteria
+q = {"questions": {"late": Noul(instructions="Is the parcel late?", criteria=NoulCriteria(true="yes", false="no"))}}`;
+		expect(read(text).questions[0]?.criteria?.kind).toBe('unreadable');
+		expect(codes(text)).toEqual(['JEV000']);
+	});
+});

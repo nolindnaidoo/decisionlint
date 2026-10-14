@@ -406,14 +406,15 @@ function nameOf(value: Node): Named {
 function collectList(node: ObjectNode, sink: Sink): boolean {
 	const questions = prop(node, 'questions')?.value;
 	if (questions?.kind !== 'array') return false;
-	const marked = questions.items.some(
+	const items = questions.items.map(unwrapUnion);
+	const marked = items.some(
 		(item) => isMapEntry(item, sink) || isBrokenQuestion(item),
 	);
 	if (!marked) return false;
 	const map = sink.maps.length;
 	const evidence = prop(node, 'input') ?? prop(node, 'state');
 	sink.maps.push({
-		entries: questions.items.flatMap((item) => {
+		entries: items.flatMap((item) => {
 			const named = nameOf(item);
 			return named ? [{ id: named.id, idSpan: named.span }] : [];
 		}),
@@ -421,7 +422,7 @@ function collectList(node: ObjectNode, sink: Sink): boolean {
 		stateKey: evidence?.keySpan,
 		model: modelOf(node),
 	});
-	for (const item of questions.items) {
+	for (const item of items) {
 		const named = nameOf(item);
 		if (item.kind === 'object' && typeOf(item)) {
 			sink.questions.push(fromObject(item, named, true, map));
@@ -451,12 +452,48 @@ function oxlintRules(node: ObjectNode): ArrayNode | undefined {
 	return rules?.kind === 'array' ? rules : undefined;
 }
 
-/** The `model` of a request, when it is written out. */
+// The AI SDK's `model: typeSafeAi.decisionModel('jev-latest')`: the reader
+// keeps the factory call inside the expression it could not read as a whole.
+const MODEL_FACTORY = 'decisionModel';
+
+function factoryModel(node: Node): ModelRef | undefined {
+	const call =
+		node.kind === 'call'
+			? node
+			: node.kind === 'unreadable' && node.inner.length === 1
+				? node.inner[0]
+				: undefined;
+	if (call?.kind !== 'call' || call.callee !== MODEL_FACTORY) return undefined;
+	const [id] = call.args;
+	return id?.kind === 'string' && call.args.length === 1
+		? { value: id.value, span: id.span }
+		: undefined;
+}
+
+/** The `model` of a request, when it is written out, or named through the AI SDK's factory. */
 function modelOf(node: ObjectNode): ModelRef | undefined {
 	const model = prop(node, 'model')?.value;
-	return model?.kind === 'string'
+	if (!model) return undefined;
+	return model.kind === 'string'
 		? { value: model.value, span: model.span }
-		: undefined;
+		: factoryModel(model);
+}
+
+// OpenAI's Go SDK writes each question of a list as a union of one member,
+// `{OfPredicate: &openai.DecisionNewParamsQuestionPredicate{...}}`. The
+// member is the question. A Map, because the key is the file's.
+const UNION_MEMBERS: ReadonlySet<string> = new Set([
+	'ofpredicate',
+	'ofchoice',
+	'ofscore',
+]);
+
+function unwrapUnion(item: Node): Node {
+	if (item.kind !== 'object' || item.props.length !== 1) return item;
+	const [only] = item.props;
+	return only && UNION_MEMBERS.has(only.key) && only.value.kind === 'object'
+		? only.value
+		: item;
 }
 
 /** Each `jev/ask` rule in an oxlint-plugin-jev config is a Noul question with its own id. */

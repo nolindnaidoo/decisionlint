@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TOOL_NAMES } from '../cli/mcp';
 
@@ -110,9 +110,10 @@ describe('what the documents claim', () => {
 	});
 
 	it('names only test files that exist', () => {
+		// `basename`, not a slice at '/': the walk joins with the platform's separator.
 		const existing = new Set(
 			[...sourceFiles('src'), ...sourceFiles('test')].map((path) =>
-				path.slice(path.lastIndexOf('/') + 1),
+				basename(path),
 			),
 		);
 		const named = [

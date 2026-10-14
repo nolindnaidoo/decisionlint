@@ -57,8 +57,8 @@ export function failureMessage(
 
 /** The environment variables that stand in for `--ask-endpoint` and `--ask-shape`, for a server started without flags. */
 export const ROUTE_ENV = Object.freeze({
-	endpoint: 'DECISIONLINT_LE_ASK_ENDPOINT',
-	shape: 'DECISIONLINT_LE_ASK_SHAPE',
+	endpoint: 'DECISIONLINT_ASK_ENDPOINT',
+	shape: 'DECISIONLINT_ASK_SHAPE',
 });
 
 type Env = Readonly<Record<string, string | undefined>>;

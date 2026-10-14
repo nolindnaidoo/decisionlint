@@ -25,7 +25,7 @@ const experiments = [
 	...read('overlap'),
 	...read('numbers'),
 	...read('criteria'),
-].filter((experiment) => experiment.rule < 'JEV300');
+].filter((experiment) => experiment.rule < 'DEC300');
 
 // Rules that ship off are validated too. Whether to turn one on is exactly
 // what its experiment is for.

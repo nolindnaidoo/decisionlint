@@ -4,40 +4,40 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 
 | Code | Name | Default | What it means |
 |---|---|---|---|
-| [JEV000](JEV000.md) | unreadable | hint | Part of the question is built at runtime, so the rules that need it did not run |
-| [JEV001](JEV001.md) | unpinned-model | warning | An alias such as `jev-latest` moves with each release, so answers can change with no change on your side |
-| [JEV002](JEV002.md) | choice-option-limit | error | A Choice has more than 255 options. The API rejects it |
-| [JEV003](JEV003.md) | score-level-limit | error | A Score has more than 10 levels. The API rejects it |
-| [JEV004](JEV004.md) | no-fallback-option | info | A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text |
-| [JEV005](JEV005.md) | duplicate | error | A question id, option or level appears twice. In an object the later one silently replaces the earlier |
-| [JEV006](JEV006.md) | criteria-shape | error | A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false` |
-| [JEV007](JEV007.md) | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
-| [JEV008](JEV008.md) | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
-| [JEV009](JEV009.md) | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
-| [JEV010](JEV010.md) | unused-disable | warning | A `decisionlint-le-disable` comment silences nothing, so it can only hide a finding added later |
-| [JEV011](JEV011.md) | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
-| [JEV012](JEV012.md) | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
-| [JEV013](JEV013.md) | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
-| [JEV014](JEV014.md) | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
-| [JEV101](JEV101.md) | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
-| [JEV102](JEV102.md) | arithmetic | warning | The question asks Jev to count or compare numbers |
-| [JEV103](JEV103.md) | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
-| [JEV104](JEV104.md) | compound | off | A Noul joins two judgments with 'and' |
-| [JEV105](JEV105.md) | generation | warning | The question asks for a value or for text to be written |
-| [JEV107](JEV107.md) | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
-| [JEV108](JEV108.md) | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
-| [JEV110](JEV110.md) | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
-| [JEV111](JEV111.md) | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
-| [JEV112](JEV112.md) | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
-| [JEV301](JEV301.md) | jev-counting | warning | Jev reads the question as needing counting or arithmetic |
-| [JEV302](JEV302.md) | jev-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
-| [JEV303](JEV303.md) | jev-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
-| [JEV304](JEV304.md) | jev-overlapping-levels | warning | Jev reads two levels of a Score as the same situation |
-| [JEV305](JEV305.md) | jev-label-mismatch | warning | Jev reads an option as named for one thing and described as another |
-| [JEV306](JEV306.md) | jev-criteria-off-topic | info | Jev reads the criteria as deciding something the instructions do not ask |
-| [JEV307](JEV307.md) | jev-ordered-options | info | Jev reads a Choice's options as steps on one scale, which a Score would place between |
-| [JEV308](JEV308.md) | jev-unordered-levels | info | Jev reads a Score's levels as unordered categories, which a Choice would pick from |
-| [JEV309](JEV309.md) | jev-depends-on-sibling | info | Jev reads a question as needing another question's answer from the same request |
-| [JEV310](JEV310.md) | jev-overlapping-questions | info | Jev reads two questions in one request as asking for the same judgment |
-| [JEV311](JEV311.md) | jev-answer-not-in-state | info | Jev reads the state written in the file as not holding what the question asks about |
-| [JEV312](JEV312.md) | jev-orders-in-state | info | Jev reads part of the state written in the file as giving orders to its reader |
+| [DEC000](DEC000.md) | unreadable | hint | Part of the question is built at runtime, so the rules that need it did not run |
+| [DEC001](DEC001.md) | unpinned-model | warning | An alias such as `jev-latest` moves with each release, so answers can change with no change on your side |
+| [DEC002](DEC002.md) | choice-option-limit | error | A Choice has more than 255 options. The API rejects it |
+| [DEC003](DEC003.md) | score-level-limit | error | A Score has more than 10 levels. The API rejects it |
+| [DEC004](DEC004.md) | no-fallback-option | info | A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text |
+| [DEC005](DEC005.md) | duplicate | error | A question id, option or level appears twice. In an object the later one silently replaces the earlier |
+| [DEC006](DEC006.md) | criteria-shape | error | A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false` |
+| [DEC007](DEC007.md) | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
+| [DEC008](DEC008.md) | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
+| [DEC009](DEC009.md) | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
+| [DEC010](DEC010.md) | unused-disable | warning | A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later |
+| [DEC011](DEC011.md) | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
+| [DEC012](DEC012.md) | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
+| [DEC013](DEC013.md) | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
+| [DEC014](DEC014.md) | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
+| [DEC101](DEC101.md) | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
+| [DEC102](DEC102.md) | arithmetic | warning | The question asks Jev to count or compare numbers |
+| [DEC103](DEC103.md) | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
+| [DEC104](DEC104.md) | compound | off | A Noul joins two judgments with 'and' |
+| [DEC105](DEC105.md) | generation | warning | The question asks for a value or for text to be written |
+| [DEC107](DEC107.md) | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
+| [DEC108](DEC108.md) | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
+| [DEC110](DEC110.md) | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
+| [DEC111](DEC111.md) | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
+| [DEC112](DEC112.md) | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
+| [DEC301](DEC301.md) | model-counting | warning | Jev reads the question as needing counting or arithmetic |
+| [DEC302](DEC302.md) | model-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
+| [DEC303](DEC303.md) | model-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
+| [DEC304](DEC304.md) | model-overlapping-levels | warning | Jev reads two levels of a Score as the same situation |
+| [DEC305](DEC305.md) | model-label-mismatch | warning | Jev reads an option as named for one thing and described as another |
+| [DEC306](DEC306.md) | model-criteria-off-topic | info | Jev reads the criteria as deciding something the instructions do not ask |
+| [DEC307](DEC307.md) | model-ordered-options | info | Jev reads a Choice's options as steps on one scale, which a Score would place between |
+| [DEC308](DEC308.md) | model-unordered-levels | info | Jev reads a Score's levels as unordered categories, which a Choice would pick from |
+| [DEC309](DEC309.md) | model-depends-on-sibling | info | Jev reads a question as needing another question's answer from the same request |
+| [DEC310](DEC310.md) | model-overlapping-questions | info | Jev reads two questions in one request as asking for the same judgment |
+| [DEC311](DEC311.md) | model-answer-not-in-state | info | Jev reads the state written in the file as not holding what the question asks about |
+| [DEC312](DEC312.md) | model-orders-in-state | info | Jev reads part of the state written in the file as giving orders to its reader |

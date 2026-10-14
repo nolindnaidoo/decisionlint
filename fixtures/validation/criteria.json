@@ -1,6 +1,6 @@
 [
   {
-    "rule": "JEV305",
+    "rule": "DEC305",
     "name": "option names that contradict their descriptions against names that agree",
     "cases": [
       {
@@ -84,7 +84,7 @@
     }
   },
   {
-    "rule": "JEV306",
+    "rule": "DEC306",
     "name": "criteria about something the question never asked against criteria that match",
     "cases": [
       {

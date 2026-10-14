@@ -1,6 +1,6 @@
 [
   {
-    "rule": "JEV303",
+    "rule": "DEC303",
     "name": "two options that cover the same cases against one",
     "cases": [
       {
@@ -81,7 +81,7 @@
     }
   },
   {
-    "rule": "JEV304",
+    "rule": "DEC304",
     "name": "two levels that describe the same situation against three distinct ones",
     "cases": [
       {

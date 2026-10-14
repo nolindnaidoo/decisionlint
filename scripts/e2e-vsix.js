@@ -70,7 +70,7 @@ const path = require('path');
 const codes = (uri) =>
 	vscode.languages
 		.getDiagnostics(uri)
-		.filter((d) => d.source === 'decisionlint-le')
+		.filter((d) => d.source === 'decisionlint')
 		.sort((a, b) => a.range.start.compareTo(b.range.start))
 		.map((d) => String(d.code.value));
 
@@ -109,7 +109,7 @@ exports.run = async function run() {
 	const folder = vscode.workspace.workspaceFolders[0].uri;
 	const json = vscode.Uri.joinPath(folder, 'triage.jev.json');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(json));
-	const expectedJson = ['JEV001', 'JEV004', 'JEV008', 'JEV006', 'JEV006', 'JEV007', 'JEV006', 'JEV005'];
+	const expectedJson = ['DEC001', 'DEC004', 'DEC008', 'DEC006', 'DEC006', 'DEC007', 'DEC006', 'DEC005'];
 	await until(
 		() => JSON.stringify(codes(json)) === JSON.stringify(expectedJson),
 		() => 'triage.jev.json has ' + JSON.stringify(codes(json)),
@@ -124,7 +124,7 @@ exports.run = async function run() {
 	const bare = vscode.Uri.joinPath(folder, 'missing-state.jev.json');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(bare));
 	await until(
-		() => vscode.languages.getDiagnostics(bare).some((d) => d.source !== 'decisionlint-le' && /state/.test(d.message)),
+		() => vscode.languages.getDiagnostics(bare).some((d) => d.source !== 'decisionlint' && /state/.test(d.message)),
 		() => 'the request schema did not flag the missing state; got ' +
 			JSON.stringify(vscode.languages.getDiagnostics(bare).map((d) => d.message)),
 	);
@@ -139,7 +139,7 @@ exports.run = async function run() {
 	assert.ok(fs.existsSync(server), 'dist/cli.js is missing from the installed VSIX. Check .vscodeignore');
 	assert.deepStrictEqual(
 		(contributes.mcpServerDefinitionProviders || []).map((p) => p.id),
-		['jevlint-le'],
+		['decisionlint'],
 	);
 	const asked = [
 		{ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } },
@@ -158,7 +158,7 @@ exports.run = async function run() {
 
 	const ts = vscode.Uri.joinPath(folder, 'triage.ts');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(ts));
-	const expectedTs = ['JEV001', 'JEV004', 'JEV008', 'JEV000', 'JEV009', 'JEV007', 'JEV005'];
+	const expectedTs = ['DEC001', 'DEC004', 'DEC008', 'DEC000', 'DEC009', 'DEC007', 'DEC005'];
 	await until(
 		() => JSON.stringify(codes(ts)) === JSON.stringify(expectedTs),
 		() => 'triage.ts has ' + JSON.stringify(codes(ts)),

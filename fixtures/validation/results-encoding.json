@@ -5,7 +5,7 @@
   "inputTokens": 7018,
   "results": [
     {
-      "rule": "JEV111",
+      "rule": "DEC111",
       "name": "a colour given as hex against the same colour named",
       "bad": "12 of 12",
       "badSureness": "0.94",

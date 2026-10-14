@@ -147,7 +147,7 @@ describe('arguments', () => {
 	});
 
 	it.each([
-		[['-h'], 'Usage: decisionlint-le'],
+		[['-h'], 'Usage: decisionlint'],
 		[['-v'], '9.9.9'],
 	])('takes %j as an option, not as a file', async (args, said) => {
 		const result = await cli(args);
@@ -181,8 +181,8 @@ describe('arguments', () => {
 		[['--fromat', 'json'], "Unknown option '--fromat'."],
 		[['--format'], '--format needs a value'],
 		[['--format', 'xml'], "'xml' is not a format"],
-		[['--rule', 'JEV999=off'], "'JEV999' is not a rule code"],
-		[['--rule', 'JEV004=loud'], "'loud' is not a level"],
+		[['--rule', 'DEC999=off'], "'DEC999' is not a rule code"],
+		[['--rule', 'DEC004=loud'], "'loud' is not a level"],
 		[['--max-warnings', 'few'], "'few' is not a whole number"],
 		[['--quiet=yes'], '--quiet takes no value'],
 	])('refuses %j', async (args, reason) => {
@@ -193,7 +193,7 @@ describe('arguments', () => {
 	});
 
 	it('prints the help and the version', async () => {
-		expect((await cli(['--help'])).out).toContain('Usage: decisionlint-le');
+		expect((await cli(['--help'])).out).toContain('Usage: decisionlint');
 		expect((await cli(['--version'])).out).toBe('9.9.9\n');
 	});
 });
@@ -213,8 +213,8 @@ describe('a run', () => {
 		});
 		expect(result.status).toBe(EXIT.failed);
 		const lines = result.out.split('\n');
-		expect(lines[0]).toMatch(/^a\.json:2:\d+ {2}info {2}JEV004 {2}/);
-		expect(lines[1]).toMatch(/^a\.json:2:\d+ {2}error {2}JEV006 {2}/);
+		expect(lines[0]).toMatch(/^a\.json:2:\d+ {2}info {2}DEC004 {2}/);
+		expect(lines[1]).toMatch(/^a\.json:2:\d+ {2}error {2}DEC006 {2}/);
 		expect(result.out).toContain(
 			'2 findings (1 error, 0 warnings) in 2 questions across 1 file.',
 		);
@@ -259,7 +259,7 @@ describe('a run', () => {
 		[
 			'a file type it does not read',
 			['notes.md'],
-			'Not a file type decisionlint-le reads: notes.md',
+			'Not a file type decisionlint reads: notes.md',
 		],
 		['a directory with nothing to read', ['empty'], 'No files to lint'],
 	])('refuses %s', async (_name, args, reason) => {
@@ -322,14 +322,14 @@ describe('settings', () => {
 				'-f',
 				'compact',
 				'--rule',
-				'JEV006=off',
+				'DEC006=off',
 				'--rule',
-				'JEV004=error',
+				'DEC004=error',
 			],
 			tree,
 		);
-		expect(result.out).toContain('error  JEV004');
-		expect(result.out).not.toContain('JEV006');
+		expect(result.out).toContain('error  DEC004');
+		expect(result.out).not.toContain('DEC006');
 	});
 
 	it('takes a rule by its name, and warn for warning', async () => {
@@ -338,16 +338,16 @@ describe('settings', () => {
 			{ 'q.json': BAD },
 		);
 		const levels = JSON.parse(byName.out).files[0].findings.filter(
-			(finding: { code: string }) => finding.code === 'JEV004',
+			(finding: { code: string }) => finding.code === 'DEC004',
 		);
 		expect(
 			levels.map((finding: { severity: string }) => finding.severity),
 		).toEqual(['warning']);
 		const inFile = await cli(['q.json'], {
 			'q.json': BAD,
-			'decisionlint-le.json': '{ "rules": { "no-fallback-option": "off" } }',
+			'decisionlint.json': '{ "rules": { "no-fallback-option": "off" } }',
 		});
-		expect(inFile.out).not.toContain('JEV004');
+		expect(inFile.out).not.toContain('DEC004');
 		const wrong = await cli(['--rule', 'no-such-rule=off', 'q.json'], {
 			'q.json': BAD,
 		});
@@ -358,7 +358,7 @@ describe('settings', () => {
 
 	it('reads a config file, and lets a flag override it', async () => {
 		const config = JSON.stringify({
-			rules: { JEV006: 'off', JEV004: 'off' },
+			rules: { DEC006: 'off', DEC004: 'off' },
 			ignore: [],
 		});
 		const fromFile = await cli(['a.json', '--config', 'c.json'], {
@@ -367,16 +367,16 @@ describe('settings', () => {
 		});
 		expect(fromFile.out).toContain('0 findings');
 		const overridden = await cli(
-			['a.json', '--config', 'c.json', '--rule', 'JEV004=warning'],
+			['a.json', '--config', 'c.json', '--rule', 'DEC004=warning'],
 			{ ...tree, 'c.json': config },
 		);
-		expect(overridden.out).toContain('warning  JEV004');
+		expect(overridden.out).toContain('warning  DEC004');
 	});
 
 	it.each([
 		['{ "rule": {} }', "'rule' is not a setting"],
-		['{ "rules": { "JEV004": "loud" } }', "rules: 'loud' is not a level"],
-		['{ "ignore": "JEV004:team" }', "'ignore' must be a list of strings"],
+		['{ "rules": { "DEC004": "loud" } }', "rules: 'loud' is not a level"],
+		['{ "ignore": "DEC004:team" }', "'ignore' must be a list of strings"],
 		['not json', 'it is not valid JSON'],
 	])('refuses the config %s', async (config, reason) => {
 		const result = await cli(['a.json', '--config', 'c.json'], {
@@ -395,18 +395,18 @@ describe('settings', () => {
 
 	it('prints errors only when quiet, and still fails on them', async () => {
 		const result = await cli(['a.json', '--quiet'], tree);
-		expect(result.out).not.toContain('JEV004');
+		expect(result.out).not.toContain('DEC004');
 		expect(result.status).toBe(EXIT.failed);
 	});
 });
 
 describe('the project settings file', () => {
-	const OFF = '{ "rules": { "JEV006": "off", "JEV004": "off" } }';
+	const OFF = '{ "rules": { "DEC006": "off", "DEC004": "off" } }';
 
 	it('is found near the files and applied, with no flag', async () => {
 		const result = await cli(['src'], {
 			'src/a.json': BAD,
-			'decisionlint-le.json': OFF,
+			'decisionlint.json': OFF,
 		});
 		expect(result.out).toContain('0 findings');
 		expect(result.status).toBe(EXIT.passed);
@@ -414,8 +414,8 @@ describe('the project settings file', () => {
 
 	it('is the nearest one, so a folder can have its own', async () => {
 		const result = await cli(['.', '--format', 'json'], {
-			'decisionlint-le.json': OFF,
-			'app/decisionlint-le.json': '{}',
+			'decisionlint.json': OFF,
+			'app/decisionlint.json': '{}',
 			'app/a.json': BAD,
 			'lib/a.json': BAD,
 		});
@@ -432,26 +432,24 @@ describe('the project settings file', () => {
 	it('gives way to --config, and to --rule for the rule it names', async () => {
 		const tree = {
 			'a.json': BAD,
-			'decisionlint-le.json': OFF,
+			'decisionlint.json': OFF,
 			'other.json': '{}',
 		};
 		expect(
 			(await cli(['a.json', '--config', 'other.json'], tree)).out,
 		).toContain('2 findings');
 		expect(
-			(await cli(['a.json', '--rule', 'JEV004=warning'], tree)).out,
+			(await cli(['a.json', '--rule', 'DEC004=warning'], tree)).out,
 		).toContain('1 finding ');
 	});
 
 	it('stops the run when it cannot be used, and names it', async () => {
 		const result = await cli(['a.json'], {
 			'a.json': BAD,
-			'decisionlint-le.json': '{ "rule": {} }',
+			'decisionlint.json': '{ "rule": {} }',
 		});
 		expect(result.status).toBe(EXIT.unusable);
-		expect(result.err).toContain(
-			"decisionlint-le.json: 'rule' is not a setting",
-		);
+		expect(result.err).toContain("decisionlint.json: 'rule' is not a setting");
 		expect(result.out).toBe('');
 	});
 
@@ -467,7 +465,7 @@ describe('the project settings file', () => {
 		};
 		const result = await cli(
 			['--mcp'],
-			{ 'decisionlint-le.json': OFF },
+			{ 'decisionlint.json': OFF },
 			JSON.stringify(call),
 		);
 		expect(
@@ -478,7 +476,7 @@ describe('the project settings file', () => {
 
 describe('exclude in the settings file', () => {
 	const tree = {
-		'decisionlint-le.json': '{ "exclude": ["fixtures", "*.generated.json"] }',
+		'decisionlint.json': '{ "exclude": ["fixtures", "*.generated.json"] }',
 		'src/q.json': CLEAN,
 		'src/api.generated.json': BAD,
 		'fixtures/bad.json': BAD,
@@ -523,7 +521,7 @@ describe('exclude in the settings file', () => {
 		const result = await cli(['--mcp'], tree, input);
 		const report = JSON.parse(JSON.parse(result.out).result.content[0].text);
 		expect(report.files.map((file: { path: string }) => file.path)).toEqual([
-			'decisionlint-le.json',
+			'decisionlint.json',
 			'src/q.json',
 		]);
 		expect(report.totals.excluded).toBe(2);
@@ -538,9 +536,9 @@ describe('--fix', () => {
 		const result = await cli(['--fix', '.'], tree);
 		expect(tree['q.json']).toContain('"true": "After the day promised"');
 		expect(tree['ok.json']).toBe(CLEAN);
-		expect(result.out).not.toContain('JEV006');
+		expect(result.out).not.toContain('DEC006');
 		// The missing fallback is the author's call, so it is reported and not written.
-		expect(result.out).toContain('JEV004');
+		expect(result.out).toContain('DEC004');
 		expect(tree['q.json']).not.toContain('"other"');
 		expect(result.out).toContain('Fixed 2 findings in 1 file.');
 		expect(result.status).toBe(EXIT.passed);
@@ -569,12 +567,12 @@ describe('--fix', () => {
 			'q.json': `\n${BAD}`,
 		});
 		const [fallback, shape] = JSON.parse(result.out).files[0].findings;
-		expect(fallback.code).toBe('JEV004');
+		expect(fallback.code).toBe('DEC004');
 		expect(fallback.fix).toMatchObject({
 			safe: false,
 			title: expect.any(String),
 		});
-		expect(shape.code).toBe('JEV006');
+		expect(shape.code).toBe('DEC006');
 		expect(shape.fix).toMatchObject({
 			safe: true,
 			edits: [{ line: 2, text: '["Calm"]' }],
@@ -786,9 +784,9 @@ describe('the default format', () => {
 		const result = await cli(['src'], tree);
 		const lines = result.out.split('\n');
 		expect(lines[0]).toBe('src/a.json');
-		expect(lines[1]).toMatch(/^ +2:\d+ {2}info {5}JEV004 no-fallback-option$/);
+		expect(lines[1]).toMatch(/^ +2:\d+ {2}info {5}DEC004 no-fallback-option$/);
 		expect(lines[2]).toMatch(/^ {2} +This Choice has no fallback option,/);
-		expect(lines[3]).toMatch(/^ +2:\d+ {2}error {4}JEV006 /);
+		expect(lines[3]).toMatch(/^ +2:\d+ {2}error {4}DEC006 /);
 		// A file with nothing to say is not listed.
 		expect(result.out).not.toContain('src/ok.json');
 		expect(lines.at(-2)).toMatch(/^2 findings \(1 error, 0 warnings\)/);
@@ -800,7 +798,7 @@ describe('the default format', () => {
 		expect(lines.every((line) => line.length <= 60)).toBe(true);
 		const message = lines.slice(
 			2,
-			lines.findIndex((line, i) => i > 1 && /JEV006/.test(line)),
+			lines.findIndex((line, i) => i > 1 && /DEC006/.test(line)),
 		);
 		expect(message.length).toBeGreaterThan(1);
 		// Every line of the message starts under the first, and none breaks a word.
@@ -851,24 +849,24 @@ describe('formats for other tools', () => {
 		expect(sarif.version).toBe('2.1.0');
 		const [run] = sarif.runs;
 		expect(run.tool.driver).toMatchObject({
-			name: 'DecisionLint-LE',
+			name: 'DecisionLint',
 			version: '9.9.9',
 		});
 		const ids = run.tool.driver.rules.map((rule: { id: string }) => rule.id);
-		expect(ids).toContain('JEV004');
+		expect(ids).toContain('DEC004');
 		expect(
 			run.results.map((found: { ruleId: string; level: string }) => [
 				found.ruleId,
 				found.level,
 			]),
 		).toEqual([
-			['JEV004', 'note'],
-			['JEV006', 'error'],
+			['DEC004', 'note'],
+			['DEC006', 'error'],
 		]);
 		const [first] = run.results;
 		// Help is the rule's own page, as in the editor.
 		expect(run.tool.driver.rules[first.ruleIndex].helpUri).toMatch(
-			/\/docs\/rules\/JEV004\.md$/,
+			/\/docs\/rules\/DEC004\.md$/,
 		);
 		// The index must point at the rule it names, or a viewer shows the wrong help.
 		expect(ids[first.ruleIndex]).toBe(first.ruleId);
@@ -890,17 +888,17 @@ describe('formats for other tools', () => {
 			tree,
 		);
 		expect(result.out).toMatch(
-			/^<\?xml version="1\.0" encoding="UTF-8"\?>\n<testsuites name="decisionlint-le" tests="3" failures="1" errors="0">/,
+			/^<\?xml version="1\.0" encoding="UTF-8"\?>\n<testsuites name="decisionlint" tests="3" failures="1" errors="0">/,
 		);
 		expect(result.out).toContain(
 			'<testsuite name="src/a.json" tests="2" failures="1" errors="0">',
 		);
 		// The info finding is a passing case that carries its message.
 		expect(result.out).toMatch(
-			/<testcase name="JEV004 no-fallback-option \(2:\d+\)" classname="src\/a\.json"><system-out>info: /,
+			/<testcase name="DEC004 no-fallback-option \(2:\d+\)" classname="src\/a\.json"><system-out>info: /,
 		);
 		expect(result.out).toMatch(
-			/<testcase name="JEV006 [^"]+" classname="src\/a\.json"><failure message="[^"]+" type="JEV006">src\/a\.json:2:\d+<\/failure>/,
+			/<testcase name="DEC006 [^"]+" classname="src\/a\.json"><failure message="[^"]+" type="DEC006">src\/a\.json:2:\d+<\/failure>/,
 		);
 		// A clean file still shows as checked.
 		expect(result.out).toContain(
@@ -950,7 +948,7 @@ describe('formats', () => {
 			counts: { error: 1, info: 1 },
 		});
 		expect(report.files[0].findings[0]).toMatchObject({
-			code: 'JEV004',
+			code: 'DEC004',
 			rule: 'no-fallback-option',
 			severity: 'info',
 			questionId: 'team',
@@ -968,7 +966,7 @@ describe('formats', () => {
 		});
 		const lines = result.out.split('\n');
 		expect(lines[0]).toMatch(
-			/^::notice file=src\/a%2Cb\.json,line=1,col=\d+,endLine=1,endColumn=\d+,title=JEV004 no-fallback-option::/,
+			/^::notice file=src\/a%2Cb\.json,line=1,col=\d+,endLine=1,endColumn=\d+,title=DEC004 no-fallback-option::/,
 		);
 		expect(lines[1]).toMatch(/^::error file=/);
 		expect(lines[0]).not.toMatch(/::.*\n/);
@@ -1053,7 +1051,7 @@ describe('the MCP server', () => {
 				}),
 			],
 			{},
-			world(fetch, { DECISIONLINT_LE_ASK_ENDPOINT: LOCAL }),
+			world(fetch, { DECISIONLINT_ASK_ENDPOINT: LOCAL }),
 		);
 		expect(reply.result.isError).toBe(false);
 		const [url] = fetch.mock.calls[0] as unknown as [string];
@@ -1076,7 +1074,7 @@ describe('the MCP server', () => {
 		);
 		expect(refused.result.isError).toBe(true);
 		expect(refused.result.content[0].text).toContain(
-			'Set DECISIONLINT_LE_ASK_ENDPOINT, and DECISIONLINT_LE_ASK_SHAPE where its path does not say, in the environment the server was started with.',
+			'Set DECISIONLINT_ASK_ENDPOINT, and DECISIONLINT_ASK_SHAPE where its path does not say, in the environment the server was started with.',
 		);
 	});
 
@@ -1097,7 +1095,7 @@ describe('the MCP server', () => {
 		]);
 		expect(known.result).toMatchObject({
 			protocolVersion: '2024-11-05',
-			serverInfo: { name: 'decisionlint-le', version: '9.9.9' },
+			serverInfo: { name: 'decisionlint', version: '9.9.9' },
 		});
 		expect(unknown.result.protocolVersion).toBe('2025-06-18');
 	});
@@ -1117,7 +1115,7 @@ describe('the MCP server', () => {
 		]);
 		expect(
 			body(json).files[0].findings.map((f: { code: string }) => f.code),
-		).toEqual(['JEV004', 'JEV006']);
+		).toEqual(['DEC004', 'DEC006']);
 		expect(body(json).files[0].path).toBe('request.jev.json');
 		expect(body(python).totals.unreadable).toBe(1);
 	});
@@ -1144,17 +1142,17 @@ describe('the MCP server', () => {
 			code: string;
 			message: string;
 		}[];
-		expect(findings.map((f) => f.code)).toEqual(['JEV012', 'JEV004', 'JEV011']);
+		expect(findings.map((f) => f.code)).toEqual(['DEC012', 'DEC004', 'DEC011']);
 		expect(findings.every((f) => !/\bJev\b/.test(f.message))).toBe(true);
 	});
 
 	it('lints paths on disk and takes rule levels', async () => {
 		const [reply] = await talk(
-			[call(1, 'lint_paths', { paths: ['src'], rules: { JEV006: 'off' } })],
+			[call(1, 'lint_paths', { paths: ['src'], rules: { DEC006: 'off' } })],
 			{ 'src/a.json': BAD, 'src/b.json': CLEAN },
 		);
 		expect(body(reply).totals).toMatchObject({ files: 2, questions: 3 });
-		expect(JSON.stringify(body(reply))).not.toContain('JEV006');
+		expect(JSON.stringify(body(reply))).not.toContain('DEC006');
 	});
 
 	it('lists every rule, and says which need Jev itself', async () => {
@@ -1165,10 +1163,10 @@ describe('the MCP server', () => {
 			runsHere: boolean;
 		}[];
 		expect(rules.map((rule) => rule.code)).toEqual(RULE_CODES);
-		expect(rules.find((rule) => rule.code === 'JEV004')?.runsHere).toBe(true);
-		expect(rules.find((rule) => rule.code === 'JEV303')?.runsHere).toBe(false);
-		expect(rules.find((rule) => rule.code === 'JEV004')?.meaning).toBe(
-			RULES.JEV004.meaning,
+		expect(rules.find((rule) => rule.code === 'DEC004')?.runsHere).toBe(true);
+		expect(rules.find((rule) => rule.code === 'DEC303')?.runsHere).toBe(false);
+		expect(rules.find((rule) => rule.code === 'DEC004')?.meaning).toBe(
+			RULES.DEC004.meaning,
 		);
 	});
 
@@ -1215,9 +1213,9 @@ describe('the MCP server', () => {
 	it('carries each fix with the finding, marked safe or not', async () => {
 		const [reply] = await talk([call(1, 'lint_text', { text: BAD })]);
 		const [fallback, shape] = body(reply).files[0].findings;
-		expect(fallback).toMatchObject({ code: 'JEV004', fix: { safe: false } });
+		expect(fallback).toMatchObject({ code: 'DEC004', fix: { safe: false } });
 		expect(shape).toMatchObject({
-			code: 'JEV006',
+			code: 'DEC006',
 			fix: { safe: true, edits: [{ line: 1, text: '["Calm"]' }] },
 		});
 	});
@@ -1231,7 +1229,7 @@ describe('the MCP server', () => {
 		// level is now too few, which the mended text shows and the original did not.
 		expect(
 			fixed.files[0].findings.map((f: { code: string }) => f.code),
-		).toEqual(['JEV004', 'JEV009']);
+		).toEqual(['DEC004', 'DEC009']);
 		expect(fixed.totals.fixable).toBe(0);
 		expect(body(reply)).toEqual(fixed);
 	});
@@ -1269,27 +1267,29 @@ describe('the MCP server', () => {
 		expect(fixed.fixed).toBe(0);
 		expect(fixed.text).toContain('jev-latest');
 		expect(fixed.files[0].findings[0]).toMatchObject({
-			code: 'JEV001',
+			code: 'DEC001',
 			fix: { safe: false },
 		});
 	});
 
 	it('explains a rule with its page, taking the code in any case', async () => {
-		const [exact, loose, jev] = await talk([
-			call(1, 'explain_rule', { code: 'JEV004' }),
-			call(2, 'explain_rule', { code: ' jev004' }),
-			call(3, 'explain_rule', { code: 'JEV303' }),
+		const [exact, loose, jev, old] = await talk([
+			call(1, 'explain_rule', { code: 'DEC004' }),
+			call(2, 'explain_rule', { code: ' dec004' }),
+			call(3, 'explain_rule', { code: 'DEC303' }),
+			call(4, 'explain_rule', { code: 'JEV004' }),
 		]);
-		expect(exact.result.content[0].text).toBe(rulePage('JEV004'));
+		expect(exact.result.content[0].text).toBe(rulePage('DEC004'));
 		expect(exact.result.content[0].text).toContain('## Flagged');
 		expect(exact.result.structuredContent).toMatchObject({
-			code: 'JEV004',
+			code: 'DEC004',
 			name: 'no-fallback-option',
-			meaning: RULES.JEV004.meaning,
+			meaning: RULES.DEC004.meaning,
 			runsHere: true,
-			markdown: rulePage('JEV004'),
+			markdown: rulePage('DEC004'),
 		});
-		expect(loose.result.structuredContent.code).toBe('JEV004');
+		expect(loose.result.structuredContent.code).toBe('DEC004');
+		expect(old.result.structuredContent.code).toBe('DEC004');
 		expect(jev.result.structuredContent.runsHere).toBe(false);
 		expect(jev.result.content[0].text).toContain('## What Jev is asked');
 	});
@@ -1303,7 +1303,7 @@ describe('the MCP server', () => {
 				call(2, 'lint_paths', { paths: ['q.ts'] }),
 				call(3, 'fix_text', { text: BAD }),
 				call(4, 'list_rules', {}),
-				call(5, 'explain_rule', { code: 'JEV302' }),
+				call(5, 'explain_rule', { code: 'DEC302' }),
 				call(6, 'plan_ask', { text: VAGUE, filename: 'q.ts' }),
 			],
 			tree,
@@ -1352,7 +1352,7 @@ describe('the MCP server', () => {
 	});
 
 	it('checks with the model using the key from the environment, and prints it nowhere', async () => {
-		const fetch = jevSays({ JEV301: { noul: 0.02 }, JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC301: { noul: 0.02 }, DEC302: { noul: 0.91 } });
 		const [reply] = await talk(
 			[call(1, 'ask_model', { text: VAGUE, filename: 'q.ts' })],
 			{},
@@ -1378,15 +1378,15 @@ describe('the MCP server', () => {
 			message: string;
 			fix: unknown;
 		}[];
-		expect(findings.map((f) => f.code)).toEqual(['JEV302', 'JEV112']);
-		const fromModel = findings.find((f) => f.code === 'JEV302');
+		expect(findings.map((f) => f.code)).toEqual(['DEC302', 'DEC112']);
+		const fromModel = findings.find((f) => f.code === 'DEC302');
 		expect(fromModel?.message).toContain('0.91');
 		expect(fromModel?.fix).toBe(null);
 		expect(JSON.stringify(reply)).not.toContain('apikey_secret_value');
 	});
 
 	it('takes the key from .env.local before .env when the environment has none', async () => {
-		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC302: { noul: 0.91 } });
 		const tree = {
 			'q.ts': VAGUE,
 			'.env': 'TYPESAFE_API_KEY=shared_key_value',
@@ -1399,7 +1399,7 @@ describe('the MCP server', () => {
 		);
 		expect(local.result.structuredContent.keySource).toBe('.env.local');
 		expect(calls(fetch)[0]?.headers.Authorization).toContain('local_key_value');
-		const shared = jevSays({ JEV302: { noul: 0.91 } });
+		const shared = jevSays({ DEC302: { noul: 0.91 } });
 		const [fromEnv] = await talk(
 			[call(1, 'ask_model', { paths: ['q.ts'] })],
 			{ 'q.ts': VAGUE, '.env': tree['.env'] },
@@ -1415,7 +1415,7 @@ describe('the MCP server', () => {
 	});
 
 	it('says why a check fell short, and fails one that answered nothing', async () => {
-		const over = jevSays({ JEV302: { noul: 0.91 } });
+		const over = jevSays({ DEC302: { noul: 0.91 } });
 		const [short] = await talk(
 			[call(1, 'ask_model', { paths: ['.'], maxCalls: 1 })],
 			{ 'a.ts': VAGUE, 'b.ts': HEAVY },
@@ -1447,7 +1447,7 @@ describe('the MCP server', () => {
 			status: 200,
 			json: async () => ({
 				model: 'gpt-6-luna',
-				answers: [{ type: 'predicate', name: 'JEV302', probability: 0.91 }],
+				answers: [{ type: 'predicate', name: 'DEC302', probability: 0.91 }],
 				usage: { input_tokens: 200 },
 			}),
 			text: async () => '',
@@ -1485,7 +1485,7 @@ describe('the MCP server', () => {
 			asked.result.structuredContent.files[0].findings.map(
 				(f: { code: string }) => f.code,
 			),
-		).toContain('JEV302');
+		).toContain('DEC302');
 	});
 
 	it('probes a question against its state and reports the verdict', async () => {
@@ -1540,13 +1540,13 @@ describe('the MCP server', () => {
 		],
 		[
 			'a rule level it does not know',
-			call(1, 'lint_text', { text: BAD, rules: { JEV004: 'loud' } }),
+			call(1, 'lint_text', { text: BAD, rules: { DEC004: 'loud' } }),
 			"'loud' is not a level",
 		],
 		[
 			'a rule it does not have',
-			call(1, 'explain_rule', { code: 'JEV999' }),
-			'Unknown rule: JEV999',
+			call(1, 'explain_rule', { code: 'DEC999' }),
+			'Unknown rule: DEC999',
 		],
 		[
 			'text to fix in a file type it does not read',
@@ -1903,7 +1903,7 @@ describe('checking with Jev', () => {
 			status: 200,
 			json: async () => ({
 				model: 'gpt-6-luna',
-				answers: [{ type: 'predicate', name: 'JEV302', probability: 0.91 }],
+				answers: [{ type: 'predicate', name: 'DEC302', probability: 0.91 }],
 				usage: { input_tokens: 200 },
 			}),
 			text: async () => '',
@@ -1943,7 +1943,7 @@ describe('checking with Jev', () => {
 	});
 
 	it('reports what Jev flags, in its place, and says what was sent', async () => {
-		const fetch = jevSays({ JEV301: { noul: 0.02 }, JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC301: { noul: 0.02 }, DEC302: { noul: 0.91 } });
 		const result = await cli(
 			['--ask', '--format', 'compact', 'q.ts'],
 			{ 'q.ts': VAGUE },
@@ -1953,14 +1953,14 @@ describe('checking with Jev', () => {
 		expect(fetch).toHaveBeenCalledTimes(1);
 		expect(result.status).toBe(EXIT.passed);
 		expect(result.out).toContain(
-			`q.ts:1:${VAGUE.indexOf('big') + 1}  info  JEV302  `,
+			`q.ts:1:${VAGUE.indexOf('big') + 1}  info  DEC302  `,
 		);
 		expect(result.out).toContain('(Jev put this at 0.91.)');
 		expect(result.out).toContain(
 			'Jev answered 1 of 1 request on jev-1.13.0, 310 input tokens.',
 		);
 		expect(result.err).toMatch(
-			/^decisionlint-le: Sending 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\. State is not sent\.\n$/,
+			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\. State is not sent\.\n$/,
 		);
 	});
 
@@ -1969,7 +1969,7 @@ describe('checking with Jev', () => {
 			['--ask', '--ask-model', 'jev-99.0.0', '--format', 'compact', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
-			world(jevSays({ JEV302: { noul: 0.91 } })),
+			world(jevSays({ DEC302: { noul: 0.91 } })),
 		);
 		expect(result.out).toContain(
 			'(Jev put this at 0.91.) The cutoff was set on jev-1.13.0, not on jev-99.0.0.',
@@ -1979,14 +1979,14 @@ describe('checking with Jev', () => {
 			['--ask', '--format', 'compact', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
-			world(jevSays({ JEV302: { noul: 0.91 } })),
+			world(jevSays({ DEC302: { noul: 0.91 } })),
 		);
 		expect(pinned.out).toContain('(Jev put this at 0.91.)');
 		expect(pinned.out).not.toContain('The cutoff was set on');
 	});
 
 	it('sends the key as a header and prints it nowhere', async () => {
-		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC302: { noul: 0.91 } });
 		const text = await cli(
 			['--ask', 'q.ts'],
 			{ 'q.ts': VAGUE },
@@ -2142,7 +2142,7 @@ describe('checking with Jev', () => {
 		const fetch = jevSays();
 		const result = await cli(
 			['q.ts'],
-			{ 'q.ts': VAGUE, 'decisionlint-le.json': '{ "jev": true }' },
+			{ 'q.ts': VAGUE, 'decisionlint.json': '{ "jev": true }' },
 			'',
 			world(fetch),
 		);
@@ -2153,18 +2153,18 @@ describe('checking with Jev', () => {
 	it('takes rule levels: off is not asked, error fails the run', async () => {
 		const off = jevSays();
 		await cli(
-			['--ask', '--rule', 'JEV302=off', 'q.ts'],
+			['--ask', '--rule', 'DEC302=off', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
 			world(off),
 		);
-		expect(Object.keys(calls(off)[0]?.body.questions)).not.toContain('JEV302');
+		expect(Object.keys(calls(off)[0]?.body.questions)).not.toContain('DEC302');
 
 		const raised = await cli(
-			['--ask', '--rule', 'JEV302=error', 'q.ts'],
+			['--ask', '--rule', 'DEC302=error', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
-			world(jevSays({ JEV302: { noul: 0.91 } })),
+			world(jevSays({ DEC302: { noul: 0.91 } })),
 		);
 		expect(raised.status).toBe(EXIT.failed);
 	});
@@ -2181,32 +2181,32 @@ describe('checking with Jev', () => {
 	});
 
 	it('checks text from standard input', async () => {
-		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC302: { noul: 0.91 } });
 		const result = await cli(
 			['--ask', '--stdin-filename', 'q.ts'],
 			{},
 			VAGUE,
 			world(fetch),
 		);
-		expect(result.out).toContain('JEV302');
+		expect(result.out).toContain('DEC302');
 	});
 
 	it('hides Jev findings under --quiet unless one is an error', async () => {
-		const answers = { JEV302: { noul: 0.91 } };
+		const answers = { DEC302: { noul: 0.91 } };
 		const quiet = await cli(
 			['--ask', '--quiet', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
 			world(jevSays(answers)),
 		);
-		expect(quiet.out).not.toContain('JEV302');
+		expect(quiet.out).not.toContain('DEC302');
 		const raised = await cli(
-			['--ask', '--quiet', '--rule', 'JEV302=error', 'q.ts'],
+			['--ask', '--quiet', '--rule', 'DEC302=error', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
 			world(jevSays(answers)),
 		);
-		expect(raised.out).toContain('JEV302');
+		expect(raised.out).toContain('DEC302');
 	});
 
 	it.each([
@@ -2232,7 +2232,7 @@ describe('the files other tools run this through', () => {
 
 	it('pins the pre-commit hook to this release, and to the file types the tool reads', () => {
 		const hook = readFileSync('.pre-commit-hooks.yaml', 'utf8');
-		expect(hook).toContain(`entry: npx --yes decisionlint-le@${version} `);
+		expect(hook).toContain(`entry: npx --yes decisionlint@${version} `);
 		expect(hook).toContain(`rev: v${version}`);
 		const listed = /files: \\\.\(([^)]+)\)\$/.exec(hook)?.[1]?.split('|');
 		expect(listed?.sort()).toEqual([...EXTENSIONS.keys()].sort());
@@ -2247,7 +2247,7 @@ describe('the files other tools run this through', () => {
 				`version:[\\s\\S]*?default: ${version.replace(/\./g, '\\.')}\\n`,
 			),
 		);
-		expect(action).toContain(`uses: nolindnaidoo/decisionlint-le@v${version}`);
+		expect(action).toContain(`uses: nolindnaidoo/decisionlint@v${version}`);
 		// An input spliced into the script could be read as a command.
 		const script = action.slice(action.indexOf('      run: |'));
 		expect(script).not.toContain('${{');
@@ -2261,7 +2261,7 @@ describe('a file whose extension names a property of Object.prototype', () => {
 		const result = await cli(['a.constructor'], { 'a.constructor': NOUL });
 		expect(result.status).toBe(EXIT.unusable);
 		expect(result.err).toContain(
-			'Not a file type decisionlint-le reads: a.constructor',
+			'Not a file type decisionlint reads: a.constructor',
 		);
 	});
 
@@ -2295,7 +2295,7 @@ describe('a file whose extension names a property of Object.prototype', () => {
 			.map((line) => JSON.parse(line));
 		expect(reply.result.isError).toBe(true);
 		expect(reply.result.content[0].text).toBe(
-			'Not a file type decisionlint-le reads: x.constructor',
+			'Not a file type decisionlint reads: x.constructor',
 		);
 	});
 });
@@ -2347,7 +2347,7 @@ describe('where --ask sends', () => {
 	});
 
 	it('sends to --ask-endpoint with no key when none is set, and names the host', async () => {
-		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC302: { noul: 0.91 } });
 		const result = await cli(
 			[
 				'--ask',
@@ -2394,8 +2394,8 @@ describe('where --ask sends', () => {
 			{ 'q.ts': VAGUE },
 			'',
 			world(fetch, {
-				DECISIONLINT_LE_ASK_ENDPOINT: 'http://localhost:11435/api/decide',
-				DECISIONLINT_LE_ASK_SHAPE: 'typesafe',
+				DECISIONLINT_ASK_ENDPOINT: 'http://localhost:11435/api/decide',
+				DECISIONLINT_ASK_SHAPE: 'typesafe',
 			}),
 		);
 		expect(result.status).toBe(EXIT.passed);
@@ -2463,11 +2463,11 @@ describe('where --ask sends', () => {
 			['--ask', '--ask-endpoint', LOCAL, 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
-			world(fetch, { DECISIONLINT_LE_ASK_SHAPE: 'xml' }),
+			world(fetch, { DECISIONLINT_ASK_SHAPE: 'xml' }),
 		);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(result.err).toContain(
-			"DECISIONLINT_LE_ASK_SHAPE is 'xml', which is not a shape. Use typesafe or openai.",
+			"DECISIONLINT_ASK_SHAPE is 'xml', which is not a shape. Use typesafe or openai.",
 		);
 	});
 

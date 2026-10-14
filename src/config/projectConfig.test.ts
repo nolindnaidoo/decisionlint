@@ -11,6 +11,8 @@ import {
 	OLD_CONFIG_FILE,
 	parseConfig,
 	readLintOptions,
+	readRule,
+	readRules,
 } from './projectConfig';
 
 const disk = (tree: Record<string, string>) => {
@@ -26,27 +28,27 @@ const disk = (tree: Record<string, string>) => {
 		},
 	};
 };
-const OFF = '{ "rules": { "JEV004": "off" } }';
+const OFF = '{ "rules": { "DEC004": "off" } }';
 
 describe('a project settings file', () => {
 	it('holds rules, fallback options, what to ignore and which files to leave out', () => {
 		expect(
 			parseConfig(
-				'{ "rules": { "JEV004": "error" }, "fallbackOptions": ["else"], "ignore": ["JEV112:big"], "exclude": ["fixtures"] }',
+				'{ "rules": { "DEC004": "error" }, "fallbackOptions": ["else"], "ignore": ["DEC112:big"], "exclude": ["fixtures"] }',
 			),
 		).toEqual({
-			rules: { JEV004: 'error' },
+			rules: { DEC004: 'error' },
 			fallbackOptions: ['else'],
-			ignore: ['JEV112:big'],
+			ignore: ['DEC112:big'],
 			exclude: ['fixtures'],
 		});
 	});
 
 	it.each([
 		['{ "rule": {} }', "'rule' is not a setting"],
-		['{ "rules": { "JEV999": "off" } }', "'JEV999' is not a rule code"],
-		['{ "rules": { "JEV004": "loud" } }', "'loud' is not a level"],
-		['{ "ignore": "JEV004:team" }', "'ignore' must be a list of strings"],
+		['{ "rules": { "DEC999": "off" } }', "'DEC999' is not a rule code"],
+		['{ "rules": { "DEC004": "loud" } }', "'loud' is not a level"],
+		['{ "ignore": "DEC004:team" }', "'ignore' must be a list of strings"],
 		['{ "exclude": "fixtures" }', "'exclude' must be a list of strings"],
 		['{ "target": "jay" }', "'target' must be one of typesafe, openai"],
 		['{ "target": ["litellm"] }', "'target' must be one of"],
@@ -63,6 +65,18 @@ describe('a project settings file', () => {
 		expect(readLintOptions({ target: '' })).not.toHaveProperty('target');
 	});
 
+	it('reads the codes and names rules had before 1.0.0, and reports the spelling it was given', () => {
+		expect(readRule('JEV004=off')).toEqual(['DEC004', 'off']);
+		expect(readRule('jev-counting=warning')).toEqual(['DEC301', 'warning']);
+		expect(readRule('JEV999=off')).toBe(
+			"'JEV999' is not a rule code or a rule name.",
+		);
+		expect(readRules({ JEV001: 'off', 'jev-counting': 'off' })).toEqual({
+			DEC001: 'off',
+			DEC301: 'off',
+		});
+	});
+
 	it('is described by a schema with the same keys, levels and targets', () => {
 		const schema = JSON.parse(
 			readFileSync('schemas/config.schema.json', 'utf8'),
@@ -70,7 +84,7 @@ describe('a project settings file', () => {
 		expect(Object.keys(schema.properties)).toEqual(CONFIG_KEYS);
 		expect(schema.properties.target.enum).toEqual(TARGET_IDS);
 		const manifestTargets = JSON.parse(readFileSync('package.json', 'utf8'))
-			.contributes.configuration.properties['jevlint-le.target'].enum;
+			.contributes.configuration.properties['decisionlint.target'].enum;
 		expect(manifestTargets).toEqual(['', ...TARGET_IDS]);
 		expect(schema.properties.rules.additionalProperties.enum).toEqual([
 			...LEVELS,
@@ -87,13 +101,13 @@ describe('a project settings file', () => {
 describe('finding the file that applies', () => {
 	it('takes the nearest one, looking up from the file', () => {
 		const { fs } = disk({
-			'decisionlint-le.json': '{}',
-			'app/decisionlint-le.json': OFF,
+			'decisionlint.json': '{}',
+			'app/decisionlint.json': OFF,
 		});
 		const loader = createConfigLoader(fs);
-		expect(loader.for('app/src/q.ts')?.path).toBe('app/decisionlint-le.json');
-		expect(loader.for('lib/q.ts')?.path).toBe('decisionlint-le.json');
-		expect(loader.for('q.ts')?.path).toBe('decisionlint-le.json');
+		expect(loader.for('app/src/q.ts')?.path).toBe('app/decisionlint.json');
+		expect(loader.for('lib/q.ts')?.path).toBe('decisionlint.json');
+		expect(loader.for('q.ts')?.path).toBe('decisionlint.json');
 	});
 
 	it('finds none when there is none', () => {
@@ -104,43 +118,41 @@ describe('finding the file that applies', () => {
 		const { fs } = disk({
 			'jevlint-le.json': OFF,
 			'app/jevlint-le.json': OFF,
-			'app/decisionlint-le.json': '{}',
+			'app/decisionlint.json': '{}',
 		});
 		const loader = createConfigLoader(fs);
 		expect(loader.for('lib/q.ts')?.path).toBe('jevlint-le.json');
-		expect(loader.for('app/q.ts')?.path).toBe('app/decisionlint-le.json');
+		expect(loader.for('app/q.ts')?.path).toBe('app/decisionlint.json');
 		expect(OLD_CONFIG_FILE).toBe('jevlint-le.json');
 	});
 
 	it('looks no higher than the boundary it is given', () => {
-		const { fs } = disk({ '/home/decisionlint-le.json': OFF });
+		const { fs } = disk({ '/home/decisionlint.json': OFF });
 		const loader = createConfigLoader(fs);
 		expect(loader.for('/home/work/app/q.ts', '/home/work')).toBeUndefined();
 		expect(loader.for('/home/work/app/q.ts', '/home')?.path).toBe(
-			'/home/decisionlint-le.json',
+			'/home/decisionlint.json',
 		);
 		expect(loader.for('/home/work/app/q.ts')?.path).toBe(
-			'/home/decisionlint-le.json',
+			'/home/decisionlint.json',
 		);
 	});
 
 	it('keeps the separators the path came with, whatever the platform', () => {
 		const windows = createConfigLoader(
-			disk({ 'C:\\work\\decisionlint-le.json': OFF }).fs,
+			disk({ 'C:\\work\\decisionlint.json': OFF }).fs,
 		);
 		expect(windows.for('C:\\work\\app\\q.ts')?.path).toBe(
-			'C:\\work\\decisionlint-le.json',
+			'C:\\work\\decisionlint.json',
 		);
 		const forward = createConfigLoader(
-			disk({ 'work/decisionlint-le.json': OFF }).fs,
+			disk({ 'work/decisionlint.json': OFF }).fs,
 		);
-		expect(forward.for('work/app/q.ts')?.path).toBe(
-			'work/decisionlint-le.json',
-		);
+		expect(forward.for('work/app/q.ts')?.path).toBe('work/decisionlint.json');
 	});
 
 	it('reads a file once until told it changed', () => {
-		const { fs, reads } = disk({ 'decisionlint-le.json': OFF });
+		const { fs, reads } = disk({ 'decisionlint.json': OFF });
 		const loader = createConfigLoader(fs);
 		loader.for('a.ts');
 		loader.for('b.ts');
@@ -152,10 +164,10 @@ describe('finding the file that applies', () => {
 
 	it('hands back what is wrong with a file it cannot use', () => {
 		const loader = createConfigLoader(
-			disk({ 'decisionlint-le.json': '{ "rule": {} }' }).fs,
+			disk({ 'decisionlint.json': '{ "rule": {} }' }).fs,
 		);
 		expect(loader.for('a.ts')).toMatchObject({
-			path: 'decisionlint-le.json',
+			path: 'decisionlint.json',
 			options: expect.stringContaining("'rule' is not a setting"),
 		});
 	});
@@ -164,7 +176,7 @@ describe('finding the file that applies', () => {
 describe('a settings file that cannot be read', () => {
 	it('is a file that cannot be used, not a crash', () => {
 		const loader = createConfigLoader({
-			isFile: (path) => path === '/work/decisionlint-le.json',
+			isFile: (path) => path === '/work/decisionlint.json',
 			read: () => {
 				throw new Error('EACCES: permission denied');
 			},

@@ -6,9 +6,9 @@ import { TARGETS } from './targets';
 const read = (name: string): string =>
 	readFileSync(new URL(`../../${name}`, import.meta.url), 'utf8');
 
-/** The `| JEV004 | no-fallback-option | info |` rows of a rule table. */
+/** The `| DEC004 | no-fallback-option | info |` rows of a rule table. */
 function documented(text: string): ReadonlyArray<string> {
-	return [...text.matchAll(/^\| (JEV\d{3}) \| ([a-z-]+) \| (\w+) \|/gm)].map(
+	return [...text.matchAll(/^\| (DEC\d{3}) \| ([a-z-]+) \| (\w+) \|/gm)].map(
 		(row) => `${row[1]} ${row[2]} ${row[3]}`,
 	);
 }
@@ -29,7 +29,7 @@ describe('rule registry', () => {
 		// The registry's `meaning` is the first line of a rule's page and what
 		// the MCP server explains a rule with, so the README's column is held to it.
 		const rows = read('README.md').matchAll(
-			/^\| (JEV\d{3}) \| [^|]+ \| [^|]+ \| (.+) \|$/gm,
+			/^\| (DEC\d{3}) \| [^|]+ \| [^|]+ \| (.+) \|$/gm,
 		);
 		const documented = new Map([...rows].map((row) => [row[1], row[2]]));
 		for (const code of RULE_CODES)
@@ -42,8 +42,8 @@ describe('rule registry', () => {
 
 	it('points every rule about a question at a page of a platform the target table knows', () => {
 		const hosts = new Set(TARGETS.map((target) => new URL(target.docs).host));
-		// JEV010 is about this tool's own comments, which no vendor page covers.
-		for (const code of RULE_CODES.filter((code) => code !== 'JEV010'))
+		// DEC010 is about this tool's own comments, which no vendor page covers.
+		for (const code of RULE_CODES.filter((code) => code !== 'DEC010'))
 			expect(hosts, `${code} -> ${RULES[code].docs}`).toContain(
 				new URL(RULES[code].docs).host,
 			);

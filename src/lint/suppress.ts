@@ -1,4 +1,5 @@
 import type { Finding, Span } from '../types';
+import { currentCode } from './rules';
 
 type Directive = Readonly<{
 	/** The line the directive silences, or undefined for the whole file. */
@@ -27,8 +28,8 @@ export type Suppression = Readonly<{
 // The old name still silences, for ever: a comment in a repository is not
 // this tool's to update. A new comment is always written with the new name.
 const DIRECTIVE =
-	/(?:decisionlint|jevlint)-le-disable(-next-line|-line)?\b([^\n]*)/g;
-const CODE = /JEV\d{3}/g;
+	/(?:decisionlint|jevlint-le)-disable(-next-line|-line)?\b([^\n]*)/g;
+const CODE = /(?:DEC|JEV)\d{3}/g;
 const LINE_OFFSETS: Readonly<Record<string, number | undefined>> =
 	Object.freeze({
 		'-next-line': 1,
@@ -63,7 +64,7 @@ function directives(
 			offset === undefined ? undefined : lineAt(starts, match.index) + offset;
 		return {
 			line,
-			codes: new Set((match[2] ?? '').match(CODE) ?? []),
+			codes: new Set(((match[2] ?? '').match(CODE) ?? []).map(currentCode)),
 			span: {
 				start: match.index,
 				end: match.index + match[0].trimEnd().length,
@@ -84,15 +85,15 @@ const NONE: Suppression = Object.freeze({
 
 const onlyJevBacked = (directive: Directive): boolean =>
 	directive.codes.size > 0 &&
-	[...directive.codes].every((code) => code.startsWith('JEV3'));
+	[...directive.codes].every((code) => code.startsWith('DEC3'));
 
 /**
- * The comment directives in a text: `decisionlint-le-disable-next-line JEV004`,
- * `decisionlint-le-disable-line`, or `decisionlint-le-disable` for the whole file. No
+ * The comment directives in a text: `decisionlint-disable-next-line DEC004`,
+ * `decisionlint-disable-line`, or `decisionlint-disable` for the whole file. No
  * code list means every rule.
  */
 export function suppression(text: string): Suppression {
-	if (!text.includes('-le-disable')) return NONE;
+	if (!text.includes('-disable')) return NONE;
 	const starts = lineStarts(text);
 	const found = directives(text, starts);
 	const used = new Set<Directive>();

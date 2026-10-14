@@ -2,31 +2,37 @@
 
 ## 1.0.0 — 2026-10-14
 
-**JevLint-LE is DecisionLint-LE.** It lints the questions sent to any
+**JevLint-LE is DecisionLint.** It lints the questions sent to any
 decision model, and nine platforms serve one, so the name says what it does
-rather than which model came first. Everything that carried the old name is
-renamed where a rename costs nobody anything: the npm packages are
-`decisionlint-le` and `decisionlint-le-mcp`, the MCP server is
-`io.github.nolindnaidoo/decisionlint-le`, the settings file is
-`decisionlint-le.json`, the directive is `decisionlint-le-disable` and the
-diagnostic source is `decisionlint-le`. The extension keeps its id,
-`nolindnaidoo.jevlint-le`, its `jevlint-le.*` settings and its `jevlint-le.*`
-command ids, so everyone who has it gets this version in place with their
-settings, keybindings and stored keys intact. Two spellings a repository may
-already hold are kept for ever: a `jevlint-le.json` is read where no
-`decisionlint-le.json` sits beside it, and a `jevlint-le-disable` comment
-still silences. The rule codes stay `JEV`: a code is an identifier in
-comments and settings files that nothing ever updates, and the number ranges
-already say what each rule is about. The old npm packages get one final
-release that points here.
+rather than which model came first, and it stands on its own rather than in
+the LE family, so the name is the whole word. Everything that carried the
+old name is renamed: the extension is `nolindnaidoo.decisionlint` with
+`decisionlint.*` settings and command ids, the npm packages are
+`decisionlint` and `decisionlint-mcp`, the MCP server is
+`io.github.nolindnaidoo/decisionlint`, the repository is
+`nolindnaidoo/decisionlint`, the settings file is `decisionlint.json`, the
+directive is `decisionlint-disable` and the diagnostic source is
+`decisionlint`. Two spellings a repository may already hold are kept for
+ever: a `jevlint-le.json` is read where no `decisionlint.json` sits beside
+it, and a `jevlint-le-disable` comment still silences. The rule codes are
+`DEC`, `DEC004` where it was `JEV004`, with the same numbers, and the twelve
+model-backed rules are `model-counting` and so on where they were
+`jev-counting`: a rule is named for what it finds, not for the first model
+that found it. The old codes and names are read for ever, in a comment, in
+`rules`, in `ignore` and in `explain_rule`, and every finding is written
+with the new code, so a SARIF baseline is renamed once. Each old rule page
+stays and points at the new one.
+The old extension and the old npm packages each get one final release that
+points here. A new extension id has a new keychain, so a stored TypeSafe or
+OpenAI key is set once more.
 
 **The verb is ask, and there is one command per platform.** `--jev` and the
 `jev.*` settings were named after one model and now reach nine platforms.
 The editor has **Ask Jev About This File**, **Ask Luna About This File**,
 **Ask via OpenRouter**, **Ask via Vercel AI Gateway**, **Ask via LLM
 Gateway**, **Ask Liquid d1** and **Ask the Model at My Endpoint**, each
-sending the model in `decisionlint-le.ask.models` for that platform with
-that platform's own key: typed into `decisionlint-le.ask.keys`, stored by
+sending the model in `decisionlint.ask.models` for that platform with
+that platform's own key: typed into `decisionlint.ask.keys`, stored by
 its own **Set ... API Key** command, or read from the variable the platform
 names. The command line has `--ask`, `--ask-plan`, `--ask-platform`,
 `--ask-model`, `--ask-endpoint`, `--ask-shape`, `--ask-max-calls` and
@@ -36,13 +42,15 @@ carried `jev`. The probe asks Jev at TypeSafe.
 
 | Was | Is |
 |---|---|
-| `jevlint-le`, `jevlint-le-mcp` on npm | `decisionlint-le`, `decisionlint-le-mcp` |
-| `nolindnaidoo.jevlint-le` on the Marketplace and Open VSX | unchanged, with the display name DecisionLint-LE |
-| `io.github.nolindnaidoo/jevlint-le` on the MCP registry | `io.github.nolindnaidoo/decisionlint-le` |
-| `jevlint-le.json` | `decisionlint-le.json`, the old name still read |
-| `jevlint-le-disable` | `decisionlint-le-disable`, the old name still honoured |
-| `jevlint-le.jev.model`, `.apiKey`, `.openaiApiKey` | `jevlint-le.ask.models`, `jevlint-le.ask.keys`, one entry per platform |
-| `jevlint-le.jev.maxCalls`, `.sendState`, `.confirm` | `jevlint-le.ask.maxCalls`, `.sendState`, `.confirm` |
+| `jevlint-le`, `jevlint-le-mcp` on npm | `decisionlint`, `decisionlint-mcp` |
+| `nolindnaidoo.jevlint-le` on the Marketplace and Open VSX | `nolindnaidoo.decisionlint`, called DecisionLint. The old listing gets one final release that points here |
+| `io.github.nolindnaidoo/jevlint-le` on the MCP registry | `io.github.nolindnaidoo/decisionlint` |
+| `jevlint-le.json` | `decisionlint.json`, the old name still read |
+| `jevlint-le-disable` | `decisionlint-disable`, the old name still honoured |
+| `JEV000` to `JEV312` | `DEC000` to `DEC312`, the same numbers, the old codes still read |
+| `jev-counting` and the other eleven `jev-*` names | `model-counting` and so on, the old names still read |
+| `jevlint-le.jev.model`, `.apiKey`, `.openaiApiKey` | `decisionlint.ask.models`, `decisionlint.ask.keys`, one entry per platform |
+| `jevlint-le.jev.maxCalls`, `.sendState`, `.confirm` | `decisionlint.ask.maxCalls`, `.sendState`, `.confirm` |
 | Check This File with Jev; Set TypeSafe API Key, Set OpenAI API Key | one Ask command and one Set API Key command per platform |
 | `--jev`, `--jev-*` | `--ask`, `--ask-*`, plus `--ask-platform` |
 | `check_with_jev`, `plan_jev` | `ask_model`, `plan_ask` |
@@ -61,17 +69,17 @@ each fact was read from. The research behind it is in `docs/research/`.
   read from the model id where its spelling says, `~typesafe/jev-latest` is
   OpenRouter and `typesafe-ai/jev` is Vercel, from the one platform a URL in
   the file names, or from a new `target` setting, in `jevlint-le.json` or as
-  `jevlint-le.target`. Vercel's 255 choices and 10 levels, LiteLLM's 128
+  `decisionlint.target`. Vercel's 255 choices and 10 levels, LiteLLM's 128
   questions per request, and none where a platform publishes none: a
   request bound for OpenAI gets no limit finding, as before. Nothing saying
   where a request goes, a TypeSafe-shaped question keeps TypeSafe's limits.
-  A new `JEV014` reports a request with more questions than its platform
+  A new `DEC014` reports a request with more questions than its platform
   takes in one call. Messages name the platform: "Vercel AI Gateway accepts
   at most 10".
 - **A floating alias is caught in every spelling**, and pinned in the one
   the platform documents: `jev-latest` to `jev-1.13.0`,
   `~typesafe/jev-latest` to `typesafe/jev-1.13`. A spelling no page gives a
-  pinned form for, `typesafe/jev-latest`, is reported with no fix. `JEV013`
+  pinned form for, `typesafe/jev-latest`, is reported with no fix. `DEC013`
   reads the version out of any spelling. A Hugging Face repo id, an Ollama
   tag or a deployment name is left alone.
 - **A check goes to any platform, and the host is never guessed.** A model
@@ -81,8 +89,8 @@ each fact was read from. The research behind it is in `docs/research/`.
   spelling that names no host, such as `openai/gpt-6-luna-decisions`, which
   every gateway writes, is refused with nothing sent, where before it went
   to OpenAI and failed with the key spent. A platform you host is named
-  with `jevlint-le.jev.endpoint`, `--jev-endpoint` or
-  `JEVLINT_LE_JEV_ENDPOINT`, and the shape with `jevlint-le.jev.shape`,
+  with `decisionlint.jev.endpoint`, `--jev-endpoint` or
+  `JEVLINT_LE_JEV_ENDPOINT`, and the shape with `decisionlint.jev.shape`,
   `--jev-shape` or `JEVLINT_LE_JEV_SHAPE` where the path does not say. The
   endpoint is read from the same places as the key and never from a
   repository file or a tool argument. A host the table does not know is

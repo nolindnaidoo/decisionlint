@@ -54,7 +54,7 @@ async function cli(args: string[], tree: Record<string, string>, stdin = '') {
 describe('a file the reader fails on', () => {
 	it('is named, and does not take the other files with it', async () => {
 		const result = await cli(['.'], { 'a.json': BAD, 'b.json': 'POISON' });
-		expect(result.out).toContain('JEV004');
+		expect(result.out).toContain('DEC004');
 		expect(result.out).toContain('1 path could not be read: b.json.');
 		expect(result.status).toBe(EXIT.passed);
 	});
@@ -63,7 +63,7 @@ describe('a file the reader fails on', () => {
 		const result = await cli(['.'], { 'b.json': 'POISON' });
 		expect(result.status).toBe(EXIT.unusable);
 		expect(result.err).toBe(
-			'decisionlint-le: No files could be linted. Not readable: b.json.\n',
+			'decisionlint: No files could be linted. Not readable: b.json.\n',
 		);
 		expect(result.out).toBe('');
 	});

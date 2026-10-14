@@ -44,8 +44,8 @@ export function findingsOf(code: RuleCode, text: string, syntax: string) {
 	);
 }
 
-const jevBacked = (code: string) => code.startsWith('JEV3');
-const wording = (code: string) => code > 'JEV100' && code < 'JEV300';
+const jevBacked = (code: string) => code.startsWith('DEC3');
+const wording = (code: string) => code > 'DEC100' && code < 'DEC300';
 
 function kind(code: RuleCode): string {
 	if (jevBacked(code))
@@ -58,7 +58,7 @@ function kind(code: RuleCode): string {
 function level(code: RuleCode): string {
 	const { severity } = RULES[code];
 	if (severity !== 'off') return `On by default, as \`${severity}\`.`;
-	return `Off by default. Turn it on in \`decisionlint-le.json\` with \`{ "rules": { "${code}": "warning" } }\`.`;
+	return `Off by default. Turn it on in \`decisionlint.json\` with \`{ "rules": { "${code}": "warning" } }\`.`;
 }
 
 function fixing(code: RuleCode, example: RuleExample | undefined): string {
@@ -117,16 +117,16 @@ function asked(code: RuleCode): string {
 }
 
 function silence(code: RuleCode): string {
-	if (code === 'JEV010')
-		return 'Remove the comment it points at. To stop the rule itself, set it to `off` in `decisionlint-le.json`.\n';
+	if (code === 'DEC010')
+		return 'Remove the comment it points at. To stop the rule itself, set it to `off` in `decisionlint.json`.\n';
 	return [
 		'In code, on the line above:',
 		'',
 		`${FENCE}ts`,
-		`// decisionlint-le-disable-next-line ${code}`,
+		`// decisionlint-disable-next-line ${code}`,
 		FENCE,
 		'',
-		'In JSON, which has no comments, by question id in `decisionlint-le.json`:',
+		'In JSON, which has no comments, by question id in `decisionlint.json`:',
 		'',
 		`${FENCE}json`,
 		`{ "ignore": ["${code}:your-question-id"] }`,
@@ -159,7 +159,7 @@ function page(code: RuleCode, example: RuleExample | undefined): string {
 		silence(code),
 		'## Source',
 		'',
-		code === 'JEV010'
+		code === 'DEC010'
 			? "This rule is about the linter's own comments, so it has no vendor page."
 			: `[${rule.docs}](${rule.docs})`,
 		'',
@@ -185,6 +185,22 @@ function index(): string {
 	].join('\n');
 }
 
+/** The code a rule had before 1.0.0, which a finding from then links to. */
+const oldCode = (code: RuleCode): string => `JEV${code.slice(3)}`;
+
+// A finding from before 1.0.0 links to the old code's page, so each old page
+// stays and points at the new one.
+function pointer(code: RuleCode): string {
+	return [
+		`# ${oldCode(code)}`,
+		'',
+		`${oldCode(code)} is [${code}](${code}.md) since DecisionLint 1.0.0. The old code is still read in comments and settings files, and every finding is written with the new one.`,
+		'',
+		'[All rules](README.md)',
+		'',
+	].join('\n');
+}
+
 /** Every page, by file name, as it should be on disk under `docs/rules/`. */
 export function renderRulePages(
 	examples: RuleExamples = EXAMPLES,
@@ -192,5 +208,8 @@ export function renderRulePages(
 	const pages = RULE_CODES.map(
 		(code) => [`${code}.md`, rulePage(code, examples)] as const,
 	);
-	return Object.fromEntries([['README.md', index()], ...pages]);
+	const pointers = RULE_CODES.map(
+		(code) => [`${oldCode(code)}.md`, pointer(code)] as const,
+	);
+	return Object.fromEntries([['README.md', index()], ...pages, ...pointers]);
 }

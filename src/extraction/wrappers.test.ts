@@ -43,7 +43,7 @@ var q = map[string]any{"questions": map[string]Question{"late": ask("How many pa
 		];
 		for (const [syntax, text] of cases) {
 			expect(shape(text, syntax)).toEqual(['late noul request']);
-			expect(codes(text, syntax)).toEqual(['JEV102 late']);
+			expect(codes(text, syntax)).toEqual(['DEC102 late']);
 		}
 	});
 
@@ -67,7 +67,7 @@ var q = map[string]any{"questions": map[string]Question{"late": ask("How many pa
 		const text = `function pick(instructions, criteria) { return { type: 'choice', instructions, criteria }; }
 const q = { questions: { team: pick('Which team takes it?', { billing: 'Charges', technical: 'Faults' }) } };`;
 		const found = lintText(text).findings[0];
-		expect(found?.code).toBe('JEV004');
+		expect(found?.code).toBe('DEC004');
 		const edit = found?.fix?.edits[0];
 		if (!edit) throw new Error('no fix offered');
 		const mended =
@@ -78,18 +78,18 @@ const q = { questions: { team: pick('Which team takes it?', { billing: 'Charges'
 
 	it('takes Python arguments by name', () => {
 		const text = `def ask(text, levels):\n    return {"type": "score", "instructions": text, "criteria": levels}\n\nq = {"questions": {"mood": ask(levels=["1", "2"], text="How upset are they?")}}`;
-		expect(codes(text, 'python')).toEqual(['JEV008 mood']);
+		expect(codes(text, 'python')).toEqual(['DEC008 mood']);
 	});
 
 	it('leaves a part unread when the call does not pass it or computes it', () => {
 		const text = `const ask = (instructions, criteria) => ({ type: 'choice', instructions, criteria });
 const q = { questions: { a: ask('Which one fits?'), b: ask(build(), { x: 'Extra', other: 'Else' }) } };`;
-		expect(codes(text)).toEqual(['JEV000 a', 'JEV000 b']);
+		expect(codes(text)).toEqual(['DEC000 a', 'DEC000 b']);
 	});
 
 	it('keeps what the wrapper changes unread, and says so at each call', () => {
 		const text = `def pick(text, options):\n    return {"type": "choice", "instructions": text, "criteria": dict.fromkeys(options)}\n\nq = {"questions": {"t": pick("Which team takes it?", ["billing", "technical"])}}`;
-		expect(codes(text, 'python')).toEqual(['JEV000 t']);
+		expect(codes(text, 'python')).toEqual(['DEC000 t']);
 	});
 
 	it.each([
@@ -111,7 +111,7 @@ const q = { questions: { a: ask('Which one fits?'), b: ask(build(), { x: 'Extra'
 		],
 	])('does not read a call to a name that is %s', (_name, setup) => {
 		const text = `${setup}\nconst q = { questions: { late: ask('How many parcels are late?') } };`;
-		expect(codes(text).filter((code) => code.startsWith('JEV102'))).toEqual([]);
+		expect(codes(text).filter((code) => code.startsWith('DEC102'))).toEqual([]);
 	});
 
 	it('does not read a call that only hands on what it was given', () => {
@@ -124,6 +124,6 @@ function outer(instructions) { return ask(instructions); }`;
 	it('reads a wrapper named like an SDK helper when the file defines it', () => {
 		const text = `const noul = (instructions) => ({ type: 'noul', instructions });
 const q = { questions: { late: noul('How many parcels are late?') } };`;
-		expect(codes(text)).toEqual(['JEV102 late']);
+		expect(codes(text)).toEqual(['DEC102 late']);
 	});
 });

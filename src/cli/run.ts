@@ -86,7 +86,7 @@ export type Overrides = Readonly<{
 
 /**
  * The settings that apply to one file: the file named with `--config`, or
- * else the `decisionlint-le.json` nearest to it, looking no higher than the
+ * else the `decisionlint.json` nearest to it, looking no higher than the
  * directory the run started in. A sentence in place of settings says why a
  * settings file could not be used.
  */
@@ -229,7 +229,7 @@ async function gather(options: CliOptions, io: Io): Promise<Gathered> {
 	if (options.paths.length)
 		return '--stdin-filename cannot be combined with paths.';
 	if (!syntaxForPath(name))
-		return `Not a file type decisionlint-le reads: ${name}`;
+		return `Not a file type decisionlint reads: ${name}`;
 	const text = await io.stdin();
 	// The limit a file is held to, so piped text cannot be the way around it.
 	if (Buffer.byteLength(text, 'utf8') > MAX_FILE_SIZE_BYTES)
@@ -365,7 +365,7 @@ export async function run(
 	io: Io,
 ): Promise<number> {
 	const unusable = (message: string) => {
-		io.err(`decisionlint-le: ${message}\n`);
+		io.err(`decisionlint: ${message}\n`);
 		return EXIT.unusable;
 	};
 	const parsed = parseArgs(argv);
@@ -496,7 +496,7 @@ async function runWithAsk(
 	optionsFor: (file: string) => LintOptions | string,
 	fixed: Pick<Totals, 'fixed'>,
 ): Promise<number> {
-	const say = (message: string) => io.err(`decisionlint-le: ${message}\n`);
+	const say = (message: string) => io.err(`decisionlint: ${message}\n`);
 	// Already resolved once by `refuseAsk`, which stops the run on a refusal.
 	const routed = providerFromFlags(options, io.env);
 	if (typeof routed === 'string') {

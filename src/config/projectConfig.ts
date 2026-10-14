@@ -1,5 +1,5 @@
 import { DEFAULT_FALLBACK_OPTIONS } from '../lint/lint';
-import { RULE_CODES, RULES } from '../lint/rules';
+import { currentCode, RULE_CODES, RULES } from '../lint/rules';
 import { TARGET_IDS, targetById } from '../lint/targets';
 import type { LintOptions, RuleCode, Severity } from '../types';
 
@@ -8,7 +8,7 @@ import type { LintOptions, RuleCode, Severity } from '../types';
  * the command line apply the same rules. Without it a rule switched off in
  * one would still fail in the other.
  */
-export const CONFIG_FILE = 'decisionlint-le.json';
+export const CONFIG_FILE = 'decisionlint.json';
 /** The file's name before the rename. Read where the new name is absent, for ever: a repository's file is not this tool's to update. */
 export const OLD_CONFIG_FILE = 'jevlint-le.json';
 export const CONFIG_KEYS: ReadonlyArray<string> = [
@@ -37,11 +37,19 @@ const BY_NAME: ReadonlyMap<string, RuleCode> = new Map(
 	RULE_CODES.map((code) => [RULES[code].name, code]),
 );
 
-/** A rule and a level, written as `JEV004=warning` or `missing-fallback=warn`, or the reason it is not one. */
+// The names the model-backed rules had before 1.0.0, `jev-counting`, read
+// for ever beside the old codes.
+const currentSpelling = (rule: string): string =>
+	rule.startsWith('jev-') && BY_NAME.has(`model-${rule.slice(4)}`)
+		? `model-${rule.slice(4)}`
+		: currentCode(rule);
+
+/** A rule and a level, written as `DEC004=warning` or `missing-fallback=warn`, or the reason it is not one. */
 export function readRule(text: string): readonly [RuleCode, Level] | string {
-	const [rule = '', given = ''] = text.split('=');
+	const [written = '', given = ''] = text.split('=');
+	const rule = currentSpelling(written);
 	const code = CODES.has(rule) ? (rule as RuleCode) : BY_NAME.get(rule);
-	if (!code) return `'${rule}' is not a rule code or a rule name.`;
+	if (!code) return `'${written}' is not a rule code or a rule name.`;
 	const level = LEVEL_ALIASES.get(given) ?? given;
 	if (!LEVELS.includes(level))
 		return `'${given}' is not a level. Use one of ${LEVELS.join(', ')}.`;
@@ -90,7 +98,7 @@ export function parseConfig(text: string | undefined): LintOptions | string {
 
 /**
  * The lint settings in `config`, checked as the file is checked, or the
- * reason they cannot be used. The editor's own `jevlint-le.*` settings are
+ * reason they cannot be used. The editor's own `decisionlint.*` settings are
  * read through here too, so a typo'd rule code is refused in both places and
  * never dropped quietly, leaving the rule on.
  */

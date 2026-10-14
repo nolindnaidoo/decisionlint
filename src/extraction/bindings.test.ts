@@ -54,7 +54,7 @@ const q = { questions: { a: { type: 'noul', instructions: TEXT.late.ask }, b: { 
 	it('reports a finding where the literal is written', () => {
 		const text = `const MODEL = 'jev-latest';\nconst q = { model: MODEL, questions: { a: { type: 'noul', instructions: 'Is it late?' } } };`;
 		const found = lintText(text).findings[0];
-		expect(found?.code).toBe('JEV001');
+		expect(found?.code).toBe('DEC001');
 		expect(text.slice(found?.span.start, found?.span.end)).toBe("'jev-latest'");
 	});
 
@@ -74,7 +74,7 @@ const q = { questions: { a: { type: 'choice', instructions: 'Which team takes it
 	it('reports a mistake in a shared literal once', () => {
 		const text = `const LEVELS = ['1', '2', '3'];
 const q = { questions: { a: { type: 'score', instructions: 'How bad is it?', criteria: LEVELS }, b: { type: 'score', instructions: 'How soon is it?', criteria: LEVELS } } };`;
-		expect(codes(text)).toEqual(['JEV008']);
+		expect(codes(text)).toEqual(['DEC008']);
 	});
 
 	it('counts a question defined under a name and used in a request once', () => {
@@ -117,12 +117,12 @@ const q = { questions: { a: { type: 'score', instructions: 'How bad is it?', cri
 		const text = `test('a', () => { const criteria = ['x']; use(criteria); });
 const criteria = { a: 'A', b: 'B' };
 test('b', () => { const q = { questions: { t: { type: 'choice', instructions: 'Which one fits?', criteria } } }; });`;
-		expect(codes(text)).toEqual(['JEV000']);
+		expect(codes(text)).toEqual(['DEC000']);
 	});
 
 	it('does not read a Python comprehension as a list of one', () => {
 		const text = `levels = [l.strip() for l in raw.split(",")]\nq = {"questions": {"a": {"type": "score", "instructions": "Rate the damage", "criteria": levels}}}`;
-		expect(codes(text, 'python')).toEqual(['JEV000']);
+		expect(codes(text, 'python')).toEqual(['DEC000']);
 	});
 });
 
@@ -161,7 +161,7 @@ describe('text with runtime parts', () => {
 			'const q = { questions: { a: { type: "noul", instructions: `How many of the items in @{field} are late?` } } };',
 		);
 		const found = lintText(text).findings;
-		expect(found.map((finding) => finding.code)).toEqual(['JEV000', 'JEV102']);
+		expect(found.map((finding) => finding.code)).toEqual(['DEC000', 'DEC102']);
 		expect(found[0]?.message).toContain('The fixed text was checked');
 		expect(lintText(text).unreadableCount).toBe(1);
 	});
@@ -171,8 +171,8 @@ describe('text with runtime parts', () => {
 			'const q = { questions: { a: { type: "noul", instructions: `Is the order large? @{RULE}` } } };',
 		);
 		const plain = `const q = { questions: { a: { type: "noul", instructions: "Is the order large?" } } };`;
-		expect(codes(plain)).toContain('JEV112');
-		expect(codes(slotted)).toEqual(['JEV000']);
+		expect(codes(plain)).toContain('DEC112');
+		expect(codes(slotted)).toEqual(['DEC000']);
 	});
 
 	it('leaves a sum of two names alone', () => {

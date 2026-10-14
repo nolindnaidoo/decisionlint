@@ -5,7 +5,7 @@
   "inputTokens": 13450,
   "results": [
     {
-      "rule": "JEV303",
+      "rule": "DEC303",
       "name": "two options that cover the same cases against one",
       "bad": "10 of 10",
       "badSureness": "0.86",
@@ -13,7 +13,7 @@
       "goodSureness": "1.00"
     },
     {
-      "rule": "JEV304",
+      "rule": "DEC304",
       "name": "two levels that describe the same situation against three distinct ones",
       "bad": "6 of 10",
       "badSureness": "0.58",

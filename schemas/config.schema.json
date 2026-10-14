@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "DecisionLint-LE project settings",
+  "title": "DecisionLint project settings",
   "description": "Lint settings for this project. The editor and the command line both read this file, so they report the same findings.",
   "type": "object",
   "additionalProperties": false,
@@ -8,7 +8,7 @@
     "rules": {
       "description": "The level of a rule, by its code or its name. A rule not listed keeps its default. `warn` means `warning`.",
       "type": "object",
-      "propertyNames": { "pattern": "^(JEV\\d{3}|[a-z][a-z-]*)$" },
+      "propertyNames": { "pattern": "^(DEC\\d{3}|JEV\\d{3}|[a-z][a-z-]*)$" },
       "additionalProperties": {
         "enum": ["off", "hint", "info", "warning", "error", "warn"]
       }
@@ -19,9 +19,9 @@
       "items": { "type": "string" }
     },
     "ignore": {
-      "description": "Findings to leave out, each written as a rule code, a colon and a question id: JEV004:department.",
+      "description": "Findings to leave out, each written as a rule code, a colon and a question id: DEC004:department.",
       "type": "array",
-      "items": { "type": "string", "pattern": "^JEV\\d{3}:.+$" }
+      "items": { "type": "string", "pattern": "^(DEC|JEV)\\d{3}:.+$" }
     },
     "exclude": {
       "description": "Files and folders not to lint, as patterns relative to this file. `**` crosses folders, `*` stays inside one, and a name with no slash matches at any depth: fixtures, **/*.generated.ts, test/data/**.",

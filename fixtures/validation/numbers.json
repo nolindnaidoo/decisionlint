@@ -1,6 +1,6 @@
 [
   {
-    "rule": "JEV103",
+    "rule": "DEC103",
     "name": "a date inside a window counted in days",
     "cases": [
       {
@@ -112,7 +112,7 @@
     "good": null
   },
   {
-    "rule": "JEV102",
+    "rule": "DEC102",
     "name": "adding three to five numbers against a limit",
     "cases": [
       {

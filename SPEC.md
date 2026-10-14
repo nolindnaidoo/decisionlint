@@ -1,4 +1,4 @@
-# DecisionLint-LE — specification
+# DecisionLint — specification
 
 **Status: released. The current version and its date are the top heading of
 [CHANGELOG.md](CHANGELOG.md); 0.1.0 shipped on 2026-10-04 and 0.2.0 on
@@ -6,7 +6,7 @@
 shell and their tests exist and pass. Everything under an "Extended release"
 heading is intent and none of it is built.
 
-A VS Code extension in the LE family, category **Check**, that finds the
+A VS Code extension by the author of the LE family, standalone since 1.0.0, category **Check**, that finds the
 questions a project sends to TypeSafe's Jev
 model and reports the ones written in a way that is documented to produce bad
 answers. Linting never calls Jev.
@@ -99,42 +99,42 @@ A value is unreadable when it is not a literal in the file: a variable, a
 function call, a template string with a substitution, a shorthand property. An
 object or array with a spread, a computed key or a method is partial. Rules
 that need an unreadable or partial value do not run. The question gets one
-`JEV000` hint, and the unread count is shown beside the findings count. The
-count is taken before suppression, so switching `JEV000` off hides the hints
+`DEC000` hint, and the unread count is shown beside the findings count. The
+count is taken before suppression, so switching `DEC000` off hides the hints
 and leaves the count.
 
 ## Initial release
 
 Exact checks. Each is true or false from the text, so none can be wrong about
-what the text says. `JEV004` is the exception in spirit and is explained below.
+what the text says. `DEC004` is the exception in spirit and is explained below.
 
 ### Rules
 
 | Code | Name | Default | Fires when |
 |---|---|---|---|
-| JEV000 | unreadable | hint | A field a rule needs is built at runtime |
-| JEV001 | unpinned-model | warning | `model` is a floating Jev alias in any platform's spelling: `jev-latest`, `jev-preview`, `~typesafe/jev-latest` |
-| JEV002 | choice-option-limit | error | A Choice has more than 255 options |
-| JEV003 | score-level-limit | error | A Score has more than 10 levels |
-| JEV004 | no-fallback-option | info | A Choice has two or more options and none has a fallback word in its name |
-| JEV005 | duplicate | error | A question id, a Choice option or a Score level is repeated |
-| JEV006 | criteria-shape | error | In a request, a Choice has no map of options or a Score has no array of levels, or a Noul has criteria keys other than `true` and `false` |
-| JEV007 | invalid-question | error | The `type` is missing or unknown, or the instructions are an empty string |
-| JEV008 | numeric-levels | warning | Every level of a Score is a bare number |
-| JEV009 | too-few-options | info | A Choice has fewer than two options, or a Score fewer than two levels |
-| JEV010 | unused-disable | warning | A `decisionlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
-| JEV011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
-| JEV012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
-| JEV013 | newer-model | info | `model` is a versioned Jev id in any platform's spelling, numbers and nothing after them, above the version the rules were measured on |
-| JEV014 | question-limit | error | A `questions` map or list has more entries than its target takes in one request. Only a target in `lint/targets.ts` that publishes the number is checked |
+| DEC000 | unreadable | hint | A field a rule needs is built at runtime |
+| DEC001 | unpinned-model | warning | `model` is a floating Jev alias in any platform's spelling: `jev-latest`, `jev-preview`, `~typesafe/jev-latest` |
+| DEC002 | choice-option-limit | error | A Choice has more than 255 options |
+| DEC003 | score-level-limit | error | A Score has more than 10 levels |
+| DEC004 | no-fallback-option | info | A Choice has two or more options and none has a fallback word in its name |
+| DEC005 | duplicate | error | A question id, a Choice option or a Score level is repeated |
+| DEC006 | criteria-shape | error | In a request, a Choice has no map of options or a Score has no array of levels, or a Noul has criteria keys other than `true` and `false` |
+| DEC007 | invalid-question | error | The `type` is missing or unknown, or the instructions are an empty string |
+| DEC008 | numeric-levels | warning | Every level of a Score is a bare number |
+| DEC009 | too-few-options | info | A Choice has fewer than two options, or a Score fewer than two levels |
+| DEC010 | unused-disable | warning | A `decisionlint-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
+| DEC011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
+| DEC012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
+| DEC013 | newer-model | info | `model` is a versioned Jev id in any platform's spelling, numbers and nothing after them, above the version the rules were measured on |
+| DEC014 | question-limit | error | A `questions` map or list has more entries than its target takes in one request. Only a target in `lint/targets.ts` that publishes the number is checked |
 
-**JEV001's fix is never applied for you.** It offers to pin to `KNOWN_VERSION`,
+**DEC001's fix is never applied for you.** It offers to pin to `KNOWN_VERSION`,
 the version `jev-latest` pointed to when the repo last checked, and is marked
 unsafe, so `--fix`, fix on save and `fix_text` leave it alone: which version
 to pin is a choice, and a hard-coded id is wrong after the next release. The
 message says to copy the `model` value from a response.
 
-**JEV004 is `info`, not `warning`.** TypeSafe's advice is to add `other` or
+**DEC004 is `info`, not `warning`.** TypeSafe's advice is to add `other` or
 `none of the above` "when the list might not cover every input", and the text
 of a question cannot show whether it does. Measured on 2026-10-04, the rule
 fires on 9 of the 11 Choice examples in TypeSafe's own docs. The default
@@ -164,8 +164,8 @@ the second set found 23 more. Each cause is fixed and pinned by a test:
   in a `questions` map or an SDK helper call, never for a lone object.
 - **Template slots.** `"criteria": "$options"` is a value that arrives later.
 - **One option and one level.** Public code sends both where the lists are
-  generated, and a public parity suite expects the API to accept them. `JEV009`
-  reports both as `info`, and `JEV003` is now only the upper limit.
+  generated, and a public parity suite expects the API to accept them. `DEC009`
+  reports both as `info`, and `DEC003` is now only the upper limit.
 
 On the third set, with these in place, the shape rule fired six times in
 2,463 questions and all six were real: Nouls with `yes` and `no` criteria, and
@@ -178,16 +178,16 @@ Scores sent with no levels.
   links to the vendor page behind the rule.
 - **Quick fixes**, each offered only where the edit is mechanical and loses
   nothing:
-  - `JEV004`: insert a fallback option, matching the quote style, indentation
+  - `DEC004`: insert a fallback option, matching the quote style, indentation
     and trailing-comma style already there.
-  - `JEV001`: pin an alias to the newest version this extension was checked
+  - `DEC001`: pin an alias to the newest version this extension was checked
     against. The title carries the date, because that stops being the newest.
-  - `JEV006`: rename `yes` and `no` criteria to `true` and `false`. Turn a
+  - `DEC006`: rename `yes` and `no` criteria to `true` and `false`. Turn a
     Score map into an array, keeping every description. Turn a Choice array of
     names into a map.
-  - `JEV007`: correct a mistyped type when exactly one real type is within two
+  - `DEC007`: correct a mistyped type when exactly one real type is within two
     edits.
-- **Project settings file.** `decisionlint-le.json`, read by the editor, the
+- **Project settings file.** `decisionlint.json`, read by the editor, the
   command line and the MCP server. The nearest one to a file applies, looking
   upward as far as the workspace folder in the editor and the working
   directory on the command line. Where one applies it replaces the editor's
@@ -208,8 +208,8 @@ Scores sent with no levels.
 - **Commands:** lint the active file, lint the workspace, open settings. The
   workspace command reports files skipped as too large and files it could not
   open.
-- **Suppression** by comment: `decisionlint-le-disable-next-line JEV004`,
-  `decisionlint-le-disable-line`, or `decisionlint-le-disable` for the file. No code list means
+- **Suppression** by comment: `decisionlint-disable-next-line DEC004`,
+  `decisionlint-disable-line`, or `decisionlint-disable` for the file. No code list means
   every rule. JSON has no comments, so the `ignore` setting takes
   `CODE:questionId` entries.
 - **JSON schema** for request bodies, applied to files named `*.jev.json`. It
@@ -223,22 +223,22 @@ Scores sent with no levels.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `decisionlint-le.json` |
-| `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
-| `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `jevlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
-| `jevlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
-| `jevlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
-| `jevlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
-| `jevlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
-| `jevlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
-| `jevlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
-| `jevlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
-| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
-| `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
-| `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
-| `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
+| `decisionlint.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `decisionlint.json` |
+| `decisionlint.fallbackOptions` | the list above | Option names that satisfy `DEC004` |
+| `decisionlint.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `decisionlint.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `decisionlint.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `decisionlint.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
+| `decisionlint.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
+| `decisionlint.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `decisionlint.ask.endpointModel` | `""` | The model id sent to that endpoint |
+| `decisionlint.ask.maxCalls` | `25` | The most requests one Ask command may send |
+| `decisionlint.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
+| `decisionlint.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
+| `decisionlint.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
+| `decisionlint.exclude` | `node_modules`, build output | Files the workspace command skips |
+| `decisionlint.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
+| `decisionlint.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
 
 ### Not built from the first draft of this spec
 
@@ -260,18 +260,18 @@ or its primitives guide.
 
 | Code | Name | Default | Fires when |
 |---|---|---|---|
-| JEV101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
-| JEV102 | arithmetic | warning | The question asks Jev to count or compare numbers |
-| JEV103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
-| JEV104 | compound | off | A Noul joins two judgments with 'and' |
-| JEV105 | generation | warning | The question asks for a value or for text to be written |
-| JEV107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
-| JEV108 | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
-| JEV110 | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
-| JEV111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
-| JEV112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
+| DEC101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
+| DEC102 | arithmetic | warning | The question asks Jev to count or compare numbers |
+| DEC103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
+| DEC104 | compound | off | A Noul joins two judgments with 'and' |
+| DEC105 | generation | warning | The question asks for a value or for text to be written |
+| DEC107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
+| DEC108 | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
+| DEC110 | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
+| DEC111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
+| DEC112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
 
-A rule that is `off` still runs when switched on in `jevlint-le.rules`.
+A rule that is `off` still runs when switched on in `decisionlint.rules`.
 
 Text inside backticks or double quotes is left out before a wording rule
 reads a question, because it is a field name or quoted data and not the
@@ -301,16 +301,16 @@ questions. After the changes they catch 41.
 
 | Rule | Caught | Fired on good |
 |---|---|---|
-| JEV101 double-negative | 10 of 10 | 0 of 119 |
-| JEV102 arithmetic | 14 of 14 | 0 of 119 |
-| JEV103 date-comparison | 10 of 10 | 0 of 119 |
-| JEV104 compound | 6 of 10 | 0 of 119 |
-| JEV105 generation | 11 of 11 | 0 of 119 |
-| JEV107 negated-noul | 9 of 9 | 0 of 119 |
-| JEV108 inverted-criteria | 6 of 9 | 0 of 119 |
-| JEV110 degree-levels | 16 of 16 | 0 of 119 |
-| JEV111 numeric-encoding | 6 of 7 | 0 of 119 |
-| JEV112 undefined-boundary | 5 of 5 | 0 of 119 |
+| DEC101 double-negative | 10 of 10 | 0 of 119 |
+| DEC102 arithmetic | 14 of 14 | 0 of 119 |
+| DEC103 date-comparison | 10 of 10 | 0 of 119 |
+| DEC104 compound | 6 of 10 | 0 of 119 |
+| DEC105 generation | 11 of 11 | 0 of 119 |
+| DEC107 negated-noul | 9 of 9 | 0 of 119 |
+| DEC108 inverted-criteria | 6 of 9 | 0 of 119 |
+| DEC110 degree-levels | 16 of 16 | 0 of 119 |
+| DEC111 numeric-encoding | 6 of 7 | 0 of 119 |
+| DEC112 undefined-boundary | 5 of 5 | 0 of 119 |
 
 ### What the labels are worth
 
@@ -342,16 +342,16 @@ tokens, about a sixth of a cent. Results are in
 
 | Rule | Bad question right | Fixed question right |
 |---|---|---|
-| JEV008 numeric-levels | 3 of 6 | 6 of 6 |
-| JEV112 undefined-boundary | 4 of 6 | 6 of 6 |
-| JEV004 no-fallback-option | 4 of 8 | 8 of 8 |
-| JEV101 double-negative | 6 of 6 | 6 of 6 |
-| JEV102 arithmetic | 6 of 6 | 6 of 6 |
-| JEV103 date-comparison | 6 of 6 | done in code |
-| JEV104 compound | 8 of 8 | 8 of 8 |
-| JEV107 negated-noul | 6 of 6 | 6 of 6 |
-| JEV108 inverted-criteria | 6 of 6 | 6 of 6 |
-| JEV110 degree-levels | 6 of 6 | 6 of 6 |
+| DEC008 numeric-levels | 3 of 6 | 6 of 6 |
+| DEC112 undefined-boundary | 4 of 6 | 6 of 6 |
+| DEC004 no-fallback-option | 4 of 8 | 8 of 8 |
+| DEC101 double-negative | 6 of 6 | 6 of 6 |
+| DEC102 arithmetic | 6 of 6 | 6 of 6 |
+| DEC103 date-comparison | 6 of 6 | done in code |
+| DEC104 compound | 8 of 8 | 8 of 8 |
+| DEC107 negated-noul | 6 of 6 | 6 of 6 |
+| DEC108 inverted-criteria | 6 of 6 | 6 of 6 |
+| DEC110 degree-levels | 6 of 6 | 6 of 6 |
 
 Three defects cost answers. Seven did not, on these cases, which were few
 and easy. So the seven were run again on harder ones.
@@ -370,14 +370,14 @@ has no measured cost.
 
 | Rule | Bad question | Sure | Fixed question | Sure | Outcome |
 |---|---|---|---|---|---|
-| JEV101 double-negative | 14 of 15 | 0.73 | 15 of 15 | 0.87 | Advisory. Now `info` |
-| JEV102 arithmetic | 8 of 12 | 0.58 | 9 of 12 | n/a | Kept. See below |
-| JEV103 date-comparison | 12 of 12 | 0.90 | done in code | n/a | No cost on ordering. See the window run below |
-| JEV104 compound | 14 of 14 | 0.87 | 14 of 14 | 0.92 | No cost. Stays `off` |
-| JEV107 negated-noul | 14 of 14 | 0.86 | 14 of 14 | 0.88 | No cost. Now `off` |
-| JEV108 inverted-criteria | 14 of 14 | 0.86 | 14 of 14 | 0.95 | No cost. Now `off` |
-| JEV110 degree-levels | 11 of 12 | 0.90 | 11 of 12 | 0.95 | No cost. Now `off` |
-| JEV111 numeric-encoding | 12 of 12 | 0.94 | 12 of 12 | 0.97 | No cost. Now `off` |
+| DEC101 double-negative | 14 of 15 | 0.73 | 15 of 15 | 0.87 | Advisory. Now `info` |
+| DEC102 arithmetic | 8 of 12 | 0.58 | 9 of 12 | n/a | Kept. See below |
+| DEC103 date-comparison | 12 of 12 | 0.90 | done in code | n/a | No cost on ordering. See the window run below |
+| DEC104 compound | 14 of 14 | 0.87 | 14 of 14 | 0.92 | No cost. Stays `off` |
+| DEC107 negated-noul | 14 of 14 | 0.86 | 14 of 14 | 0.88 | No cost. Now `off` |
+| DEC108 inverted-criteria | 14 of 14 | 0.86 | 14 of 14 | 0.95 | No cost. Now `off` |
+| DEC110 degree-levels | 11 of 12 | 0.90 | 11 of 12 | 0.95 | No cost. Now `off` |
+| DEC111 numeric-encoding | 12 of 12 | 0.94 | 12 of 12 | 0.97 | No cost. Now `off` |
 
 **Counting did not fit the rule, and is kept.** The bad question was right 8
 times in 12 at 0.58 sure, which is close to a guess. That is the defect
@@ -386,7 +386,7 @@ in code, was right only 9 times in 12, because with the true count one from
 the line a single misjudged item flips the answer. So the defect is real and
 the fix is not the cure the docs imply near a threshold.
 
-**`JEV108` missed advisory by 0.01.** It is `off` because the rule was set
+**`DEC108` missed advisory by 0.01.** It is `off` because the rule was set
 beforehand. Jev answers the question and ignores criteria that contradict it,
 so inverted criteria are a mistake in what the author wrote down and not one
 that changes the answer.
@@ -396,27 +396,27 @@ The answer key was checked in code before anything was sent.
 
 | Rule | Question | Right | Sure |
 |---|---|---|---|
-| JEV102 | Do three to five amounts add up to more than a limit? | 5 of 12 | 0.52 |
-| JEV103 | Was the item returned inside a window counted in days? | 11 of 12 | 0.75 |
+| DEC102 | Do three to five amounts add up to more than a limit? | 5 of 12 | 0.52 |
+| DEC103 | Was the item returned inside a window counted in days? | 11 of 12 | 0.75 |
 
 Addition is worse than a coin. The window question lost one answer and a
 quarter of the certainty that code has, which by the rule above is advisory,
-so `JEV103` is back on at `info`. Ordering two dates stays cost-free. What
+so `DEC103` is back on at `info`. Ordering two dates stays cost-free. What
 costs is arithmetic on dates.
 
-**What is and is not proven.** Measured to cost answers here: `JEV004`,
-`JEV008`, `JEV102`, `JEV110`, `JEV112`. Measured to cost confidence: `JEV101`,
-`JEV012`. Measured to cost nothing on sensible names, and kept as `info` for
-the names that say nothing: `JEV011`. Everything else on by default is an
-exact rule about what the API accepts, plus `JEV105`.
+**What is and is not proven.** Measured to cost answers here: `DEC004`,
+`DEC008`, `DEC102`, `DEC110`, `DEC112`. Measured to cost confidence: `DEC101`,
+`DEC012`. Measured to cost nothing on sensible names, and kept as `info` for
+the names that say nothing: `DEC011`. Everything else on by default is an
+exact rule about what the API accepts, plus `DEC105`.
 
-`JEV111` was left out of the harder run by mistake and run on its own
+`DEC111` was left out of the harder run by mistake and run on its own
 afterwards, 24 calls, with the result in `results-encoding.json`. It compared
 "closer to #FF0000 than to #0000FF" with "closer to red than to blue". Those
 are the two easiest hex values there are, so a finer comparison might still
 fail.
 
-`JEV105` cannot be tested this way. A Noul asked "What is the order number?"
+`DEC105` cannot be tested this way. A Noul asked "What is the order number?"
 returns a probability, and there is no right or wrong probability for a
 question that is not yes or no. The rule reports a mismatch between the
 question and the type of answer, the way a type checker does, and needs no
@@ -445,20 +445,20 @@ causes that are now removed:
   word is no longer an arithmetic pattern.
 - "How long a session does the learner want?" read as a date comparison. Only
   "how long ago", "since", "until", "before" and "after" count now.
-- `JEV104` fired three times and was right once. It is off again.
+- `DEC104` fired three times and was right once. It is off again.
 
 Over all three sets with the final rules, the default-on wording rules fire
-39 times in 4,168 questions: `JEV112` 17, `JEV102` 11, `JEV110` 8, and one each
-for `JEV101`, `JEV103` and `JEV107`. Read by hand, about 34 are right. The
-weakest is `JEV112`, where three of 17 turn on a word used as a plain
+39 times in 4,168 questions: `DEC112` 17, `DEC102` 11, `DEC110` 8, and one each
+for `DEC101`, `DEC103` and `DEC107`. Read by hand, about 34 are right. The
+weakest is `DEC112`, where three of 17 turn on a word used as a plain
 adjective ("an expensive model"), which is why it is `info`.
 
-**Rules that are off for being wrong on public code.** `JEV104` compound was
+**Rules that are off for being wrong on public code.** `DEC104` compound was
 wrong on two of three firings in the third set.
 
-**Rules removed for being wrong on public code.** `JEV106` multi-hop fired
+**Rules removed for being wrong on public code.** `DEC106` multi-hop fired
 six times across the sets and was never right, then once more on sample 3,
-wrong again. `JEV109` multi-dimension-level fired 166 times across the sets,
+wrong again. `DEC109` multi-dimension-level fired 166 times across the sets,
 nearly all on levels that list examples, then 10 of 11 wrong on sample 2 and
 10 of 10 on sample 3. Both were removed in 0.4.0. A settings file that names
 either is now refused as naming a rule that does not exist.
@@ -478,7 +478,7 @@ one, and ignore template slots such as `$question`.
 before any rule ran, and scored twice: with the rules as they were, and
 after the changes 0.4.0 made. The before run is the measurement. The after
 run is a check on the changes against the questions that prompted them, so
-it is not blind for `JEV102`, `JEV110` and `JEV112`, and `JEV012`'s threshold
+it is not blind for `DEC102`, `DEC110` and `DEC112`, and `DEC012`'s threshold
 was read off these labels.
 
 35 of the 252 questions read had a clear defect, and 28 of the 35 had one of
@@ -495,24 +495,24 @@ else wrong. The wording rules had 8 clear cases between them.
 
 What changed because of it, each measured on the sample afterwards:
 
-- `JEV011 description-repeats-name` and `JEV012 terse-instructions`, new,
-  both exact, both `info`. 8 of 10 and 20 of 23, none wrong. `JEV012` leaves
+- `DEC011 description-repeats-name` and `DEC012 terse-instructions`, new,
+  both exact, both `info`. 8 of 10 and 20 of 23, none wrong. `DEC012` leaves
   a two-word question that opens with how, who, what, which, where, when or
   why alone, which is what separated "How severe?" from "how much?" in the
-  labels. The levels come from the run below: `JEV012` cost confidence and
-  not answers, and `JEV011` cost nothing measurable where the name itself
+  labels. The levels come from the run below: `DEC012` cost confidence and
+  not answers, and `DEC011` cost nothing measurable where the name itself
   says something.
-- `JEV110 degree-levels` on, as a warning, and widened to levels that are a
+- `DEC110 degree-levels` on, as a warning, and widened to levels that are a
   bare word or two, or carry a slash gloss. 5 of 5, none wrong, after 6 of
   10 with none wrong on sample 2. Proven below: Shallow, Medium, Deep placed
   4 of 12 code reviews right against 12 of 12 for described levels.
-- `JEV102 arithmetic` reads comparisons written as symbols or as "greater
+- `DEC102 arithmetic` reads comparisons written as symbols or as "greater
   than the number", and "40 minutes or longer". 3 of 3 after 1 of 3.
-- `JEV112 undefined-boundary` fires only where the vague word is the
+- `DEC112 undefined-boundary` fires only where the vague word is the
   predicate or closes the question. It was wrong on both of its findings
   here and on 2 of 5 on sample 2, every time on an adjective sitting on a
   noun. It now fires on nothing in this sample.
-- `JEV004 no-fallback-option` stays `info`, after a look at raising it. It
+- `DEC004 no-fallback-option` stays `info`, after a look at raising it. It
   fired on 65 of the sample's 86 Choices, 57 once more names counted as a
   fallback, and text cannot tell an exhaustive
   pair from one that is not. ESLint's `default-case` and Biome's
@@ -520,7 +520,7 @@ What changed because of it, each measured on the sample afterwards:
   recommended sets. The message now carries the measured cost, and a fallback
   counts under more names, so `uncertain`, `none_implied` and
   `other_or_unclear` no longer draw it.
-- `JEV106` and `JEV109` removed, wrong on every firing across three samples.
+- `DEC106` and `DEC109` removed, wrong on every firing across three samples.
 
 **Whether the new defects cost anything.** Four experiments in
 `fixtures/validation/descriptions.json`, run on 2026-10-08 against
@@ -529,33 +529,33 @@ each, with the ambiguous ones the bad wording would plausibly lose.
 
 | Rule | Bad question | Sure | Fixed question | Sure | Outcome |
 |---|---|---|---|---|---|
-| JEV110 Shallow, Medium, Deep | 4 of 12 | 0.76 | 12 of 12 | 0.89 | Proven. `warning` |
-| JEV012 "Refund?" | 9 of 12 | 0.70 | 10 of 12 | 0.85 | Advisory. `info` |
-| JEV011 true: Yes, false: No | 11 of 12 | 0.83 | 11 of 12 | 0.91 | No cost found. `info` |
-| JEV011 billing: Billing | 12 of 12 | 0.98 | 12 of 12 | 1.00 | No cost found. `info` |
+| DEC110 Shallow, Medium, Deep | 4 of 12 | 0.76 | 12 of 12 | 0.89 | Proven. `warning` |
+| DEC012 "Refund?" | 9 of 12 | 0.70 | 10 of 12 | 0.85 | Advisory. `info` |
+| DEC011 true: Yes, false: No | 11 of 12 | 0.83 | 11 of 12 | 0.91 | No cost found. `info` |
+| DEC011 billing: Billing | 12 of 12 | 0.98 | 12 of 12 | 1.00 | No cost found. `info` |
 
 The short scale is the largest cost measured on any wording rule in this
-project. The two `JEV011` arms found none, because "billing" and "yes"
+project. The two `DEC011` arms found none, because "billing" and "yes"
 already say what the description would: the cost that independent runs
 report is in names that say nothing, "a": "A", which is what 10 of the 10
 public cases were and what no experiment with a sensible name can show.
 
 **The Jev-backed checks on real questions.** The same day, every question
-read from sample 3 was sent through `JEV301` to `JEV308` with the cutoffs as
+read from sample 3 was sent through `DEC301` to `DEC308` with the cutoffs as
 they stand: 252 calls, 171,299 input tokens, every probability saved in
 `fixtures/public-sample-3/reviews.json` by hash. The first scoring of those
 checks on questions their author did not write. Read by hand:
 
 | Check | Asked | Fired | Right |
 |---|---|---|---|
-| JEV301 counting | 252 | 3 | 3, the three questions labelled `JEV102` |
-| JEV302 undefined boundary | 132 | 6 | 6, two of them the `JEV112` borderlines |
-| JEV303 overlapping options | 78 | 13 | 13 plausible, category sets an input could fit twice |
-| JEV307 ordered options | 53 | 5 | 5, all tiers such as low, medium, high |
-| JEV304, JEV305, JEV306, JEV308 | 28 to 156 | 0 | |
+| DEC301 counting | 252 | 3 | 3, the three questions labelled `DEC102` |
+| DEC302 undefined boundary | 132 | 6 | 6, two of them the `DEC112` borderlines |
+| DEC303 overlapping options | 78 | 13 | 13 plausible, category sets an input could fit twice |
+| DEC307 ordered options | 53 | 5 | 5, all tiers such as low, medium, high |
+| DEC304, DEC305, DEC306, DEC308 | 28 to 156 | 0 | |
 
-No cutoff moved. `JEV303` fires on one Choice in six and stays `info`, as
-the first sample already said. `JEV309` to `JEV312` are still unmeasured
+No cutoff moved. `DEC303` fires on one Choice in six and stays `info`, as
+the first sample already said. `DEC309` to `DEC312` are still unmeasured
 on real code.
 
 ### Not built
@@ -572,18 +572,18 @@ runs it, and it uses the user's own API key.
 
 | Code | Name | Default | Fires when |
 |---|---|---|---|
-| JEV301 | jev-counting | warning | Jev reads the question as needing counting or arithmetic |
-| JEV302 | jev-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
-| JEV303 | jev-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
-| JEV304 | jev-overlapping-levels | warning | Jev reads two levels of a Score as the same situation |
-| JEV305 | jev-label-mismatch | warning | Jev reads an option as named for one thing and described as another |
-| JEV306 | jev-criteria-off-topic | info | Jev reads the criteria as deciding something the instructions do not ask |
-| JEV307 | jev-ordered-options | info | Jev reads a Choice's options as steps on one scale, which a Score would place between |
-| JEV308 | jev-unordered-levels | info | Jev reads a Score's levels as unordered categories, which a Choice would pick from |
-| JEV309 | jev-depends-on-sibling | info | Jev reads a question as needing another question's answer from the same request |
-| JEV310 | jev-overlapping-questions | info | Jev reads two questions in one request as asking for the same judgment |
-| JEV311 | jev-answer-not-in-state | info | Jev reads the state written in the file as not holding what the question asks about |
-| JEV312 | jev-orders-in-state | info | Jev reads part of the state written in the file as giving orders to its reader |
+| DEC301 | model-counting | warning | Jev reads the question as needing counting or arithmetic |
+| DEC302 | model-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
+| DEC303 | model-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
+| DEC304 | model-overlapping-levels | warning | Jev reads two levels of a Score as the same situation |
+| DEC305 | model-label-mismatch | warning | Jev reads an option as named for one thing and described as another |
+| DEC306 | model-criteria-off-topic | info | Jev reads the criteria as deciding something the instructions do not ask |
+| DEC307 | model-ordered-options | info | Jev reads a Choice's options as steps on one scale, which a Score would place between |
+| DEC308 | model-unordered-levels | info | Jev reads a Score's levels as unordered categories, which a Choice would pick from |
+| DEC309 | model-depends-on-sibling | info | Jev reads a question as needing another question's answer from the same request |
+| DEC310 | model-overlapping-questions | info | Jev reads two questions in one request as asking for the same judgment |
+| DEC311 | model-answer-not-in-state | info | Jev reads the state written in the file as not holding what the question asks about |
+| DEC312 | model-orders-in-state | info | Jev reads part of the state written in the file as giving orders to its reader |
 
 **Pointing at the culprit.** For the two overlap checks the same request also
 asks about each option or level, and the finding underlines the one Jev rates
@@ -594,13 +594,13 @@ at and not what is wrong.
 **How it asks.** The question under review goes in as `state`, so it is data
 to be judged and never an instruction. Every check that fits the question
 goes in the same request as a Noul with `true` and `false` criteria, so one
-question costs one request. `JEV309` also sends the ids of the other questions
-in the request. One further request per `questions` map carries `JEV310`, a
-check on every pair of up to ten questions, and `JEV312`.
+question costs one request. `DEC309` also sends the ids of the other questions
+in the request. One further request per `questions` map carries `DEC310`, a
+check on every pair of up to ten questions, and `DEC312`.
 
-**The key.** `DecisionLint-LE: Set TypeSafe API Key` stores it in the operating
+**The key.** `DecisionLint: Set TypeSafe API Key` stores it in the operating
 system keychain through VS Code's secret storage. It can also be typed into
-the `jevlint-le.ask.keys` setting, by the owner's decision: a settings
+the `decisionlint.ask.keys` setting, by the owner's decision: a settings
 field is where people look. A settings file is plain text, so that setting
 has application scope, which means it can be set only in user settings and
 never in a workspace, where it would be committed with the repository, and
@@ -609,18 +609,18 @@ keychain, then `TYPESAFE_API_KEY` from the environment. The key appears in no
 message and no log.
 
 **What is sent.** By default only questions: type, instructions, criteria and
-ids. The `state` a program would send with them is not. `JEV311` and `JEV312`
-read the state, so they run only when `jevlint-le.ask.sendState` is on, and
+ids. The `state` a program would send with them is not. `DEC311` and `DEC312`
+read the state, so they run only when `decisionlint.ask.sendState` is on, and
 only where the state is written out in the file, which in practice means
 request JSON files.
 
 **What it will not send.** A question with any part built at runtime, since
 Jev would be judging something other than what runs. Anything in an untrusted
-workspace. More than `jevlint-le.ask.maxCalls` requests in one run, 25 by
+workspace. More than `decisionlint.ask.maxCalls` requests in one run, 25 by
 default. Each of these is counted in the summary, so a short run never looks
 like a complete one.
 
-**A confirmation, when asked for.** With `jevlint-le.ask.confirm` on, the
+**A confirmation, when asked for.** With `decisionlint.ask.confirm` on, the
 command first shows how many requests it will make, an estimate of the input
 tokens and the cost, whether the state is included, and what it is holding
 back, and waits for a yes. It is off by default, by the owner's decision:
@@ -633,7 +633,7 @@ errs high.
 **After an edit** the findings are removed. They were about text that has
 changed.
 
-**The model is pinned** to `jev-1.13.0` in `jevlint-le.ask.models`, because the
+**The model is pinned** to `jev-1.13.0` in `decisionlint.ask.models`, because the
 cutoffs below were set on that version.
 
 ### How the cutoffs were set
@@ -647,29 +647,29 @@ saved numbers: a check may not flag a question the corpus calls good.
 
 | Check | Cutoff | Bad caught | Lowest bad | Highest good |
 |---|---|---|---|---|
-| JEV301 counting | 0.96 | 9 of 10 | 0.84 | 0.95 |
-| JEV302 undefined boundary | 0.70 | 5 of 5 | 0.79 | 0.54 |
-| JEV303 overlapping options | 0.75 | 8 of 8 | 0.75 | 0.69 |
-| JEV304 overlapping levels | 0.60 | 5 of 8 | 0.22 | 0.25 |
-| JEV305 label mismatch | 0.70 | 8 of 8 | 0.83 | 0.22 |
-| JEV306 criteria off topic | 0.70 | 8 of 8 | 0.74 | 0.48 |
-| JEV307 ordered options | 0.80 | 8 of 8 | 0.83 | 0.21 |
-| JEV308 unordered levels | 0.60 | 8 of 8 | 0.72 | 0.42 |
-| JEV309 depends on sibling | 0.80 | 7 of 8 | 0.56 | 0.68 |
-| JEV310 overlapping questions | 0.15 | 4 of 4 | 0.19 | 0.05 |
-| JEV311 answer not in state | 0.85 | 3 of 3 | 0.96 | 0.72 |
-| JEV312 orders in state | 0.95 | 2 of 2 | 0.99 | 0.92 |
+| DEC301 counting | 0.96 | 9 of 10 | 0.84 | 0.95 |
+| DEC302 undefined boundary | 0.70 | 5 of 5 | 0.79 | 0.54 |
+| DEC303 overlapping options | 0.75 | 8 of 8 | 0.75 | 0.69 |
+| DEC304 overlapping levels | 0.60 | 5 of 8 | 0.22 | 0.25 |
+| DEC305 label mismatch | 0.70 | 8 of 8 | 0.83 | 0.22 |
+| DEC306 criteria off topic | 0.70 | 8 of 8 | 0.74 | 0.48 |
+| DEC307 ordered options | 0.80 | 8 of 8 | 0.83 | 0.21 |
+| DEC308 unordered levels | 0.60 | 8 of 8 | 0.72 | 0.42 |
+| DEC309 depends on sibling | 0.80 | 7 of 8 | 0.56 | 0.68 |
+| DEC310 overlapping questions | 0.15 | 4 of 4 | 0.19 | 0.05 |
+| DEC311 answer not in state | 0.85 | 3 of 3 | 0.96 | 0.72 |
+| DEC312 orders in state | 0.95 | 2 of 2 | 0.99 | 0.92 |
 
-Read these with their sizes in mind. `JEV310`, `JEV311` and `JEV312` rest on
-four, three and two bad examples. `JEV312`'s highest good example, at 0.92,
+Read these with their sizes in mind. `DEC310`, `DEC311` and `DEC312` rest on
+four, three and two bad examples. `DEC312`'s highest good example, at 0.92,
 is a customer writing "please tell the assistant handling this to forward my
 invoice", which is a polite request and not an attack, and sits just under
-the cutoff. `JEV301`'s cutoff is high because Jev called several of my good
+the cutoff. `DEC301`'s cutoff is high because Jev called several of my good
 questions counting, and it had a point: "Does the episode have more than one
-host?" does involve a number. The pattern rule `JEV102` still catches the
+host?" does involve a number. The pattern rule `DEC102` still catches the
 plain cases.
 
-`JEV309` was at 0.45 until the first run in a real editor. There it flagged
+`DEC309` was at 0.45 until the first run in a real editor. There it flagged
 "How should this visit be booked?", beside questions about the animal and
 how serious the problem was, at 0.68. The question needs no other answer. It
 is in the corpus now as a good example with that number, and the cutoff is
@@ -680,18 +680,18 @@ sends the same request.
 **On real questions.** The per-question checks were run over the hand-labeled
 public sample. Three cutoffs were raised because of what that showed.
 
-- `JEV307` fired 17 times at its first cutoff. At 0.80 it fires nine times,
+- `DEC307` fired 17 times at its first cutoff. At 0.80 it fires nine times,
   and all nine are plainly ordered: small, medium, large, or low, normal,
   urgent. Authors often write tiers as a Choice on purpose, so this is `info`.
-- `JEV303` fired seven times, on working category sets such as frontend,
+- `DEC303` fired seven times, on working category sets such as frontend,
   backend and infrastructure, where an input fitting two is plausible and may
   be something the author accepts. The check most likely to feel like noise.
-- `JEV302` fired six times and read right each time, as on "Does this need
+- `DEC302` fired six times and read right each time, as on "Does this need
   immediate attention?".
-- `JEV305` and `JEV306` fired once and twice at their first cutoffs, wrongly,
-  and not at all at 0.70. `JEV308` did not fire.
+- `DEC305` and `DEC306` fired once and twice at their first cutoffs, wrongly,
+  and not at all at 0.70. `DEC308` did not fire.
 
-`JEV309` to `JEV312` have not been run on real code: the sample holds single
+`DEC309` to `DEC312` have not been run on real code: the sample holds single
 questions without their requests or their state.
 
 The per-question checks were run again over public sample 3 on 2026-10-08,
@@ -703,14 +703,14 @@ wording rules section: 27 firings, read by hand, none wrong, no cutoff moved.
 
 | Check | Bad question | Confidence | Fixed question | Confidence |
 |---|---|---|---|---|
-| JEV303 overlapping options | 10 of 10 | 0.86 | 10 of 10 | 1.00 |
-| JEV304 overlapping levels | 6 of 10 | 0.58 | 9 of 10 | 0.91 |
-| JEV305 label mismatch | 9 of 10 | 0.24 | 10 of 10 | 0.95 |
-| JEV306 criteria off topic | 10 of 10 | 0.86 | 10 of 10 | 0.98 |
+| DEC303 overlapping options | 10 of 10 | 0.86 | 10 of 10 | 1.00 |
+| DEC304 overlapping levels | 6 of 10 | 0.58 | 9 of 10 | 0.91 |
+| DEC305 label mismatch | 9 of 10 | 0.24 | 10 of 10 | 0.95 |
+| DEC306 criteria off topic | 10 of 10 | 0.86 | 10 of 10 | 0.98 |
 
 Overlapping levels cost answers. A mismatched label takes Jev's confidence
 from 0.95 to 0.24, which is the largest effect measured in this project. The
-other two cost confidence only. `JEV307` to `JEV312` are unmeasured and
+other two cost confidence only. `DEC307` to `DEC312` are unmeasured and
 `info`.
 
 **What this is not.** Jev judging a question is still Jev, with the
@@ -734,9 +734,9 @@ repository, none seen before the reader was written.
 | Questions read | 795 |
 | Questions with a part built at runtime | 390, about half, the same share as JavaScript |
 | Crashes | 0 |
-| Findings | `JEV004` 91, `JEV001` 50, `JEV009` 11, `JEV006` 6, `JEV112` 6, `JEV102` 1 |
+| Findings | `DEC004` 91, `DEC001` 50, `DEC009` 11, `DEC006` 6, `DEC112` 6, `DEC102` 1 |
 
-Every `JEV006`, `JEV009`, `JEV102` and `JEV112` finding was read, with a
+Every `DEC006`, `DEC009`, `DEC102` and `DEC112` finding was read, with a
 sample of the other two. None was wrong about the code in front of it.
 Several sit in other projects' test suites, where the mistake is planted on
 purpose.
@@ -753,7 +753,7 @@ variable, and a `questions` dict passed to a function under another name.
 
 ## Command line
 
-It is one npm package, `decisionlint-le`, assembled in
+It is one npm package, `decisionlint`, assembled in
 `npm/`, that is both the command line and the MCP server. `src/cli/` wraps
 `lintText` in a process: it finds
 files, lints each with the reader its extension calls for, prints, and sets
@@ -766,9 +766,9 @@ under `--ask`. The probe is not in it.
 | Formats | `stylish`, the default, grouped by file for a person to read. `compact`, one finding per line as `path:line:column`. `json`, with one-based positions, the rule name and its docs link. `github`, workflow annotations. `sarif`, version 2.1.0, for code scanning. `junit`, one suite per file, failing only on errors |
 | Integrations | `action.yml`, a composite GitHub Action, and `.pre-commit-hooks.yaml`. Both run the published package through `npx` at the version they ship with. Neither has been run by its host tool yet |
 | Fixing | `--fix` writes the fixes marked safe, then reports what is left. Never with standard input or `--mcp` |
-| Files | `exclude` in `decisionlint-le.json` leaves files out, relative to that file. `--no-error-on-unmatched-pattern` passes a run with nothing to lint |
+| Files | `exclude` in `decisionlint.json` leaves files out, relative to that file. `--no-error-on-unmatched-pattern` passes a run with nothing to lint |
 | Exit status | 0 passed. 1 an error was found, or more warnings than `--max-warnings`. 2 the run could not be done as asked |
-| Settings | The `decisionlint-le.json` nearest each file. `--config` names one to use for every file instead. `--rule CODE=level`, repeatable, overrides either |
+| Settings | The `decisionlint.json` nearest each file. `--config` names one to use for every file instead. `--rule CODE=level`, repeatable, overrides either |
 | Standard input | `--stdin-filename` lints piped text under a file name, which picks the reader |
 
 It refuses where passing would mislead. An unknown option is an error and
@@ -785,7 +785,7 @@ process on `samples/`.
 
 ### A page per rule
 
-Built for 0.3.0. `docs/rules/JEV004.md` and its 34 siblings, plus an index,
+Built for 0.3.0. `docs/rules/DEC004.md` and its 34 siblings, plus an index,
 generated by `bun run docs:rules`. Each has the rule's meaning from the
 README table, whether it is on, what kind of rule it is, a flagged example
 with the linter's real message, an example that is not flagged, whether
@@ -801,7 +801,7 @@ Not built: the same pages on letools.dev.
 ### The project's own copy in the editor
 
 Built for 0.3.0, as Biome's extension does it. A project that lists
-`decisionlint-le` in its dev dependencies is linted in the editor by that copy.
+`decisionlint` in its dev dependencies is linted in the editor by that copy.
 
 | The project has | The editor lints with |
 |---|---|
@@ -833,7 +833,7 @@ identical requests for identical text, and a test compares them.
 | | Behaviour |
 |---|---|
 | Key | `TYPESAFE_API_KEY` in the environment, and nowhere else. `--ask` without it exits 2 before a file is read |
-| Consent | The flag. No setting in `decisionlint-le.json` turns it on, which stands in for workspace trust |
+| Consent | The flag. No setting in `decisionlint.json` turns it on, which stands in for workspace trust |
 | Plan | `--ask-plan` prints what would be sent and sends nothing. Under `--ask` the same count goes to standard error before the first request |
 | Limit | `--ask-max-calls`, default 25, for the whole run and not per file as in the editor. A run that needed more exits 2 |
 | State | Sent only with `--ask-send-state` |
@@ -841,7 +841,7 @@ identical requests for identical text, and a test compares them.
 | Failure | A rejected key, a rejected request, a busy or failing service after three tries, a reply that is not a Jev reply, no answer in 30 seconds, or an interrupt stops the sending. What was found is printed, the reason and the count answered of the count planned go to standard error, and the exit is 2 |
 | Output | Jev findings join each file's findings. `totals.ask` is present only when asked for |
 
-Not built: the model and state settings in `decisionlint-le.json`, so a team's
+Not built: the model and state settings in `decisionlint.json`, so a team's
 editors and its CI can still ask different models. A price in the plan line,
 because a stale one in a CI log reads as a quote. The probe.
 
@@ -881,7 +881,7 @@ The key is found the way `cli/dotenv.ts` finds it: `TYPESAFE_API_KEY` or
 `OPENAI_API_KEY` in the environment the client started the server with,
 then `.env.local`, then `.env` in its working directory. Never a tool
 argument, so no key lands in an agent's transcript, and never a workspace
-setting or `decisionlint-le.json`, for the reason the command line refuses those.
+setting or `decisionlint.json`, for the reason the command line refuses those.
 No answer carries the key: the report names where it came from.
 
 The server is listed on the MCP registry from `server.json` at the root,
@@ -892,15 +892,15 @@ The extension also offers the server to the editor it runs in, through
 setup. The command line bundle ships in the VSIX as `dist/cli.js` for this.
 An editor without agent mode is left alone.
 
-From 0.7.0 it is also a package of its own, `decisionlint-le-mcp`, as every
+From 0.7.0 it is also a package of its own, `decisionlint-mcp`, as every
 sibling's server is: one `bin` that is the server, with no flag. Until then
-the server was reached only as `decisionlint-le --mcp`, on the reasoning that two
+the server was reached only as `decisionlint --mcp`, on the reasoning that two
 packages would be two versions to keep equal. What changed the decision: a
 client that installs by package name, and an index that reads one, starts
-`decisionlint-le` bare and gets a linter that exits, and the family's convention
+`decisionlint` bare and gets a linter that exits, and the family's convention
 is what the outside world pattern-matches. The two versions are kept equal
 the way the family keeps them: `build-npm.js` writes both from one source and
-CI fails if they differ. `decisionlint-le` keeps `--mcp` for a project that already
+CI fails if they differ. `decisionlint` keeps `--mcp` for a project that already
 pins it, and the VSIX starts its own bundled copy that way.
 
 A bad argument, an unknown tool or a tool that throws is a failed call with
@@ -938,10 +938,10 @@ used. So the reader holds back:
 | Questions read | 901 | 732 |
 | With a part built at runtime | 233 | 386 |
 | Crashes | 0 | 0 |
-| `JEV001` unpinned model | 89 | 32 |
-| `JEV004` no fallback | 90 | 38 |
-| `JEV006` wrong shape | 37 | 23 |
-| `JEV009` one option or level | 33 | 23 |
+| `DEC001` unpinned model | 89 | 32 |
+| `DEC004` no fallback | 90 | 38 |
+| `DEC006` wrong shape | 37 | 23 |
+| `DEC009` one option or level | 33 | 23 |
 
 The shape findings that are not plain JSON were each read, 30 in all. After
 the changes above none was wrong about the code in front of it. One Go
@@ -993,7 +993,7 @@ were written.
 **Text with runtime parts** keeps its fixed text, with a placeholder where
 each runtime part goes: template literals, f-strings, `str.format`,
 `format!`, `Sprintf`, and strings joined with `+`. The rules that the fixed
-text can answer run on it. `JEV112` does not, because a slot may be where
+text can answer run on it. `DEC112` does not, because a slot may be where
 the line is stated. The question is still counted as not fully read, and Jev
 is never shown it.
 
@@ -1163,7 +1163,7 @@ the other sixteen.
   things of every tool, such as twelve locales and a Rust crate, that are not
   true of this one. The registry now declares what this tool has: an npm
   package for the command line and one for the MCP server, its Open VSX
-  namespace, its MCP registry listing as `io.github.nolindnaidoo/decisionlint-le`,
+  namespace, its MCP registry listing as `io.github.nolindnaidoo/decisionlint`,
   and that one command sends on request.
 - **The fleet check names it and does not compare it.** `OUTSIDE_FLEET` in the
   site's `scripts/check-fleet.ts` lists this repo, and a test there holds every
@@ -1185,7 +1185,7 @@ Not planned for now: a Rust port of the command line, which every sibling
 has. The TypeScript one lints thousands of files in seconds, and a port would
 be every reader and rule kept in agreement twice.
 
-The MCP registry listing, `io.github.nolindnaidoo/decisionlint-le`, is in
+The MCP registry listing, `io.github.nolindnaidoo/decisionlint`, is in
 `server.json` and goes out with the npm job of the Release workflow from
 0.6.0, pointing at the npm package with `--mcp`. It was held back until the
 server gave an agent something to act on: the fixes, `fix_text` and
@@ -1229,16 +1229,16 @@ choices, distinct adjacent levels, a fallback such as `other`. A message
 about a Luna question says Luna, and one about an AI SDK question says "the
 model", since the SDK routes to either vendor.
 
-**What does not.** The two API-limit rules, `JEV002` and `JEV003`: OpenAI
-publishes no limits. `JEV001`: there is no alias to pin against yet. The
+**What does not.** The two API-limit rules, `DEC002` and `DEC003`: OpenAI
+publishes no limits. `DEC001`: there is no alias to pin against yet. The
 shape rule reports a Decisions mistake in OpenAI's own field names, and a
 mistyped `predicate` is caught and fixed; a shape mistake in the AI SDK's
 form cannot be told from a foreign client and is left alone.
 
-**Asking Luna.** `--ask-model gpt-6-luna`, or `jevlint-le.ask.models` in the
+**Asking Luna.** `--ask-model gpt-6-luna`, or `decisionlint.ask.models` in the
 editor, sends the same checks to OpenAI's Decisions API with the key in
 `OPENAI_API_KEY`, or in the keychain through **Set OpenAI API Key**, or in
-`jevlint-le.ask.keys`. `ask/provider.ts` is the one file that knows
+`decisionlint.ask.keys`. `ask/provider.ts` is the one file that knows
 the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
@@ -1290,8 +1290,8 @@ The platforms differ in three ways the rules do not yet know:
    `gpt-6-luna`, `openai/gpt-6-luna`, `gpt-6-luna-decisions`,
    `openai/gpt-6-luna-decisions` and a dated `-20261006`. Other platforms
    use tier suffixes (`d1:free`), `@cf/` paths, Azure deployment names,
-   Ollama tags and Hugging Face repo ids. `JEV001` knows two aliases and
-   `JEV013` one version pattern, and `ask/provider.ts` picks the host by
+   Ollama tags and Hugging Face repo ids. `DEC001` knows two aliases and
+   `DEC013` one version pattern, and `ask/provider.ts` picks the host by
    matching the id against `gpt-6-luna`.
 3. **The path and the model id do not say which shape a request is in.**
    Ollaya serves TypeSafe bodies on `/v1/decisions`, Eden AI on
@@ -1313,8 +1313,8 @@ says them. Adding a platform is a row and a test, and never a change to a
 rule.
 
 **D2. The target of a request is resolved from the file, and resolved is not
-guessed.** In order: the `target` setting in `decisionlint-le.json` or
-`jevlint-le.target`, for a project that sends everything to one platform;
+guessed.** In order: the `target` setting in `decisionlint.json` or
+`decisionlint.target`, for a project that sends everything to one platform;
 a base URL written in the file whose host a target claims; the model id,
 where its spelling names a platform (`@cf/`, `~typesafe/`, a `liquid`
 model) or a family of them (`openai/` is every gateway, so it resolves to
@@ -1326,9 +1326,9 @@ limit, the rule is silent.
 
 **D3. A model id is parsed, never matched.** `lint/models.ts` reads an id
 into its family, its version, whether it floats, and the spelling it was
-written in. `JEV001` fires on every floating spelling, and its fix pins in
+written in. `DEC001` fires on every floating spelling, and its fix pins in
 the same spelling: `~typesafe/jev-latest` becomes `typesafe/jev-1.13`, as
-OpenRouter writes it, and `jev-latest` becomes `jev-1.13.0`. `JEV013`
+OpenRouter writes it, and `jev-latest` becomes `jev-1.13.0`. `DEC013`
 compares the version out of any spelling. A Hugging Face repo id, an Ollama
 tag or a deployment name is not a Jev id, so neither rule reads it.
 
@@ -1337,13 +1337,13 @@ tag or a deployment name is not a Jev id, so neither rule reads it.
 shape, the endpoint and the name of the environment variable that holds the
 key. A vendor with a fixed host, TypeSafe, OpenAI, Liquid, OpenRouter, LLM
 Gateway and Vercel, needs nothing set. A runtime the user hosts, llama.cpp,
-vLLM, Ollaya, LiteLLM, needs an endpoint, from `jevlint-le.ask.endpoint` in
+vLLM, Ollaya, LiteLLM, needs an endpoint, from `decisionlint.ask.endpoint` in
 the editor or `--ask-endpoint` on the command line, and the shape to send is
 the target's or, for a host the table does not know, `--ask-shape`. A model
 id that resolves to no fixed host, such as `openai/gpt-6-luna-decisions`
 with no endpoint set, is refused before anything is sent: routed by the
 old rule it would carry the OpenAI key to `api.openai.com` on a request that
-fails there. The endpoint is never read from `decisionlint-le.json`, for the
+fails there. The endpoint is never read from `decisionlint.json`, for the
 reason the key is not: a cloned repository could point the key at any host.
 The reply is read against the request, in the shape that was sent, as today.
 
@@ -1373,7 +1373,7 @@ version is finished in one pull request with its changelog dated.
 
 | Phase | Builds | Done when |
 |---|---|---|
-| P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `JEV001` and `JEV013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `JEV003`, an unknown target changes nothing |
+| P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `DEC001` and `DEC013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `DEC003`, an unknown target changes nothing |
 | P2 | `ask/provider.ts` from the target table, `jev.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
 | P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go is still to do |
 | P4 | A URL in the file resolves the target, over the model id and under the setting; the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
@@ -1397,10 +1397,10 @@ version is finished in one pull request with its changelog dated.
 
 | Code | Name | Fires when | Notes |
 |---|---|---|---|
-| JEV201 | batchable | Two or more calls in one function pass the same `state` expression | Vendor cookbook: one call with 13 questions was 12.2x cheaper and 10.0x faster |
-| JEV202 | ungated-answer | A Choice or Score answer is used and `confidence` is never read | Needs data flow. Highest false-positive risk in this spec |
-| JEV203 | large-state | A literal state exceeds a size bound | "Large state full of irrelevant detail". Bound is proposed |
-| JEV204 | option-order | A Choice whose options were never tested in another order | Vendor: Jev leans toward the first option. Cannot be checked statically. Listed so it is not forgotten |
+| DEC201 | batchable | Two or more calls in one function pass the same `state` expression | Vendor cookbook: one call with 13 questions was 12.2x cheaper and 10.0x faster |
+| DEC202 | ungated-answer | A Choice or Score answer is used and `confidence` is never read | Needs data flow. Highest false-positive risk in this spec |
+| DEC203 | large-state | A literal state exceeds a size bound | "Large state full of irrelevant detail". Bound is proposed |
+| DEC204 | option-order | A Choice whose options were never tested in another order | Vendor: Jev leans toward the first option. Cannot be checked statically. Listed so it is not forgotten |
 
 More sources: the Vercel AI SDK's `experimental_evaluate`.
 
@@ -1436,7 +1436,7 @@ Read from the raw documentation pages on 2026-10-04, not through a summarizer:
 
 Measured on 2026-10-04 against the 14 embedded TypeScript examples in
 TypeSafe's docs pages: 28 of 28 questions found, none unreadable, no rule other
-than `JEV004` fired.
+than `DEC004` fired.
 
 ### What failing on purpose found
 
@@ -1459,10 +1459,10 @@ Each is fixed, and each test was seen to fail before its fix.
 ### Not verified
 
 - **Where `oxlint-plugin-jev` reads its `model` setting.** The README lists the
-  setting and does not show its place in the config. `JEV001` therefore fires
+  setting and does not show its place in the config. `DEC001` therefore fires
   on an alias written anywhere in the file and never on an absent `model`.
 - **What the API does with Noul criteria keys other than `true` and `false`.**
-  `JEV006` reports them as undocumented.
+  `DEC006` reports them as undocumented.
 - **The rendered UI.** The extension runs in a real VS Code under test, both
   from source and as an installed VSIX, and the tests read its diagnostics
   through the API. Nobody has looked at the status bar, the squiggles or the
@@ -1486,9 +1486,12 @@ Each is fixed, and each test was seen to fail before its fix.
   written per model version, so wording rules will need a version dimension.
 - **R2. Vendor ships validation.** TypeSafe could add question validation to
   the API or SDK. The SDK already throws on a Choice given an array.
-- **R3. Name.** Decided 2026-10-04: `decisionlint-le`, in the LE family. "Jev" is
+- **R3. Name.** Decided 2026-10-04: `jevlint-le`, in the LE family. "Jev" is
   TypeSafe's product name and its trademark policy has not been checked.
   `jevlint` alone is taken on GitHub and PyPI by tools that are not this one.
+  Revised 2026-10-14: `decisionlint`, standalone, the whole word on every
+  surface, because the exact name wins a registry search and it was free
+  everywhere. D6 in `docs/rename-to-decisionlint.md`.
 - **R4. Small audience.** API access is gated, so the number of people writing
   Jev questions today is unknown.
 

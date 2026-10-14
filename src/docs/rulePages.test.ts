@@ -12,7 +12,7 @@ const examples: RuleExamples = JSON.parse(
 	readFileSync('fixtures/rule-examples.json', 'utf8'),
 );
 const pages = renderRulePages(examples);
-const offline = RULE_CODES.filter((code) => !code.startsWith('JEV3'));
+const offline = RULE_CODES.filter((code) => !code.startsWith('DEC3'));
 
 describe('the rule examples', () => {
 	it('has one for every rule the linter can run offline, and for no other', () => {
@@ -49,10 +49,15 @@ describe('the rule examples', () => {
 });
 
 describe('the rule pages', () => {
-	it('has a page for every rule and an index', () => {
+	it('has a page for every rule, a pointer from each old code, and an index', () => {
 		expect(Object.keys(pages).sort()).toEqual(
-			['README.md', ...RULE_CODES.map((code) => `${code}.md`)].sort(),
+			[
+				'README.md',
+				...RULE_CODES.map((code) => `${code}.md`),
+				...RULE_CODES.map((code) => `JEV${code.slice(3)}.md`),
+			].sort(),
 		);
+		expect(pages['JEV004.md']).toContain('[DEC004](DEC004.md)');
 	});
 
 	it('are on disk as they would be written now', () => {
@@ -73,21 +78,21 @@ describe('the rule pages', () => {
 	});
 
 	it('shows the message the linter really gives for the bad example', () => {
-		expect(pages['JEV004.md']).toContain(
+		expect(pages['DEC004.md']).toContain(
 			'> This Choice has no fallback option, so',
 		);
 	});
 
 	it('says which fixes are applied unasked and which are not', () => {
-		expect(pages['JEV006.md']).toContain('`--fix` and fix on save mend this');
-		expect(pages['JEV004.md']).toContain('never applied by `--fix`');
-		expect(pages['JEV005.md']).toContain('There is no automatic fix');
+		expect(pages['DEC006.md']).toContain('`--fix` and fix on save mend this');
+		expect(pages['DEC004.md']).toContain('never applied by `--fix`');
+		expect(pages['DEC005.md']).toContain('There is no automatic fix');
 	});
 
 	it('tells a Jev-backed rule apart: what is asked, and the cutoff', () => {
-		expect(pages['JEV303.md']).toContain('## What Jev is asked');
-		expect(pages['JEV303.md']).toContain('0.75 or more');
-		expect(pages['JEV310.md']).toContain('0.15 or more');
-		expect(pages['JEV303.md']).not.toContain('## Flagged');
+		expect(pages['DEC303.md']).toContain('## What Jev is asked');
+		expect(pages['DEC303.md']).toContain('0.75 or more');
+		expect(pages['DEC310.md']).toContain('0.15 or more');
+		expect(pages['DEC303.md']).not.toContain('## Flagged');
 	});
 });

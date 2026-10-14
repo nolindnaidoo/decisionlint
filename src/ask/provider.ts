@@ -108,7 +108,7 @@ type Noul = Readonly<{
 	criteria?: Readonly<{ true: string; false: string }>;
 }>;
 
-// A check's id can hold dots, `JEV303.0`, and what OpenAI allows in a name is
+// A check's id can hold dots, `DEC303.0`, and what OpenAI allows in a name is
 // not published. Dots travel as a run of underscores no id contains.
 const DOT = '__';
 const toWireName = (id: string): string => id.split('.').join(DOT);

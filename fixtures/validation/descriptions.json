@@ -1,6 +1,6 @@
 [
   {
-    "rule": "JEV011",
+    "rule": "DEC011",
     "name": "options described as their own names against described options",
     "cases": [
       { "state": "I was charged twice for March.", "expected": "billing" },
@@ -42,7 +42,7 @@
     }
   },
   {
-    "rule": "JEV011",
+    "rule": "DEC011",
     "name": "Noul criteria that say yes and no against criteria that describe the cases",
     "cases": [
       { "state": "Your delivery was two days late and nobody told me.", "expected": true },
@@ -83,7 +83,7 @@
     }
   },
   {
-    "rule": "JEV012",
+    "rule": "DEC012",
     "name": "a one-word instruction against the question written out",
     "cases": [
       { "state": "I want a refund for the broken kettle.", "expected": true },
@@ -113,7 +113,7 @@
     }
   },
   {
-    "rule": "JEV110",
+    "rule": "DEC110",
     "name": "a short scale of bare words against described levels",
     "cases": [
       { "state": "LGTM.", "expected": 0 },

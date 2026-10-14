@@ -184,9 +184,9 @@ function listen(name: string) {
 export const languages = {
 	// Each collection is its own namespace, as in the editor. The linter's is
 	// stored under the bare uri, any other under `uri#name`.
-	createDiagnosticCollection: (name = 'decisionlint-le') => {
+	createDiagnosticCollection: (name = 'decisionlint') => {
 		const key = (uri: { toString(): string }) =>
-			name === 'decisionlint-le' ? uri.toString() : `${uri.toString()}#${name}`;
+			name === 'decisionlint' ? uri.toString() : `${uri.toString()}#${name}`;
 		return {
 			set: (uri: { toString(): string }, items: unknown[]) =>
 				_state.diagnostics.set(key(uri), items),
@@ -194,7 +194,7 @@ export const languages = {
 				_state.diagnostics.delete(key(uri)),
 			clear: () => {
 				for (const stored of [..._state.diagnostics.keys()]) {
-					const own = name === 'decisionlint-le' ? !stored.includes('#') : stored.endsWith(`#${name}`);
+					const own = name === 'decisionlint' ? !stored.includes('#') : stored.endsWith(`#${name}`);
 					if (own) _state.diagnostics.delete(stored);
 				}
 			},

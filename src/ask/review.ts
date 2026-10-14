@@ -103,8 +103,8 @@ type Prepared = Readonly<{
 
 const REVIEW_CODES: ReadonlyArray<RuleCode> = [
 	...REVIEWS.map((review) => review.code),
-	'JEV310',
-	'JEV312',
+	'DEC310',
+	'DEC312',
 ];
 
 // Measured once: the calibration run's request bodies came to about 2.2
@@ -186,14 +186,14 @@ function mapJob(
 		request,
 		read: (reply, report) => {
 			for (const found of readRequestAnswers(ids, reply.answers)) {
-				const pair = found.code === 'JEV310';
+				const pair = found.code === 'DEC310';
 				const span = pair
 					? spanOf(found.second)
 					: (map.stateKey ?? map.entries[0]?.idSpan);
 				if (!span) continue;
 				const message = pair
-					? REQUEST_REVIEWS.JEV310.message(found.first)
-					: REQUEST_REVIEWS.JEV312.message;
+					? REQUEST_REVIEWS.DEC310.message(found.first)
+					: REQUEST_REVIEWS.DEC312.message;
 				report(
 					found.code,
 					forProvider(

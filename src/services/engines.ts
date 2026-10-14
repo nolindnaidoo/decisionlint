@@ -85,7 +85,7 @@ export function createEngines(deps: Deps): Engines {
 	const instead = (installed: Installed, why: string): Engine =>
 		bundled({
 			short: `project has ${installed.version}`,
-			detail: `This project installs decisionlint-le ${installed.version}, which ${why}. The editor is linting with its own ${deps.own}, so findings here can differ from the project's command line.`,
+			detail: `This project installs decisionlint ${installed.version}, which ${why}. The editor is linting with its own ${deps.own}, so findings here can differ from the project's command line.`,
 		});
 
 	return Object.freeze({
@@ -97,7 +97,7 @@ export function createEngines(deps: Deps): Engines {
 			if ('problem' in installed)
 				return bundled({
 					short: 'project copy unreadable',
-					detail: `This project installs decisionlint-le in ${installed.dir}, but its package.json ${installed.problem}. The editor is linting with its own ${deps.own}, so findings here can differ from the project's command line.`,
+					detail: `This project installs decisionlint in ${installed.dir}, but its package.json ${installed.problem}. The editor is linting with its own ${deps.own}, so findings here can differ from the project's command line.`,
 				});
 			// The same copy the extension carries.
 			if (installed.version === deps.own) return bundled();
@@ -121,7 +121,7 @@ export function createEngines(deps: Deps): Engines {
 				},
 				note: {
 					short: `project ${installed.version}`,
-					detail: `Linting with this project's own decisionlint-le ${installed.version}, as its command line does.`,
+					detail: `Linting with this project's own decisionlint ${installed.version}, as its command line does.`,
 				},
 			};
 		},

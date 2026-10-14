@@ -56,22 +56,22 @@ const MALFORMED: Readonly<
 	>
 > = Object.freeze({
 	'unknown-type': {
-		code: 'JEV007',
+		code: 'DEC007',
 		message: (m: Malformed) =>
 			`Question type "${m.found}" does not exist. The types are ${TYPE_NAMES[m.dialect].join(', ').replace(/, (\w+)$/, ' and $1')}.`,
 	},
 	'missing-type': {
-		code: 'JEV007',
+		code: 'DEC007',
 		message: () =>
 			"This question has no 'type'. It must be noul, choice or score.",
 	},
 	'runtime-type': {
-		code: 'JEV000',
+		code: 'DEC000',
 		message: () =>
 			"Cannot read the 'type' of this question: it is set at runtime, so no rule ran on it.",
 	},
 	'runtime-question': {
-		code: 'JEV000',
+		code: 'DEC000',
 		message: () =>
 			'Cannot read this question: it is built at runtime, so no rule ran on it.',
 	},
@@ -104,7 +104,7 @@ const checkUnreadable: Check = (question) => {
 			: 'The rules that need it did not run.';
 	return [
 		report(
-			'JEV000',
+			'DEC000',
 			question,
 			`Cannot fully read the ${fields} of this question: part of it is built at runtime. ${ran}`,
 		),
@@ -121,7 +121,7 @@ const checkInstructions: Check = (question) => {
 	if (question.open) return NONE;
 	return [
 		report(
-			'JEV007',
+			'DEC007',
 			question,
 			'The instructions are empty.',
 			instructions.span,
@@ -158,7 +158,7 @@ const checkTerseInstructions: Check = (question) => {
 		return NONE;
 	return [
 		report(
-			'JEV012',
+			'DEC012',
 			question,
 			`The instructions ${SAID[count]}, so the question leans on its id for its meaning. Jev reads only the instructions. Write out what is being asked.`,
 			instructions.span,
@@ -183,7 +183,7 @@ function noulShape(question: Question): ReadonlyArray<Finding> {
 	if (criteria?.kind !== 'object') {
 		return [
 			report(
-				'JEV006',
+				'DEC006',
 				question,
 				"Noul criteria must be an object with 'true' and 'false' descriptions.",
 				question.criteriaKey,
@@ -196,7 +196,7 @@ function noulShape(question: Question): ReadonlyArray<Finding> {
 			const name = NOUL_KEY_FIXES.get(entry.key.toLowerCase());
 			return {
 				...report(
-					'JEV006',
+					'DEC006',
 					question,
 					`Noul criteria take 'true' and 'false'. '${entry.key}' is not a documented key.`,
 					entry.keySpan,
@@ -282,7 +282,7 @@ const checkCriteriaShape: Check = (question, context) => {
 		if (!question.inRequest) return NONE;
 		return [
 			report(
-				'JEV006',
+				'DEC006',
 				question,
 				`A ${question.type} question needs '${shape.field}': ${shape.needs}.`,
 			),
@@ -294,7 +294,7 @@ const checkCriteriaShape: Check = (question, context) => {
 		return [
 			{
 				...report(
-					'JEV006',
+					'DEC006',
 					question,
 					`The ${shape.field} of a ${question.type} question must be ${shape.needs}, not ${found}.`,
 					question.criteriaKey,
@@ -314,7 +314,7 @@ const checkCriteriaShape: Check = (question, context) => {
 		if (!bare) return NONE;
 		return [
 			report(
-				'JEV006',
+				'DEC006',
 				question,
 				`Each entry of '${shape.field}' must be an object with ${ENTRY_FIELDS[question.type]}, not ${KIND_LABELS[bare.kind]}.`,
 				bare.span,
@@ -329,7 +329,7 @@ const checkCriteriaShape: Check = (question, context) => {
 	return [
 		{
 			...report(
-				'JEV006',
+				'DEC006',
 				question,
 				`The criteria hold one option, '${key}', whose description is a list. The API accepts that as a one-option Choice, which answers '${key}' every time at full confidence. Make each entry of the list an option.`,
 				question.criteriaKey,
@@ -373,7 +373,7 @@ function checkMalformed(malformed: Malformed, text: string): Finding {
 function checkDuplicateIds(extraction: Extraction): ReadonlyArray<Finding> {
 	return extraction.maps.flatMap((map) =>
 		repeated(map.entries, (entry) => entry.id).map((entry) => ({
-			code: 'JEV005' as const,
+			code: 'DEC005' as const,
 			message: `Question id '${entry.id}' appears twice. The later one silently replaces the earlier.`,
 			span: entry.idSpan,
 			questionId: entry.id,
@@ -392,7 +392,7 @@ function checkModels(
 			// No fix where no platform documents a pinned spelling for this one.
 			const pinned = pinnedSpelling(model.value, KNOWN_VERSION);
 			return {
-				code: 'JEV001' as const,
+				code: 'DEC001' as const,
 				message: `'${model.value}' is an alias that moves to each new release, so answers can change with no change on your side. Pin the versioned id from a response's 'model' field once your thresholds are tuned.`,
 				span: model.span,
 				questionId: undefined,
@@ -405,8 +405,8 @@ function checkNewerModels(extraction: Extraction): ReadonlyArray<Finding> {
 	return extraction.models
 		.filter((model) => isNewerJev(model.value, MEASURED_ON))
 		.map((model) => ({
-			code: 'JEV013' as const,
-			message: `'${model.value}' is newer than ${MEASURED_ON}, the version these rules were measured on. A finding may cost no answers on it, and a weakness new to it is not looked for. A later DecisionLint-LE may have measured it.`,
+			code: 'DEC013' as const,
+			message: `'${model.value}' is newer than ${MEASURED_ON}, the version these rules were measured on. A finding may cost no answers on it, and a weakness new to it is not looked for. A later DecisionLint may have measured it.`,
 			span: model.span,
 			questionId: undefined,
 			fix: undefined,
@@ -426,7 +426,7 @@ function checkQuestionCounts(
 		if (!target || limit === undefined || !first) return NONE;
 		return [
 			{
-				code: 'JEV014' as const,
+				code: 'DEC014' as const,
 				message: `This request has ${map.entries.length} questions. ${target.name} accepts at most ${limit} in one request.`,
 				span: first.idSpan,
 				questionId: first.id,

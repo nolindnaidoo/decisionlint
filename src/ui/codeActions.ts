@@ -10,8 +10,8 @@ type Deps = Readonly<{
 
 /** What `editor.codeActionsOnSave` asks for by name, as it does of other linters. */
 export const FIX_ALL =
-	// Kept as `source.fixAll.jevlint-le`: it is what users' `codeActionsOnSave` already names.
-	vscode.CodeActionKind.SourceFixAll.append('jevlint-le');
+	// Kept as `source.fixAll.decisionlint`: it is what users' `codeActionsOnSave` already names.
+	vscode.CodeActionKind.SourceFixAll.append('decisionlint');
 
 // One edit for the whole file: the fixes were worked out together, so they go in together.
 function toFixAll(
@@ -19,7 +19,7 @@ function toFixAll(
 	fixed: string,
 ): vscode.CodeAction {
 	const action = new vscode.CodeAction(
-		'Fix all the DecisionLint-LE findings that can be fixed safely',
+		'Fix all the DecisionLint findings that can be fixed safely',
 		FIX_ALL,
 	);
 	const edit = new vscode.WorkspaceEdit();
@@ -109,7 +109,7 @@ function toSilencers(
 	const comment = COMMENTS.get(document.languageId);
 	// Inside a string a comment would become part of the JSON. And a comment to
 	// silence the report of an unused comment would be one more of them.
-	if (!comment || finding.inString || finding.code === 'JEV010') return [];
+	if (!comment || finding.inString || finding.code === 'DEC010') return [];
 	const text = document.getText();
 	const lineStart = text.lastIndexOf('\n', finding.span.start - 1) + 1;
 	const indent = /^[ \t]*/.exec(text.slice(lineStart))?.[0] ?? '';
@@ -121,14 +121,14 @@ function toSilencers(
 			diagnostic,
 			`Disable ${finding.code} for this line`,
 			lineStart,
-			`${indent}${comment} decisionlint-le-disable-next-line ${finding.code}\n`,
+			`${indent}${comment} decisionlint-disable-next-line ${finding.code}\n`,
 		),
 		inserting(
 			document,
 			diagnostic,
 			`Disable ${finding.code} for this file`,
 			top,
-			`${comment} decisionlint-le-disable ${finding.code}\n`,
+			`${comment} decisionlint-disable ${finding.code}\n`,
 		),
 	];
 }

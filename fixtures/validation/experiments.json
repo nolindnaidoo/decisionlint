@@ -1,6 +1,6 @@
 [
   {
-    "rule": "JEV101",
+    "rule": "DEC101",
     "name": "double negative against the direct question",
     "cases": [
       {
@@ -48,7 +48,7 @@
     }
   },
   {
-    "rule": "JEV102",
+    "rule": "DEC102",
     "name": "counting in one question against one question per item",
     "cases": [
       {
@@ -148,7 +148,7 @@
     }
   },
   {
-    "rule": "JEV103",
+    "rule": "DEC103",
     "name": "ordering two dates",
     "cases": [
       {
@@ -206,7 +206,7 @@
     "good": null
   },
   {
-    "rule": "JEV104",
+    "rule": "DEC104",
     "name": "one compound question against two combined in code",
     "cases": [
       {
@@ -266,7 +266,7 @@
     }
   },
   {
-    "rule": "JEV107",
+    "rule": "DEC107",
     "name": "asking for absence against asking for presence",
     "cases": [
       {
@@ -314,7 +314,7 @@
     }
   },
   {
-    "rule": "JEV108",
+    "rule": "DEC108",
     "name": "inverted criteria against aligned criteria",
     "cases": [
       {
@@ -370,7 +370,7 @@
     }
   },
   {
-    "rule": "JEV110",
+    "rule": "DEC110",
     "name": "degree words against described levels",
     "cases": [
       {
@@ -428,7 +428,7 @@
     }
   },
   {
-    "rule": "JEV008",
+    "rule": "DEC008",
     "name": "bare numbers against described levels",
     "cases": [
       {
@@ -486,7 +486,7 @@
     }
   },
   {
-    "rule": "JEV112",
+    "rule": "DEC112",
     "name": "an undefined boundary against one drawn in the criteria",
     "cases": [
       {
@@ -538,7 +538,7 @@
     }
   },
   {
-    "rule": "JEV004",
+    "rule": "DEC004",
     "name": "a Choice with no fallback against one with a fallback",
     "cases": [
       {

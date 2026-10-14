@@ -27,7 +27,7 @@ function scoreLevels(question: Question): ArrayNode | undefined {
 /**
  * `criteria: { "options": [...] }`: the list of options wrapped in a map with
  * one key. The API accepts it as a one-option Choice that answers "options"
- * every time, at confidence 1.0. `JEV006` reports it, so the count rule does not.
+ * every time, at confidence 1.0. `DEC006` reports it, so the count rule does not.
  */
 export function wrapsList(options: ObjectNode): ArrayNode | undefined {
 	if (options.partial || options.props.length !== 1) return undefined;
@@ -47,7 +47,7 @@ const checkChoiceCount: Check = (question, context) => {
 	if (max !== undefined && count > max) {
 		return [
 			report(
-				'JEV002',
+				'DEC002',
 				question,
 				`This Choice has ${count} options. ${owner} accepts at most ${max}.`,
 			),
@@ -56,7 +56,7 @@ const checkChoiceCount: Check = (question, context) => {
 	if (options.partial || count >= 2) return NONE;
 	return [
 		report(
-			'JEV009',
+			'DEC009',
 			question,
 			`This Choice has ${count} option${count === 1 ? '' : 's'}, so every input gets the same answer.`,
 		),
@@ -79,7 +79,7 @@ const checkFallback: Check = (question, context) => {
 	const raw = question.criteriaRaw;
 	return [
 		{
-			...report('JEV004', question, message),
+			...report('DEC004', question, message),
 			fix:
 				raw?.kind === 'array'
 					? fallbackListFix(raw, context.text, context.fallbackName, syntax)
@@ -93,7 +93,7 @@ const checkDuplicateOptions: Check = (question) => {
 	if (!options) return NONE;
 	return repeated(options.props, (entry) => entry.key).map((entry) =>
 		report(
-			'JEV005',
+			'DEC005',
 			question,
 			`Option '${entry.key}' appears twice. The later one silently replaces the earlier.`,
 			entry.keySpan,
@@ -113,7 +113,7 @@ const checkLevelCount: Check = (question, context) => {
 	if (max !== undefined && count > max) {
 		return [
 			report(
-				'JEV003',
+				'DEC003',
 				question,
 				`This Score has ${count} levels. ${owner} accepts at most ${max}.`,
 			),
@@ -125,7 +125,7 @@ const checkLevelCount: Check = (question, context) => {
 	// hand-written code, where a one-level scale can only return that level.
 	return [
 		report(
-			'JEV009',
+			'DEC009',
 			question,
 			`This Score has ${count} level${count === 1 ? '' : 's'}, so every input gets the same answer.`,
 		),
@@ -139,7 +139,7 @@ const checkDuplicateLevels: Check = (question) => {
 		item.kind === 'string' ? item.value.trim() : undefined,
 	).map((item) =>
 		report(
-			'JEV005',
+			'DEC005',
 			question,
 			'This level repeats an earlier one. Two identical levels cannot be told apart.',
 			item.span,
@@ -159,7 +159,7 @@ const checkNumericLevels: Check = (question) => {
 	if (!levels.items.every(isBareNumber)) return NONE;
 	const message =
 		'These Score levels are bare numbers. Jev matches the state against each level description and never sees its position, so a number gives it nothing to match. Describe the situation each level stands for.';
-	return [report('JEV008', question, message, levels.span)];
+	return [report('DEC008', question, message, levels.span)];
 };
 
 // "ready": "Ready", "low": "low", "a": "Option A". Case, underscores, hyphens,
@@ -195,7 +195,7 @@ const checkDescriptionRepeatsName: Check = (question) => {
 			)
 			.map((entry) =>
 				report(
-					'JEV011',
+					'DEC011',
 					question,
 					`The description of '${entry.key}' only repeats its name. Jev matches the state against the description, so say what belongs under this option.`,
 					entry.value.span,
@@ -214,7 +214,7 @@ const checkDescriptionRepeatsName: Check = (question) => {
 				return [];
 			return [
 				report(
-					'JEV011',
+					'DEC011',
 					question,
 					`The description of level '${label.value}' only repeats its label. Jev matches the state against the description, so say what this level looks like.`,
 					description.span,
@@ -233,7 +233,7 @@ const checkDescriptionRepeatsName: Check = (question) => {
 			)
 			.map((entry) =>
 				report(
-					'JEV011',
+					'DEC011',
 					question,
 					`The '${entry.key}' criterion says '${(entry.value as StringNode).value}', which only repeats the key. Say what makes the answer ${entry.key}, or leave the criteria out.`,
 					entry.value.span,

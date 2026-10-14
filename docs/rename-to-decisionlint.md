@@ -1,15 +1,15 @@
-# Rename to DecisionLint-LE
+# Rename to DecisionLint
 
-Status: steps 1 to 4 done on 2026-10-14, steps 5 and 6 pending, each its own authorization. Ships as 1.0.0 with the every-platform
-work in `SPEC.md` under "Every provider". Nothing of 0.9.0 was published, so
-its new surfaces are named right here instead of aliased.
+Status: steps 1 to 4 done on 2026-10-14, step 5 onward pending, each its
+own authorization. Ships as 1.0.0 with the every-platform work in `SPEC.md`
+under "Every provider". Nothing of 0.9.0 was published, so its new surfaces
+are named right here instead of aliased.
 
 ## Decisions
 
-- **D1. The rule codes stay `JEV`**, names included, for this pass. A code
-  is an identifier in users' suppression comments, settings files and SARIF
-  baselines, where nothing ever updates it. The number ranges carry the
-  taxonomy: 0xx shape, 1xx wording, 2xx request, 3xx model-backed.
+- **D1. Superseded by D7.** The rule codes were to stay `JEV` because a
+  code is an identifier in users' suppression comments, settings files and
+  SARIF baselines, where nothing ever updates it.
 - **D2. The verb is `ask`, and the editor has one command per platform.**
   `--jev` and `jev.*` were named after one model and reach nine platforms.
   On the command line and in the server the platform is an argument; in
@@ -20,37 +20,55 @@ its new surfaces are named right here instead of aliased.
   npm and the Marketplace is a shim that points here.
 - **D4. The repository is renamed in place.** GitHub redirects clones, web
   links, the rule pages and `uses:` in workflows.
-- **D5. The extension keeps its install identity.** The Marketplace lets a
-  display name change and never an id, and a new id is a new listing at
-  zero installs. So `nolindnaidoo.jevlint-le`, the `jevlint-le.*` settings
-  and the `jevlint-le.*` command ids stay, and the keychain still reads the
-  two keys JevLint-LE stored. The npm packages and the MCP server take the
-  new names in full, with shims for the old. Decided on 2026-10-14 after
-  the first cut had renamed the id.
+- **D5. Superseded by D6.** For a few hours on 2026-10-14 the extension kept
+  its install identity, `nolindnaidoo.jevlint-le`, on the reasoning that a
+  new id is a new listing at zero installs. The listing had 6 installs,
+  which a final release points across in one line.
+- **D6. The product is DecisionLint, standalone, the whole word on every
+  surface.** A registry search ranks the exact name above a suffixed one
+  whatever the install counts (the Marketplace puts an "EnvSync" with 3
+  installs above EnvSync-LE with 16), nothing on a registry can keep
+  another publisher off a name, and `decisionlint` was free on npm, GitHub,
+  both extension registries and the `.com`, `.dev`, `.io` and `.ai` domains
+  on 2026-10-14. So the way to be the result for "DecisionLint" is to be
+  the exact name first, with the installs and the age. The suffix was the
+  one thing in the way. The tool stays the author's and is listed on
+  letools.dev, outside the family's naming. Decided on 2026-10-14.
+- **D7. The rule codes are `DEC`, and the model-backed rules are `model-*`.**
+  With D6 nothing under the new name is published, so this is the last cheap
+  moment, and the base is 6 installs and 0.8.1 on npm. The numbers stay, so
+  the taxonomy stays: 0xx shape, 1xx wording, 2xx request, 3xx model-backed.
+  What D1 protected is kept another way: the old codes and names are read
+  for ever in comments, `rules`, `ignore` and `explain_rule`, every finding
+  is written with the new code, and each old rule page stays as a pointer.
+  A SARIF baseline is renamed once. Decided on 2026-10-14.
 
 ## The names
 
 | Was | Is | Old spelling kept as |
 |---|---|---|
-| `JevLint-LE` | `DecisionLint-LE` | nothing, branding only |
-| `jevlint-le` on npm, the repo | `decisionlint-le` | a shim package |
-| `nolindnaidoo.jevlint-le`, the extension id | unchanged | nothing needed |
-| `jevlint-le-mcp` | `decisionlint-le-mcp` | a shim package |
-| `io.github.nolindnaidoo/jevlint-le` | `io.github.nolindnaidoo/decisionlint-le` | the old listing, marked deprecated if the registry allows |
-| `jevlint-le.json` | `decisionlint-le.json` | read when the new file is absent, with a notice. Permanent |
-| `jevlint-le-disable*` | `decisionlint-le-disable*` | still silences. Permanent |
-| `jevlint-le.*` settings and command ids | unchanged | nothing needed |
-| `jevlint-le.jev.model` | `jevlint-le.ask.models` (one id per platform) | nothing, unpublished shape |
-| `jevlint-le.jev.apiKey`, `.openaiApiKey` | `jevlint-le.ask.keys` (one per platform) | the keychain slots they filled are still read |
-| `jevlint-le.jev.endpoint`, `.shape` | `jevlint-le.ask.endpoint`, `.endpointShape`, `.endpointModel` | nothing, unpublished |
-| `jevlint-le.checkWithJev` | `jevlint-le.askJev`, `askLuna`, `askOpenRouter`, `askVercel`, `askLlmGateway`, `askLiquid`, `askEndpoint` | nothing |
+| `JevLint-LE` | `DecisionLint` | nothing, branding only |
+| `jevlint-le` on npm | `decisionlint` | a shim package |
+| `jevlint-le-mcp` | `decisionlint-mcp` | a shim package |
+| `nolindnaidoo/jevlint-le`, the repository | `nolindnaidoo/decisionlint` | GitHub redirects |
+| `nolindnaidoo.jevlint-le`, the extension id | `nolindnaidoo.decisionlint` | a final 0.9.0 of the old extension with one notice |
+| `io.github.nolindnaidoo/jevlint-le` | `io.github.nolindnaidoo/decisionlint` | the old listing, marked deprecated |
+| `jevlint-le.json` | `decisionlint.json` | read when the new file is absent, with a notice. Permanent |
+| `jevlint-le-disable*` | `decisionlint-disable*` | still silences. Permanent |
+| `JEV000` to `JEV312` | `DEC000` to `DEC312`, the same numbers | read for ever in comments, `rules`, `ignore` and `explain_rule`; each old page points at the new. Permanent |
+| `jev-counting` and the other eleven 3xx names | `model-counting` and so on | read for ever where a rule is named by name. Permanent |
+| `jevlint-le.*` settings and command ids | `decisionlint.*` | nothing. A new extension id has new settings |
+| `jevlint-le.jev.model` | `decisionlint.ask.models` (one id per platform) | nothing, unpublished shape |
+| `jevlint-le.jev.apiKey`, `.openaiApiKey` | `decisionlint.ask.keys` (one per platform) | nothing. The keychain is per extension id, so each key is set once more |
+| `jevlint-le.jev.endpoint`, `.shape` | `decisionlint.ask.endpoint`, `.endpointShape`, `.endpointModel` | nothing, unpublished |
+| `jevlint-le.checkWithJev` | `decisionlint.askJev`, `askLuna`, `askOpenRouter`, `askVercel`, `askLlmGateway`, `askLiquid`, `askEndpoint` | nothing |
 | `--jev`, `--jev-plan`, `--jev-model`, `--jev-max-calls`, `--jev-send-state` | `--ask`, `--ask-plan`, `--ask-model`, `--ask-max-calls`, `--ask-send-state`, and `--ask-platform` | nothing. The command line's flags are read from the help, and 1.0 is where they change |
-| `--jev-endpoint`, `--jev-shape`, `JEVLINT_LE_JEV_*` | `--ask-endpoint`, `--ask-shape`, `DECISIONLINT_LE_ASK_*` | nothing, unpublished |
+| `--jev-endpoint`, `--jev-shape`, `JEVLINT_LE_JEV_*` | `--ask-endpoint`, `--ask-shape`, `DECISIONLINT_ASK_*` | nothing, unpublished |
 | `check_with_jev`, `plan_jev` | `ask_model`, `plan_ask`, with a `platform` argument | nothing. The server's tools change with its name |
+| the `jevlint-le` pre-commit hook id | `decisionlint` | a second `jevlint-le` id in `.pre-commit-hooks.yaml`, in every tag from 1.0.0, because pre-commit reads the file at the tag |
 | `src/jev/`, `commands/jev.ts`, `cli/jev.ts` | `src/ask/`, `commands/ask.ts`, `cli/ask.ts` | internal |
 
-The `JEV3xx` rule names, `jev-overlapping-*`, keep their names under D1.
-Every message about what a model said names the model, not Jev, which the
+The `DEC3xx` rules are named `model-*` under D7. Every message about what a model said names the model, not Jev, which the
 0.9.0 work already does.
 
 ## The platforms a command can ask
@@ -69,7 +87,7 @@ publishes, with the model id it sends by default and the key it reads:
 | Ask the Model at My Endpoint | a host the user runs | `ask.endpointModel` | the shape's, or none |
 
 Each key is held three ways, as the TypeSafe key was: typed into
-`decisionlint-le.ask.keys`, user settings only and out of Settings Sync; in
+`decisionlint.ask.keys`, user settings only and out of Settings Sync; in
 the keychain through the platform's own **Set ... API Key** command, one per
 slot, because a picker would need the editor mock to grow for one dialog;
 or in the environment variable the platform names. **Clear API Keys**
@@ -86,30 +104,38 @@ endpoint when its shape is `typesafe`.
 3. 1.0.0: the version in its four files, `CHANGELOG.md` with an old-to-new
    table, the readmes, `AGENTS.md`, `SPEC.md`, the rule pages. Every gate,
    the installed VSIX and the integration tests included.
-4. Rename the repository on GitHub and push. Done on 2026-10-14: the
-   repository is `nolindnaidoo/decisionlint-le`, and the old URL redirects.
-   The site's registry, `letools-site`, stays on the old names until step 5:
-   its entries link to the published listings and its sync reads their
-   download counts, so a registry naming `decisionlint-le` before it is
-   published would link to pages that do not exist. It moves with the first
-   publish, together with the local directory, which the site's sync reads
-   by the registry id.
-5. Publish 1.0.0: Marketplace, Open VSX, npm (two packages), the MCP
-   registry. Four authorizations, each its own.
-6. Bridge the old npm names, each its own authorization: `jevlint-le@0.9.0`
-   and `jevlint-le-mcp@0.9.0` as shims that depend on the new packages, then
-   `npm deprecate` both; the old MCP listing marked deprecated through
+4. Rename the repository on GitHub and push. Done on 2026-10-14, twice: to
+   `decisionlint-le` in the morning and to `decisionlint` under D6, and
+   both old URLs redirect. The site's registry, `letools-site`, stays on
+   the old names until step 6: its entries link to the published listings
+   and its sync reads their download counts, so a registry naming
+   `decisionlint` before it is published would link to pages that do not
+   exist. It moves with the first publish, together with the local
+   directory, which the site's sync reads by the registry id.
+5. Publish 1.0.0: npm (two packages) and then the MCP registry in one
+   workflow run, the Marketplace, Open VSX. Three runs, each its own
+   authorization.
+6. The site and the local directory: `letools-site` lists `decisionlint`
+   as the author's, outside the family, and the directory is renamed to
+   match. The site's deploy is a push to its `main`, its own authorization.
+7. Bridge the old names, each its own authorization: `jevlint-le@0.9.0`
+   and `jevlint-le-mcp@0.9.0` as shims that depend on the new packages at
+   `^1`, then `npm deprecate` both; a final `nolindnaidoo.jevlint-le`
+   0.9.0 whose only act is one notice naming `nolindnaidoo.decisionlint`,
+   on the Marketplace and Open VSX, and a comment in the VS Code team's
+   "Deprecated extensions" discussion, which is how a listing gets the
+   deprecation banner; the old MCP listing marked deprecated through
    `PATCH /v0.1/servers/{name}/status`, which the registry grants the
-   namespace's publisher; a second `jevlint-le` hook id in
-   `.pre-commit-hooks.yaml` beside the new one. The extension needs no
-   bridge under D5.
+   namespace's publisher.
+8. Reservations, each its own authorization and optional: the GitHub
+   organisation `decisionlint` and the domain `decisionlint.dev`, both of
+   which only the owner can create.
 
 ## Outstanding
 
 - The MCP registry's status route was read from an extracted page on
   2026-10-14, not the raw API doc. Confirm it against the raw doc before
-  step 6.
-- The two demo recordings show the old name in the editor's UI and the
-  command line's output. Record both again after step 3.
-- Under D5 the keychain is the same, and `commands/ask.ts` reads the two
-  old slots, so no key needs setting again.
+  step 7.
+- The two demo recordings are taken again under D6, because the problems
+  panel names the diagnostic source and the command line names the
+  command.

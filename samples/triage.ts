@@ -17,7 +17,7 @@ export async function triage(note: string, part: string) {
 			}),
 			hurry: score('How soon does the customer need the bike?', ['1', '2', '3']),
 			mentions_part: noul(askAbout(part)),
-			// decisionlint-le-disable-next-line JEV004
+			// decisionlint-disable-next-line DEC004
 			drop_off: choice('Was the bike dropped off or collected?', { dropped_off: null, collected: null }),
 		},
 	});

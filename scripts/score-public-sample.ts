@@ -29,7 +29,7 @@ const text = new Map(drawn.map((question) => [question.hash, question]));
 // after a sample was labelled for it is scored on that sample too.
 const labelled = new Set(labels.flatMap((label) => [...label.defects, ...label.borderline]));
 const WORDING = RULE_CODES.filter(
-	(code) => (code > 'JEV100' && code < 'JEV300') || (code < 'JEV100' && labelled.has(code)),
+	(code) => (code > 'DEC100' && code < 'DEC300') || (code < 'DEC100' && labelled.has(code)),
 );
 const allOn: LintOptions = {
 	rules: Object.fromEntries(WORDING.map((code) => [code, 'warning'])),

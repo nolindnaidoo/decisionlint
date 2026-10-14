@@ -53,24 +53,24 @@ export type Slot =
 
 export const ASK_COMMANDS = Object.freeze({
 	ask: Object.freeze({
-		typesafe: 'jevlint-le.askJev',
-		openai: 'jevlint-le.askLuna',
-		openrouter: 'jevlint-le.askOpenRouter',
-		vercel: 'jevlint-le.askVercel',
-		llmgateway: 'jevlint-le.askLlmGateway',
-		liquid: 'jevlint-le.askLiquid',
-		[ENDPOINT_SLOT]: 'jevlint-le.askEndpoint',
+		typesafe: 'decisionlint.askJev',
+		openai: 'decisionlint.askLuna',
+		openrouter: 'decisionlint.askOpenRouter',
+		vercel: 'decisionlint.askVercel',
+		llmgateway: 'decisionlint.askLlmGateway',
+		liquid: 'decisionlint.askLiquid',
+		[ENDPOINT_SLOT]: 'decisionlint.askEndpoint',
 	}) as Readonly<Record<Slot, string>>,
 	setKey: Object.freeze({
-		typesafe: 'jevlint-le.setTypeSafeApiKey',
-		openai: 'jevlint-le.setOpenAIApiKey',
-		openrouter: 'jevlint-le.setOpenRouterApiKey',
-		vercel: 'jevlint-le.setVercelApiKey',
-		llmgateway: 'jevlint-le.setLlmGatewayApiKey',
-		liquid: 'jevlint-le.setLiquidApiKey',
-		[ENDPOINT_SLOT]: 'jevlint-le.setEndpointApiKey',
+		typesafe: 'decisionlint.setTypeSafeApiKey',
+		openai: 'decisionlint.setOpenAIApiKey',
+		openrouter: 'decisionlint.setOpenRouterApiKey',
+		vercel: 'decisionlint.setVercelApiKey',
+		llmgateway: 'decisionlint.setLlmGatewayApiKey',
+		liquid: 'decisionlint.setLiquidApiKey',
+		[ENDPOINT_SLOT]: 'decisionlint.setEndpointApiKey',
 	}) as Readonly<Record<Slot, string>>,
-	clearKeys: 'jevlint-le.clearApiKeys',
+	clearKeys: 'decisionlint.clearApiKeys',
 });
 
 /** The slots, in the order the commands are declared. `extension.test.ts` holds it to the table's platforms. */
@@ -96,14 +96,7 @@ const KEY_TITLES: ReadonlyMap<Slot, string> = new Map<Slot, string>([
 ]);
 
 /** Where a slot's key sits in the keychain. */
-const secretFor = (slot: Slot): string => `decisionlint-le.key.${slot}`;
-
-// Where JevLint-LE kept its two keys. The extension id is the same, so the
-// keychain is the same, and a key stored under the old name is still read.
-const LEGACY_SECRETS: ReadonlyMap<Slot, string> = new Map<Slot, string>([
-	['typesafe', 'jevlint-le.typesafeApiKey'],
-	['openai', 'jevlint-le.openaiApiKey'],
-]);
+const secretFor = (slot: Slot): string => `decisionlint.key.${slot}`;
 
 /** What a slot is called where a key is asked for. */
 const labelOf = (slot: Slot): string => targetById(slot)?.name ?? 'Endpoint';
@@ -113,7 +106,7 @@ export const SEND = 'Send';
 const HOW_TO_TRUST =
 	" To turn it on, run 'Workspaces: Manage Workspace Trust' and trust this folder.";
 const HOW_TO_ROUTE =
-	'Set jevlint-le.ask.endpoint to the full URL the host listens at, jevlint-le.ask.endpointShape where its path does not say, and jevlint-le.ask.endpointModel to the model id it serves.';
+	'Set decisionlint.ask.endpoint to the full URL the host listens at, decisionlint.ask.endpointShape where its path does not say, and decisionlint.ask.endpointModel to the model id it serves.';
 
 /** Why a run failed, naming the platform and, for a bad key, the command that sets a new one. */
 export function failureMessage(
@@ -123,7 +116,7 @@ export function failureMessage(
 	const { vendor } = provider;
 	const set = KEY_TITLES.get(provider.slot as Slot) ?? 'Set Endpoint API Key';
 	const messages: Readonly<Record<Failure['kind'], string>> = {
-		key: `${vendor} rejected the API key. Set a new one with "DecisionLint-LE: ${set}".`,
+		key: `${vendor} rejected the API key. Set a new one with "DecisionLint: ${set}".`,
 		rejected: `${vendor} rejected the request.`,
 		busy: `${vendor} is busy or the rate limit was reached. Try again in a moment.`,
 		server: `${vendor} had an error of its own. Try again in a moment.`,
@@ -234,7 +227,7 @@ function ask(plan: ReviewPlan, provider: Provider): Prompt {
 const locked = (provider: Provider) =>
 	`The keychain could not be read. Unlock it and try again, or set ${provider.envKey} in the environment.`;
 const noKey = (provider: Provider) =>
-	`No ${provider.vendor} API key. Set one with the button, in Settings under "DecisionLint-LE: Ask: Keys" as ${provider.slot}, or as ${provider.envKey} in the environment.`;
+	`No ${provider.vendor} API key. Set one with the button, in Settings under "DecisionLint: Ask: Keys" as ${provider.slot}, or as ${provider.envKey} in the environment.`;
 
 /**
  * The key for the slot the provider names, or the sentence that says why
@@ -255,16 +248,7 @@ export async function findKey(
 		(key) => ({ key }),
 		() => ({ locked: true as const }),
 	);
-	const legacy = LEGACY_SECRETS.get(provider.slot as Slot);
-	const kept =
-		legacy && 'key' in stored && !stored.key
-			? await deps.secrets.get(legacy).then(
-					(key) => key,
-					() => undefined,
-				)
-			: undefined;
-	const key =
-		('key' in stored && stored.key) || kept || deps.env[provider.envKey];
+	const key = ('key' in stored && stored.key) || deps.env[provider.envKey];
 	if (key) return { key };
 	// A host the user runs may take no key, and then none is sent.
 	if (provider.keyOptional) return { key: '' };
@@ -369,7 +353,7 @@ async function askModel(deps: Deps, slot: Slot): Promise<void> {
 	const outcome = await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: `DecisionLint-LE: asking ${provider.model} at ${provider.vendor} about the questions in this file`,
+			title: `DecisionLint: asking ${provider.model} at ${provider.vendor} about the questions in this file`,
 			cancellable: true,
 		},
 		(_progress, token) => {
@@ -416,8 +400,8 @@ async function setApiKey(deps: Deps, slot: Slot): Promise<void> {
 // Every slot's key goes, so one command leaves nothing behind.
 async function clearApiKeys(deps: Deps): Promise<void> {
 	const cleared = await Promise.all(
-		[...SLOTS.map(secretFor), ...LEGACY_SECRETS.values()].map((secret) =>
-			deps.secrets.delete(secret).then(
+		SLOTS.map((slot) =>
+			deps.secrets.delete(secretFor(slot)).then(
 				() => true,
 				() => false,
 			),

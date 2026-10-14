@@ -51,6 +51,6 @@ run(process.argv.slice(2), {
 		process.exitCode = status;
 	})
 	.catch((error: unknown) => {
-		process.stderr.write(`decisionlint-le: ${String(error)}\n`);
+		process.stderr.write(`decisionlint: ${String(error)}\n`);
 		process.exitCode = EXIT.unusable;
 	});

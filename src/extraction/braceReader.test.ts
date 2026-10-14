@@ -37,7 +37,7 @@ describe('Rust', () => {
     }
 });`;
 		expect(rust(text)).toEqual(['late noul request', 'team choice request']);
-		expect(codes(text, 'rust')).toEqual(['JEV001', 'JEV004']);
+		expect(codes(text, 'rust')).toEqual(['DEC001', 'DEC004']);
 	});
 
 	it('is not fooled by lifetimes, characters, raw strings or comments', () => {
@@ -90,19 +90,19 @@ let s = Score { instructions: String::from("How bad is it?"), criteria: vec!["A 
 	it("does not judge criteria held in the project's own type", () => {
 		const text = `let q = Question::Noul { instructions: "Is it late?".into(), criteria: NoulCriteria { yes: "Late".into(), no: "On time".into() } };`;
 		expect(rust(text)).toEqual(['- noul']);
-		expect(codes(text, 'rust')).toEqual(['JEV000']);
+		expect(codes(text, 'rust')).toEqual(['DEC000']);
 	});
 
 	it('takes only the wording from a constructor, since the rest varies by project', () => {
 		const text = `ask.add("items", Question::noul("Does the order hold more than 3 items?", "yes", "no"));`;
 		expect(rust(text)).toEqual(['- noul open']);
-		expect(codes(text, 'rust')).toEqual(['JEV102']);
+		expect(codes(text, 'rust')).toEqual(['DEC102']);
 	});
 
 	it('reads a type given as a constant and a field called kind', () => {
 		const text = `let q = Question { kind: QType::Score, instructions: json!("Rate the damage"), criteria: Some(json!(["1", "2"])) };`;
 		expect(rust(text)).toEqual(['- score']);
-		expect(codes(text, 'rust')).toEqual(['JEV008']);
+		expect(codes(text, 'rust')).toEqual(['DEC008']);
 	});
 });
 
@@ -119,7 +119,7 @@ describe('Go', () => {
 	},
 }`;
 		expect(go(text)).toEqual(['late noul request', 'mood score request']);
-		expect(codes(text, 'go')).toEqual(['JEV001', 'JEV008']);
+		expect(codes(text, 'go')).toEqual(['DEC001', 'DEC008']);
 	});
 
 	it('reads structs, with or without the type written out', () => {
@@ -159,7 +159,7 @@ describe('Go', () => {
 		]);
 		expect(found.maps[0]?.model?.value).toBe('gpt-6-luna');
 		// No fallback among the choices. Nothing else: the shape is the API's own.
-		expect(codes(text, 'go')).toEqual(['JEV004']);
+		expect(codes(text, 'go')).toEqual(['DEC004']);
 	});
 
 	it('is not fooled by raw strings, runes, comments or blocks', () => {
@@ -193,7 +193,7 @@ var q = map[string]any{"questions": map[string]any{"a": map[string]any{"type": "
 
 	it("does not judge criteria held in the project's own type", () => {
 		const text = `q := Score{Instructions: "Is it a risk?", Criteria: ScoreCriteria{levels}}`;
-		expect(codes(text, 'go')).toEqual(['JEV000']);
+		expect(codes(text, 'go')).toEqual(['DEC000']);
 	});
 
 	it('marks a struct with fields of its own as open', () => {
@@ -204,7 +204,7 @@ var q = map[string]any{"questions": map[string]any{"a": map[string]any{"type": "
 	it('offers no reshape fix, and still adds a fallback option', () => {
 		const list = `q := map[string]any{"questions": map[string]any{"t": map[string]any{"type": "choice", "instructions": "Which one fits?", "criteria": []string{"a", "b"}}}}`;
 		const shaped = lintText(list, DEFAULT_OPTIONS, 'go').findings[0];
-		expect(shaped?.code).toBe('JEV006');
+		expect(shaped?.code).toBe('DEC006');
 		expect(shaped?.fix).toBeUndefined();
 		const map = `q := map[string]any{"questions": map[string]any{"t": map[string]any{"type": "choice", "instructions": "Which one fits?", "criteria": map[string]string{"a": "Apples", "b": "Bread"}}}}`;
 		const out = apply(
@@ -251,8 +251,8 @@ describe('JSON inside a string', () => {
 		for (const [syntax, text] of sources) {
 			const result = lintText(text, DEFAULT_OPTIONS, syntax);
 			expect(result.findings.map((finding) => finding.code)).toEqual([
-				'JEV001',
-				'JEV008',
+				'DEC001',
+				'DEC008',
 			]);
 			const at = result.findings[0]?.span.start ?? 0;
 			expect(text.slice(at, at + 12)).toBe('"jev-latest"');

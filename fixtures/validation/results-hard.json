@@ -5,7 +5,7 @@
   "inputTokens": 62849,
   "results": [
     {
-      "rule": "JEV101",
+      "rule": "DEC101",
       "name": "double negative, states that take reading",
       "bad": "14 of 15",
       "badSureness": "0.73",
@@ -13,7 +13,7 @@
       "goodSureness": "0.87"
     },
     {
-      "rule": "JEV102",
+      "rule": "DEC102",
       "name": "counting 20 to 40 items, one either side of the line",
       "bad": "8 of 12",
       "badSureness": "0.58",
@@ -21,7 +21,7 @@
       "goodSureness": "n/a"
     },
     {
-      "rule": "JEV103",
+      "rule": "DEC103",
       "name": "two dates a day or two apart, in mixed formats",
       "bad": "12 of 12",
       "badSureness": "0.90",
@@ -29,7 +29,7 @@
       "goodSureness": "n/a"
     },
     {
-      "rule": "JEV104",
+      "rule": "DEC104",
       "name": "compound, where only one half holds",
       "bad": "14 of 14",
       "badSureness": "0.87",
@@ -37,7 +37,7 @@
       "goodSureness": "0.92"
     },
     {
-      "rule": "JEV107",
+      "rule": "DEC107",
       "name": "absence against presence, personal data that is easy to overlook",
       "bad": "14 of 14",
       "badSureness": "0.86",
@@ -45,7 +45,7 @@
       "goodSureness": "0.88"
     },
     {
-      "rule": "JEV108",
+      "rule": "DEC108",
       "name": "inverted criteria, personal data that is easy to overlook",
       "bad": "14 of 14",
       "badSureness": "0.86",
@@ -53,7 +53,7 @@
       "goodSureness": "0.95"
     },
     {
-      "rule": "JEV110",
+      "rule": "DEC110",
       "name": "degree words, reports that sit between levels",
       "bad": "11 of 12",
       "badSureness": "0.90",

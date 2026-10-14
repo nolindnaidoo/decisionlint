@@ -1,4 +1,4 @@
-# decisionlint-le
+# decisionlint
 
 Lints the questions you write for TypeSafe's Jev model and for OpenAI's
 Decisions API (`gpt-6-luna`), before they are sent. Either model answers a
@@ -11,16 +11,16 @@ rules with Jev's defaults.
 
 This package is the command line and the library, with the MCP server behind
 `--mcp`. An agent host installs the server on its own as
-[`decisionlint-le-mcp`](https://www.npmjs.com/package/decisionlint-le-mcp). None of it
+[`decisionlint-mcp`](https://www.npmjs.com/package/decisionlint-mcp). None of it
 needs an API key or uses the network, unless you pass `--ask` to the command
 line.
 
 ## Command line
 
 ```bash
-npx decisionlint-le src/                 # a directory, searched for files it reads
-npx decisionlint-le request.jev.json     # one file
-npx decisionlint-le --format github .    # annotations on a pull request
+npx decisionlint src/                 # a directory, searched for files it reads
+npx decisionlint request.jev.json     # one file
+npx decisionlint --format github .    # annotations on a pull request
 ```
 
 It reads JSON, JavaScript, TypeScript, Python, Rust and Go, in TypeSafe's
@@ -36,7 +36,7 @@ past `--max-warnings`.
 |---|---|
 | `--format <stylish\|compact\|json\|github\|sarif\|junit>` | How findings are printed. `stylish` groups them by file and is the default. `compact` is one per line as `path:line:column`. `sarif` is for code scanning and `junit` for test reporters. Also `-f` |
 | `--rule <CODE=level>` | Set one rule to `off`, `hint`, `info`, `warning` or `error`. A rule's name works in place of its code, and `warn` means `warning` |
-| `--config <file>` | Use this settings file, and no `decisionlint-le.json` found near the files. Also `-c` |
+| `--config <file>` | Use this settings file, and no `decisionlint.json` found near the files. Also `-c` |
 | `--max-warnings <n>` | Fail when more than `n` warnings are reported |
 | `--stdin-filename <path>` | Lint standard input as if it were that file |
 | `--fix` | Write the fixes that only mend what the API would refuse |
@@ -45,8 +45,8 @@ past `--max-warnings`.
 | `--ask-plan` | Say what `--ask` would send, and send nothing |
 | `--ask-platform <id>` | Where `--ask` sends, named outright: `typesafe`, `openai`, `openrouter`, `vercel`, `llmgateway` or `liquid`, each with its own key variable and a default model in its own spelling. Without it a model id goes where its spelling says |
 | `--ask-model <id>` | The model `--ask` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
-| `--ask-endpoint <url>` | The full URL `--ask` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_LE_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
-| `--ask-shape <shape>` | The shape sent to `--ask-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_LE_ASK_SHAPE` |
+| `--ask-endpoint <url>` | The full URL `--ask` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
+| `--ask-shape <shape>` | The shape sent to `--ask-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_ASK_SHAPE` |
 | `--ask-max-calls <n>` | The most requests `--ask` may send in the run. Default 25 |
 | `--ask-send-state` | With `--ask`, also send state written out in a file |
 | `--color`, `--no-color` | Colour the default format, or do not. Without either it is coloured in a terminal, unless `NO_COLOR` is set |
@@ -55,13 +55,13 @@ past `--max-warnings`.
 
 ### Asking a model
 
-`--ask` runs the checks that ask a decision model, `JEV301` to `JEV312`, after
+`--ask` runs the checks that ask a decision model, `DEC301` to `DEC312`, after
 the linting. It is the only option that uses the network, and nothing in a
 settings file can turn it on.
 
 ```bash
-npx decisionlint-le --ask-plan src/                    # what it would send. No key, nothing sent
-TYPESAFE_API_KEY=... npx decisionlint-le --ask src/    # send it
+npx decisionlint --ask-plan src/                    # what it would send. No key, nothing sent
+TYPESAFE_API_KEY=... npx decisionlint --ask src/    # send it
 ```
 
 - `--ask-platform` names where it goes: `typesafe`, `openai`, `openrouter`,
@@ -73,7 +73,7 @@ TYPESAFE_API_KEY=... npx decisionlint-le --ask src/    # send it
   its vendor. The key is read from that variable and from nowhere else, and
   is never printed. Each finding from any model but `jev-1.13.0` says that
   its cutoff was set on Jev.
-- `--ask-endpoint`, or `DECISIONLINT_LE_ASK_ENDPOINT`, sends to a platform you
+- `--ask-endpoint`, or `DECISIONLINT_ASK_ENDPOINT`, sends to a platform you
   host, with `--ask-shape` where the path does not say which shape it takes.
   A spelling that names no host is refused without it, with nothing sent.
 - A question with a part built at runtime is never sent. The summary counts
@@ -89,19 +89,19 @@ TYPESAFE_API_KEY=... npx decisionlint-le --ask src/    # send it
 ## In the editor
 
 Installed in a project's dev dependencies, this package is also what the
-[DecisionLint-LE extension](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le)
+[DecisionLint extension](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint)
 lints with in VS Code, so the editor and CI report the same findings from the
 same version. It needs 0.3.0 or newer and a trusted workspace.
 
 ## Settings
 
-A `decisionlint-le.json` in your project sets rule levels, and the VS Code
+A `decisionlint.json` in your project sets rule levels, and the VS Code
 extension reads the same file, so the editor and CI agree.
 
 ```json
 {
-  "rules": { "JEV004": "error", "JEV112": "off" },
-  "ignore": ["JEV004:department"],
+  "rules": { "DEC004": "error", "DEC112": "off" },
+  "ignore": ["DEC004:department"],
   "exclude": ["fixtures", "**/*.generated.ts"]
 }
 ```
@@ -119,14 +119,14 @@ server's instructions name both vendors, so an agent knows to call it for
 either shape.
 
 An agent host should install
-[`decisionlint-le-mcp`](https://www.npmjs.com/package/decisionlint-le-mcp), which is
+[`decisionlint-mcp`](https://www.npmjs.com/package/decisionlint-mcp), which is
 this server and nothing else, with no flag to forget. A project that already
 has this package reaches the same server with the flag:
 
 ```json
 {
   "mcpServers": {
-    "decisionlint-le": { "command": "npx", "args": ["-y", "decisionlint-le", "--mcp"] }
+    "decisionlint": { "command": "npx", "args": ["-y", "decisionlint", "--mcp"] }
   }
 }
 ```
@@ -146,19 +146,19 @@ Every tool answers as structured content beside the text. The first six send
 nothing and need no key. The two that send read `TYPESAFE_API_KEY` or
 `OPENAI_API_KEY` from the server's environment, or from `.env.local` or
 `.env` in its working directory, never from an argument. The server is listed
-on the MCP registry as `io.github.nolindnaidoo/decisionlint-le`.
+on the MCP registry as `io.github.nolindnaidoo/decisionlint`.
 
 ## As a library
 
 ```js
-const decisionlint = require('decisionlint-le');
+const decisionlint = require('decisionlint');
 
 const { findings } = decisionlint.lint(text, options, 'js');
 const { text: mended, fixed } = decisionlint.fix(text, options, 'js');
 ```
 
 `lint` and `fix` are pure: no filesystem, no network. `options` takes the
-same `rules`, `fallbackOptions` and `ignore` as `decisionlint-le.json`. The third
+same `rules`, `fallbackOptions` and `ignore` as `decisionlint.json`. The third
 argument is the syntax, one of `syntaxes`: `js` for JSON, JavaScript and
 TypeScript, then `python`, `rust` and `go`. Any other value throws, naming
 those four. `rules` lists every rule

@@ -1,7 +1,7 @@
 {
-  "name": "decisionlint-le-mcp",
+  "name": "decisionlint-mcp",
   "version": "1.0.0",
-  "mcpName": "io.github.nolindnaidoo/decisionlint-le",
+  "mcpName": "io.github.nolindnaidoo/decisionlint",
   "description": "Lint questions for TypeSafe's Jev and OpenAI's Luna offline, or ask the model itself with your key.",
   "keywords": [
     "mcp",
@@ -20,8 +20,8 @@
     "openai",
     "decisions-api",
     "lint",
-    "decisionlint-le",
-    "decisionlint-le-mcp",
+    "decisionlint",
+    "decisionlint-mcp",
     "nolindnaidoo",
     "letools"
   ],
@@ -30,18 +30,18 @@
     "name": "Nolin Naidoo",
     "url": "https://nolindnaidoo.com"
   },
-  "homepage": "https://letools.dev/tools/decisionlint-le",
+  "homepage": "https://letools.dev/tools/decisionlint",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nolindnaidoo/decisionlint-le.git",
+    "url": "https://github.com/nolindnaidoo/decisionlint.git",
     "directory": "mcp"
   },
   "bugs": {
-    "url": "https://github.com/nolindnaidoo/decisionlint-le/issues"
+    "url": "https://github.com/nolindnaidoo/decisionlint/issues"
   },
   "type": "commonjs",
   "bin": {
-    "decisionlint-le-mcp": "server.js"
+    "decisionlint-mcp": "server.js"
   },
   "files": [
     "server.js",

@@ -126,16 +126,17 @@ endpoint when its shape is `typesafe`.
    "Deprecated extensions" discussion, which is how a listing gets the
    deprecation banner; the old MCP listing marked deprecated through
    `PATCH /v0.1/servers/{name}/status`, which the registry grants the
-   namespace's publisher.
+   namespace's publisher. Built on 2026-10-14: `shim/npm`, `shim/mcp` and
+   `shim/extension`, proven by `scripts/e2e-shims.js`, published by
+   `release-shim.yml` with one opt-in per target, in the order npm,
+   deprecate, Open VSX, Marketplace, registry. The publisher binary's
+   `status` command is the route confirmed against the raw docs.
 8. Reservations, each its own authorization and optional: the GitHub
    organisation `decisionlint` and the domain `decisionlint.dev`, both of
    which only the owner can create.
 
 ## Outstanding
 
-- The MCP registry's status route was read from an extracted page on
-  2026-10-14, not the raw API doc. Confirm it against the raw doc before
-  step 7.
 - The two demo recordings are taken again under D6, because the problems
   panel names the diagnostic source and the command line names the
   command.

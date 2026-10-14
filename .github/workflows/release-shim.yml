@@ -1,0 +1,252 @@
+# Manual publishes of the bridges to the old names, from shim/. Each target
+# is its own opt-in and defaults to OFF, as in release.yml: a published
+# version can never be republished, so a run that publishes one target and
+# fails on another is recovered by re-running with the failed target alone.
+#
+# The order the bridges go out in: npm, then deprecate, then Open VSX, then
+# the Marketplace, then the registry status. The deprecate job refuses to
+# run until the forwarders are on npm, because its message tells people to
+# move to what they forward to.
+name: Release old names
+
+on:
+  workflow_dispatch:
+    inputs:
+      npm:
+        description: Publish jevlint-le and jevlint-le-mcp 0.9.0, the forwarders, to npm
+        type: boolean
+        default: false
+      deprecate:
+        description: Mark every version of jevlint-le and jevlint-le-mcp deprecated on npm, pointing at the new names
+        type: boolean
+        default: false
+      openvsx:
+        description: Publish nolindnaidoo.jevlint-le 0.9.0, the pointer, to Open VSX
+        type: boolean
+        default: false
+      marketplace:
+        description: Publish nolindnaidoo.jevlint-le 0.9.0, the pointer, to the VS Code Marketplace
+        type: boolean
+        default: false
+      registry:
+        description: Mark io.github.nolindnaidoo/jevlint-le deprecated on the MCP registry
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-shim-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require at least one target
+        env:
+          NPM: ${{ inputs.npm }}
+          DEPRECATE: ${{ inputs.deprecate }}
+          OPENVSX: ${{ inputs.openvsx }}
+          MARKETPLACE: ${{ inputs.marketplace }}
+          REGISTRY: ${{ inputs.registry }}
+        run: |
+          if [ "$NPM" != "true" ] && [ "$DEPRECATE" != "true" ] && [ "$OPENVSX" != "true" ] && [ "$MARKETPLACE" != "true" ] && [ "$REGISTRY" != "true" ]; then
+            echo "::error::No target selected."
+            exit 1
+          fi
+
+  # The two forwarders. `id-token: write` signs their provenance, as for the
+  # real packages, and is held by no job that handles the VSIX tokens.
+  npm:
+    if: inputs.npm
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # With a registry URL, setup-node writes an .npmrc that reads the token
+      # from NODE_AUTH_TOKEN, so it is never written to disk or passed in argv.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check the npm credential
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::npm publishing requested but NPM_TOKEN is not set."
+            exit 1
+          fi
+
+      - name: Refuse to republish an existing version
+        run: |
+          for dir in shim/npm shim/mcp; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "::error::$name@$version is already published."
+              exit 1
+            fi
+            echo "Publishing $name@$version"
+          done
+
+      # Builds the real packages, installs the forwarders beside them from
+      # tarballs and runs each as a process.
+      - name: Build the real packages and gate the forwarders
+        run: bun run build:npm && bun run test:shims
+
+      - name: Publish jevlint-le to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./shim/npm --access public
+
+      - name: Publish jevlint-le-mcp to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./shim/mcp --access public
+
+  deprecate:
+    if: inputs.deprecate
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the npm credential
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::npm deprecation requested but NPM_TOKEN is not set."
+            exit 1
+          fi
+
+      # The message tells people the old name forwards. It must, first.
+      - name: Require the forwarders on npm
+        run: |
+          for name in jevlint-le jevlint-le-mcp; do
+            if ! npm view "$name@0.9.0" version >/dev/null 2>&1; then
+              echo "::error::$name@0.9.0 is not on npm. Publish the forwarders first."
+              exit 1
+            fi
+          done
+
+      - name: Deprecate jevlint-le
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm deprecate 'jevlint-le@*' 'jevlint-le is now decisionlint (https://www.npmjs.com/package/decisionlint). 0.9.0 forwards to it; install decisionlint.'
+
+      - name: Deprecate jevlint-le-mcp
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm deprecate 'jevlint-le-mcp@*' 'jevlint-le-mcp is now decisionlint-mcp (https://www.npmjs.com/package/decisionlint-mcp). 0.9.0 forwards to it; install decisionlint-mcp.'
+
+  # The pointer extension. Open VSX goes first when both are selected: that
+  # is where most installs of the old id are.
+  extension:
+    if: inputs.openvsx || inputs.marketplace
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check publish targets and credentials
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          MARKETPLACE: ${{ inputs.marketplace }}
+          OPENVSX: ${{ inputs.openvsx }}
+        run: |
+          fail=0
+          if [ "$MARKETPLACE" = "true" ] && [ -z "$VSCE_PAT" ]; then
+            echo "::error::Marketplace publishing requested but VSCE_PAT is not set."
+            fail=1
+          fi
+          if [ "$OPENVSX" = "true" ] && [ -z "$OVSX_PAT" ]; then
+            echo "::error::Open VSX publishing requested but OVSX_PAT is not set."
+            fail=1
+          fi
+          exit $fail
+
+      - name: Gate the bridges
+        run: bun run build:npm && bun run test:shims
+
+      - name: Package the pointer
+        id: vsix
+        run: |
+          mkdir -p release
+          (cd shim/extension && bunx vsce package --no-dependencies --out ../../release/)
+          path=$(ls release/jevlint-le-*.vsix)
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+          echo "Built $path"
+
+      - name: Publish to Open VSX
+        if: inputs.openvsx
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: bunx ovsx publish "${{ steps.vsix.outputs.path }}"
+
+      - name: Publish to VS Code Marketplace
+        if: inputs.marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: bunx vsce publish --packagePath "${{ steps.vsix.outputs.path }}"
+
+  # The old listing stays, marked deprecated with a pointer. The publisher
+  # binary is pinned by version and checksum, as in release.yml, and logs in
+  # with this job's OIDC identity.
+  registry:
+    if: inputs.registry
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Mark the old listing deprecated
+        env:
+          PUBLISHER_VERSION: v1.8.0
+          PUBLISHER_SHA256: 1370446bbe74d562608e8005a6ccce02d146a661fbd78674e11cc70b9618d6cf
+        run: |
+          url="https://github.com/modelcontextprotocol/registry/releases/download/${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          curl -fsSL "$url" -o publisher.tar.gz
+          echo "${PUBLISHER_SHA256}  publisher.tar.gz" | sha256sum --check --status || {
+            echo "::error::mcp-publisher checksum mismatch — refusing to run it."
+            exit 1
+          }
+          tar xzf publisher.tar.gz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher status --status deprecated --all-versions --yes \
+            --message "Renamed to io.github.nolindnaidoo/decisionlint. Install decisionlint-mcp; jevlint-le-mcp 0.9.0 forwards to it." \
+            io.github.nolindnaidoo/jevlint-le

@@ -645,6 +645,33 @@ family's files, copied unchanged from `regex-le`.
   `pageFor(code)`, and the page links on to `docs`. The pages live on the
   default branch, so a rule's page exists once the rule is merged.
 
+## Bridges to the old names
+
+`shim/` holds the last releases under the names 1.0.0 left behind, each a
+few lines that point at the new one and never lint on their own:
+
+- `shim/npm`, `jevlint-le@0.9.0`: a `bin` that runs `decisionlint`'s command
+  line as a child with the same arguments, streams and exit code, and a
+  `lib.js` that re-exports the library. It depends on `decisionlint@^1`, so
+  every 1.x reaches it with no further publish. The notice goes to stderr.
+- `shim/mcp`, `jevlint-le-mcp@0.9.0`: the same for `decisionlint-mcp`. The
+  notice goes to stderr only: stdout is the protocol channel, and one stray
+  line there breaks the client.
+- `shim/extension`, `nolindnaidoo.jevlint-le@0.9.0`: no contributions, one
+  activation on startup, one notice that installs `nolindnaidoo.decisionlint`
+  and uninstalls itself. It lints nothing, because the new extension is a
+  different id, both can be installed at once, and two linters would report
+  every finding twice.
+
+The forwarders spawn the real file rather than require it, because
+`decisionlint` exports only its library. `scripts/e2e-shims.js`
+(`bun run test:shims`) installs the two npm shims from local tarballs
+beside the real packages, so nothing comes from the registry, runs each as
+a process and packages the extension; CI runs it after `test:cli`.
+`.github/workflows/release-shim.yml` publishes any of the three, marks the
+old npm names deprecated and the old registry listing deprecated, each an
+opt-in, in the order npm, deprecate, Open VSX, Marketplace, registry.
+
 ## Toolchain
 
 - **Build:** esbuild bundle to `dist/extension.js`. `tsc` is typecheck-only.
@@ -719,6 +746,7 @@ difference matters when the family changes one.
 | `.github/workflows/release.yml` | Changed: publishes `npm/` with the `NPM_TOKEN` secret where the family uses trusted publishing. The MCP registry step is the family's, in a job of its own that first waits for npm to serve the version, so a listing that fails is re-run alone |
 | `.github/dependabot.yml` | Cut down: no `cargo` entry |
 | `.github/workflows/jev-release.yml`, `scripts/check-jev-release.ts` | This repo's own. The family declares no vendor's model version |
+| `.github/workflows/release-shim.yml`, `shim/`, `scripts/e2e-shims.js` | This repo's own: the bridges to the names 1.0.0 left behind |
 
 - **`letools-site`'s fleet check names this repo and does not compare it.** It
   is listed in `OUTSIDE_FLEET` in `letools-site/scripts/check-fleet.ts`. The

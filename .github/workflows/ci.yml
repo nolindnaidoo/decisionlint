@@ -222,6 +222,13 @@ jobs:
         if: runner.os == 'Linux'
         run: bun run test:cli
 
+      # Installs the two npm forwarders beside the real packages from
+      # tarballs, runs them, and packages the pointer extension. Linux only,
+      # as above.
+      - name: Bridges to the old names
+        if: runner.os == 'Linux'
+        run: bun run test:shims
+
       - name: Package VSIX
         run: bun run package
 

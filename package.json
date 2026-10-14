@@ -50,12 +50,12 @@
     "commands": [
       {
         "command": "decisionlint-le.lintFile",
-        "title": "Lint Jev Questions in This File",
+        "title": "Lint the Questions in This File",
         "category": "DecisionLint-LE"
       },
       {
         "command": "decisionlint-le.lintWorkspace",
-        "title": "Lint Jev Questions in the Workspace",
+        "title": "Lint the Questions in the Workspace",
         "category": "DecisionLint-LE"
       },
       {
@@ -64,12 +64,42 @@
         "category": "DecisionLint-LE"
       },
       {
-        "command": "decisionlint-le.checkWithJev",
-        "title": "Check This File with Jev (uses your API key)",
+        "command": "decisionlint-le.askJev",
+        "title": "Ask Jev About This File (TypeSafe, uses your API key)",
         "category": "DecisionLint-LE"
       },
       {
-        "command": "decisionlint-le.setApiKey",
+        "command": "decisionlint-le.askLuna",
+        "title": "Ask Luna About This File (OpenAI, uses your API key)",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.askOpenRouter",
+        "title": "Ask via OpenRouter About This File (uses your API key)",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.askVercel",
+        "title": "Ask via Vercel AI Gateway About This File (uses your API key)",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.askLlmGateway",
+        "title": "Ask via LLM Gateway About This File (uses your API key)",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.askLiquid",
+        "title": "Ask Liquid d1 About This File (uses your API key)",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.askEndpoint",
+        "title": "Ask the Model at My Endpoint About This File",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.setTypeSafeApiKey",
         "title": "Set TypeSafe API Key",
         "category": "DecisionLint-LE"
       },
@@ -79,13 +109,38 @@
         "category": "DecisionLint-LE"
       },
       {
-        "command": "decisionlint-le.clearApiKey",
+        "command": "decisionlint-le.setOpenRouterApiKey",
+        "title": "Set OpenRouter API Key",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.setVercelApiKey",
+        "title": "Set Vercel AI Gateway API Key",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.setLlmGatewayApiKey",
+        "title": "Set LLM Gateway API Key",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.setLiquidApiKey",
+        "title": "Set Liquid AI API Key",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.setEndpointApiKey",
+        "title": "Set Endpoint API Key",
+        "category": "DecisionLint-LE"
+      },
+      {
+        "command": "decisionlint-le.clearApiKeys",
         "title": "Clear API Keys",
         "category": "DecisionLint-LE"
       },
       {
         "command": "decisionlint-le.probeQuestion",
-        "title": "Probe the Jev Question at the Cursor (uses your API key)",
+        "title": "Probe the Question at the Cursor (asks Jev, uses your TypeSafe key)",
         "category": "DecisionLint-LE"
       }
     ],
@@ -145,53 +200,54 @@
           "minimum": 1,
           "markdownDescription": "Files larger than this are reported as skipped, not linted."
         },
-        "decisionlint-le.jev.model": {
-          "type": "string",
-          "default": "jev-1.13.0",
-          "markdownDescription": "The model the **Check This File with Jev** command asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling, such as `~typesafe/jev-latest` for OpenRouter or `d1` for Liquid AI, each sent to that platform with the key in its own variable. Pinned to the version its checks were calibrated on. An alias such as `jev-latest` will move those cutoffs under you, and a finding from any other model says where the cutoff was set."
+        "decisionlint-le.ask.models": {
+          "type": "object",
+          "default": {"typesafe": "jev-1.13.0", "openai": "gpt-6-luna", "openrouter": "typesafe/jev-1.13", "vercel": "typesafe-ai/jev", "llmgateway": "jev-1.13.0", "liquid": "d1"},
+          "additionalProperties": { "type": "string" },
+          "markdownDescription": "The model id each Ask command sends, by platform: `typesafe` for **Ask Jev**, `openai` for **Ask Luna**, `openrouter`, `vercel`, `llmgateway` and `liquid` for the others, each in that platform's own spelling. The TypeSafe default is the version the checks were calibrated on, and a finding from any other model says where its cutoff was set. An alias such as `jev-latest` will move those cutoffs under you."
         },
-        "decisionlint-le.jev.maxCalls": {
-          "type": "number",
-          "default": 25,
-          "minimum": 1,
-          "markdownDescription": "The most requests one **Check This File with Jev** run may send. Each question in the file costs one request. Questions past the limit are counted and not sent."
-        },
-        "decisionlint-le.jev.sendState": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Also send the `state` written beside a `questions` map, so Jev can check whether the state holds what each question asks about and whether it carries instructions. Off by default: with it off, only questions are sent. It applies only where the state is written out in the file."
-        },
-        "decisionlint-le.jev.confirm": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Before **Check This File with Jev** or the probe sends anything, show how many requests it will make, roughly what that costs and whether your state is sent, and wait for a yes. Off by default: running the command is taken as the decision to send."
-        },
-        "decisionlint-le.jev.apiKey": {
-          "type": "string",
-          "default": "",
+        "decisionlint-le.ask.keys": {
+          "type": "object",
+          "default": {"typesafe": "", "openai": "", "openrouter": "", "vercel": "", "llmgateway": "", "liquid": "", "endpoint": ""},
+          "additionalProperties": { "type": "string" },
           "scope": "application",
           "ignoreSync": true,
-          "markdownDescription": "Your TypeSafe API key, for **Check This File with Jev** and the probe. It can only be set in your user settings, never in a workspace, so it cannot end up in a repository, and it is left out of Settings Sync. **Set TypeSafe API Key** in the command palette stores it in the system keychain instead, which keeps it out of a plain-text file. A key set here is used ahead of one in the keychain."
+          "markdownDescription": "An API key per platform, by the same ids, and `endpoint` for a host you name. User settings only, never a workspace's, so a key cannot end up in a repository, and left out of Settings Sync. The **Set ... API Key** commands store a key in the system keychain instead, which keeps it out of a plain-text file. A key typed here is used ahead of one in the keychain, and both ahead of the platform's own environment variable."
         },
-        "decisionlint-le.jev.openaiApiKey": {
+        "decisionlint-le.ask.endpoint": {
           "type": "string",
           "default": "",
           "scope": "application",
-          "ignoreSync": true,
-          "markdownDescription": "Your OpenAI API key, used by **Check This File with Jev** when `decisionlint-le.jev.model` is `gpt-6-luna`. Held the same way as the TypeSafe key: user settings only, left out of Settings Sync, and **Set OpenAI API Key** stores it in the system keychain instead."
+          "markdownDescription": "The full URL **Ask the Model at My Endpoint** posts to: a platform you host, such as llama.cpp, vLLM, LiteLLM or Ollaya, or a gateway reached by a model spelling the other commands do not cover. User settings only, never a workspace's, so a repository cannot point your key at a host of its choosing. A host this tool does not know is sent the `endpoint` key, else the key in `TYPESAFE_API_KEY` or `OPENAI_API_KEY`, whichever the shape's SDK reads, or no key when none is set."
         },
-        "decisionlint-le.jev.endpoint": {
-          "type": "string",
-          "default": "",
-          "scope": "application",
-          "markdownDescription": "The full URL **Check This File with Jev** and the probe post to: a platform you host, such as llama.cpp, vLLM, LiteLLM or Ollaya, or a gateway spelling of the model id that names no host, such as `openai/gpt-6-luna-decisions`. Leave empty to send a model id to the platform its spelling names: `jev-1.13.0` to TypeSafe, `gpt-6-luna` to OpenAI, `~typesafe/jev-latest` to OpenRouter, `typesafe-ai/jev` to Vercel AI Gateway, `d1` to Liquid AI, each with the key in that platform's own variable. User settings only, never a workspace's, so a repository cannot point your key at a host of its choosing. A host this tool does not know is sent the key in `TYPESAFE_API_KEY` or `OPENAI_API_KEY`, whichever the shape's SDK reads, or no key when neither is set."
-        },
-        "decisionlint-le.jev.shape": {
+        "decisionlint-le.ask.endpointShape": {
           "type": "string",
           "enum": ["", "typesafe", "openai"],
           "default": "",
           "scope": "application",
-          "markdownDescription": "The request shape sent to `decisionlint-le.jev.endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` for a System One body, `openai` for a Decisions body. Leave empty otherwise."
+          "markdownDescription": "The request shape sent to `decisionlint-le.ask.endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` for a System One body, `openai` for a Decisions body. Leave empty otherwise."
+        },
+        "decisionlint-le.ask.endpointModel": {
+          "type": "string",
+          "default": "",
+          "scope": "application",
+          "markdownDescription": "The model id sent to `decisionlint-le.ask.endpoint`. A llama.cpp with one model loaded ignores it; a proxy routes by it."
+        },
+        "decisionlint-le.ask.maxCalls": {
+          "type": "number",
+          "default": 25,
+          "minimum": 1,
+          "markdownDescription": "The most requests one Ask command may send. Each question in the file costs one request. Questions past the limit are counted and not sent."
+        },
+        "decisionlint-le.ask.sendState": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Also send the `state` written beside a `questions` map, so the model can check whether the state holds what each question asks about and whether it carries instructions. Off by default: with it off, only questions are sent. It applies only where the state is written out in the file."
+        },
+        "decisionlint-le.ask.confirm": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Before an Ask command or the probe sends anything, show how many requests it will make, roughly what that costs and whether your state is sent, and wait for a yes. Off by default: running the command is taken as the decision to send."
         },
         "decisionlint-le.notificationsLevel": {
           "type": "string",
@@ -258,7 +314,7 @@
           "group": "decisionlint-le@1"
         },
         {
-          "command": "decisionlint-le.checkWithJev",
+          "command": "decisionlint-le.askJev",
           "when": "editorLangId =~ /^(json|jsonc|javascript|javascriptreact|typescript|typescriptreact|python|rust|go)$/",
           "group": "decisionlint-le@2"
         },

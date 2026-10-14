@@ -34,8 +34,8 @@ export type Provider = Readonly<{
 	endpoint: string;
 	/** The environment variable the command line and the editor read the key from. */
 	envKey: string;
-	/** The keychain slot and typed setting in the editor. Only TypeSafe's and OpenAI's keys have one. */
-	keychain: 'typesafe' | 'openai' | undefined;
+	/** The key's slot in the editor, in the keychain and in `ask.keys`: the platform's id, or `endpoint` for a host the user names. */
+	slot: string;
 	/** True for a host the user runs, whose examples send no key. */
 	keyOptional: boolean;
 	/** Dollars per million input tokens on the platform's price page, and when that was read. */
@@ -55,7 +55,10 @@ export type Route = Readonly<{
 	shape?: Shape | '' | undefined;
 }>;
 
-/** The two vendors whose keys the editor keeps in its keychain, with the variable each reads. */
+/** The key slot for a host the user names, beside the platforms' own ids. */
+export const ENDPOINT_SLOT = 'endpoint';
+
+/** The two shapes' own vendors, whose key variables a host the user names is sent. */
 export const VENDOR_KEYS: Readonly<
 	Record<'typesafe' | 'openai', Readonly<{ vendor: string; envKey: string }>>
 > = Object.freeze({
@@ -193,9 +196,6 @@ function shapeOfPath(pathname: string): Shape | undefined {
 	return undefined;
 }
 
-const keychainOf = (target: Target): Provider['keychain'] =>
-	target.id === 'typesafe' || target.id === 'openai' ? target.id : undefined;
-
 function fromTarget(
 	target: Target,
 	shape: Shape,
@@ -210,7 +210,7 @@ function fromTarget(
 		// A platform without a variable of its own is reached through the SDK
 		// of the shape it takes, which reads that vendor's variable.
 		envKey: target.envKey ?? VENDOR_KEYS[shape].envKey,
-		keychain: keychainOf(target),
+		slot: target.id,
 		keyOptional: false,
 		pricePerMillionTokens: target.price?.perMillionInputTokens,
 		pricedOn: target.price?.readOn,
@@ -250,12 +250,24 @@ function fromEndpoint(
 		model: answererOf(model),
 		endpoint,
 		envKey: VENDOR_KEYS[shape].envKey,
-		keychain: undefined,
+		slot: ENDPOINT_SLOT,
 		keyOptional: true,
 		pricePerMillionTokens: undefined,
 		pricedOn: undefined,
 		...WIRES[shape],
 	});
+}
+
+/** Where a check goes when the platform is named outright, as an Ask command names it, or why it cannot. */
+export function providerForTarget(
+	target: Target,
+	model: string,
+): Provider | string {
+	const shape = target.shapes.find((each) => target.endpoints[each]);
+	const endpoint = shape && target.endpoints[shape];
+	if (!shape || !endpoint)
+		return `${target.name} runs at a host of your own. Set the endpoint it is sent to.`;
+	return fromTarget(target, shape, endpoint, model);
 }
 
 /**

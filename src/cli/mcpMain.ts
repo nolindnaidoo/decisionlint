@@ -11,7 +11,7 @@ import { EXIT } from './run';
  * `decisionlint-le --mcp` runs, reached with no flag, so a client that installs
  * by package name cannot start the command line by mistake and sit waiting
  * on a linter that has already exited. The network and the environment are
- * handed in for check_with_jev and probe_question, which are the only tools
+ * handed in for ask_model and probe_question, which are the only tools
  * that use them; the rest never touch either.
  */
 

@@ -16,13 +16,13 @@ import {
 } from '../lint/lint';
 import type { LintOptions, Severity } from '../types';
 import { type CliOptions, helpText, parseArgs } from './args';
-import { failureMessage, planJev, providerFromFlags, runJev } from './ask';
+import { failureMessage, planAsk, providerFromFlags, runAsk } from './ask';
 import { type Files, findFiles } from './files';
 import {
+	type AskTotals,
 	type FileReport,
 	format,
 	heldBack,
-	type JevTotals,
 	plural,
 	type Totals,
 } from './format';
@@ -37,9 +37,9 @@ export type Io = Readonly<{
 	out: (text: string) => void;
 	err: (text: string) => void;
 	version: string;
-	/** The environment, read only for the API key and only under `--jev`. */
+	/** The environment, read only for the API key and only under `--ask`. */
 	env: Readonly<Record<string, string | undefined>>;
-	/** The network, used only under `--jev`. */
+	/** The network, used only under `--ask`. */
 	fetch: Fetch;
 	wait: (ms: number) => Promise<void>;
 	/** True when a terminal is reading standard output. */
@@ -379,7 +379,7 @@ export async function run(
 		io.out(`${io.version}\n`);
 		return EXIT.passed;
 	}
-	const refused = refuseJev(options, io) ?? refuseFix(options);
+	const refused = refuseAsk(options, io) ?? refuseFix(options);
 	if (refused) return unusable(refused);
 	if (options.mcp) {
 		await serve(io);
@@ -417,41 +417,42 @@ export async function run(
 		skipped: gathered.left.skipped,
 		unread: [...gathered.left.unread, ...linted.failed],
 	};
-	if (options.jev || options.jevPlan)
-		return runWithJev(options, io, reports, left, optionsFor, fixed);
+	if (options.ask || options.askPlan)
+		return runWithAsk(options, io, reports, left, optionsFor, fixed);
 	const totals = { ...total(reports, left), ...fixed };
 	io.out(render(options, io, reports, totals));
 	return fails(totals, options.maxWarnings) ? EXIT.failed : EXIT.passed;
 }
 
-const JEV_ONLY: ReadonlyArray<readonly [keyof CliOptions, string]> = [
-	['jevModel', '--jev-model'],
-	['jevEndpoint', '--jev-endpoint'],
-	['jevShape', '--jev-shape'],
-	['jevMaxCalls', '--jev-max-calls'],
-	['jevSendState', '--jev-send-state'],
+const ASK_ONLY: ReadonlyArray<readonly [keyof CliOptions, string]> = [
+	['askPlatform', '--ask-platform'],
+	['askModel', '--ask-model'],
+	['askEndpoint', '--ask-endpoint'],
+	['askShape', '--ask-shape'],
+	['askMaxCalls', '--ask-max-calls'],
+	['askSendState', '--ask-send-state'],
 ];
 
 /** Why the Jev flags given cannot be run as given, before anything is read. */
-function refuseJev(options: CliOptions, io: Io): string | undefined {
-	const asks = options.jev || options.jevPlan;
-	const stray = JEV_ONLY.find(([key]) => options[key]);
-	if (!asks && stray) return `${stray[1]} needs --jev or --jev-plan.`;
+function refuseAsk(options: CliOptions, io: Io): string | undefined {
+	const asks = options.ask || options.askPlan;
+	const stray = ASK_ONLY.find(([key]) => options[key]);
+	if (!asks && stray) return `${stray[1]} needs --ask or --ask-plan.`;
 	if (asks && options.mcp)
-		return '--jev cannot be combined with --mcp. The server has check_with_jev for that.';
+		return '--ask cannot be combined with --mcp. The server has ask_model for that.';
 	if (!asks) return undefined;
 	// Where the requests go is settled before anything is read, so a model id
 	// that names no host is refused with nothing sent.
-	const provider = providerFromFlags(options, io.env);
-	if (typeof provider === 'string') return provider;
-	const { envKey, keyOptional } = provider;
+	const routed = providerFromFlags(options, io.env);
+	if (typeof routed === 'string') return routed;
+	const { envKey, keyOptional } = routed.provider;
 	if (
-		options.jev &&
-		!options.jevPlan &&
+		options.ask &&
+		!options.askPlan &&
 		!keyOptional &&
 		!io.env[envKey]?.trim()
 	)
-		return `--jev needs an API key in ${envKey}. Nothing was sent.`;
+		return `--ask needs an API key in ${envKey}. Nothing was sent.`;
 	return undefined;
 }
 
@@ -464,7 +465,7 @@ function refuseFix(options: CliOptions): string | undefined {
 	return undefined;
 }
 
-const sending = (jev: JevTotals): string =>
+const sending = (jev: AskTotals): string =>
 	[
 		`Sending ${plural(jev.planned, 'request')} to ${jev.vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.`,
 		jev.state ? 'State is sent.' : 'State is not sent.',
@@ -474,7 +475,7 @@ const sending = (jev: JevTotals): string =>
 // A run that checked part of what it was asked to must not pass as the whole.
 // `who` is the model's name, Jev or Luna, so the sentence names the one asked.
 function shortfall(
-	jev: JevTotals,
+	jev: AskTotals,
 	who: string,
 	failure: string | undefined,
 	stopped: boolean,
@@ -483,11 +484,11 @@ function shortfall(
 	if (failure) return `${failure}. ${who} answered ${of}.`;
 	if (stopped) return `Stopped. ${who} answered ${of}.`;
 	if (jev.overLimit)
-		return `${plural(jev.overLimit, 'request')} over the --jev-max-calls limit not sent. Raise the limit to check every question.`;
+		return `${plural(jev.overLimit, 'request')} over the --ask-max-calls limit not sent. Raise the limit to check every question.`;
 	return undefined;
 }
 
-async function runWithJev(
+async function runWithAsk(
 	options: CliOptions,
 	io: Io,
 	linted: ReadonlyArray<FileReport>,
@@ -496,24 +497,25 @@ async function runWithJev(
 	fixed: Pick<Totals, 'fixed'>,
 ): Promise<number> {
 	const say = (message: string) => io.err(`decisionlint-le: ${message}\n`);
-	// Already resolved once by `refuseJev`, which stops the run on a refusal.
-	const provider = providerFromFlags(options, io.env);
-	if (typeof provider === 'string') {
-		say(provider);
+	// Already resolved once by `refuseAsk`, which stops the run on a refusal.
+	const routed = providerFromFlags(options, io.env);
+	if (typeof routed === 'string') {
+		say(routed);
 		return EXIT.unusable;
 	}
-	const plan = planJev(linted, optionsFor, { ...options, provider });
+	const { provider, model } = routed;
+	const plan = planAsk(linted, optionsFor, { ...options, provider, model });
 	if (typeof plan === 'string') {
 		say(plan);
 		return EXIT.unusable;
 	}
-	if (options.jevPlan) {
-		const totals = { ...total(linted, left), ...fixed, jev: plan.totals };
+	if (options.askPlan) {
+		const totals = { ...total(linted, left), ...fixed, ask: plan.totals };
 		io.out(render(options, io, linted, totals));
 		return fails(totals, options.maxWarnings) ? EXIT.failed : EXIT.passed;
 	}
 	if (plan.totals.planned) say(sending(plan.totals));
-	const ran = await runJev(
+	const ran = await runAsk(
 		plan,
 		{
 			fetch: io.fetch,
@@ -523,7 +525,7 @@ async function runWithJev(
 		},
 		options.quiet,
 	);
-	const totals = { ...total(ran.reports, left), ...fixed, jev: ran.totals };
+	const totals = { ...total(ran.reports, left), ...fixed, ask: ran.totals };
 	io.out(render(options, io, ran.reports, totals));
 	const failure =
 		ran.failure &&

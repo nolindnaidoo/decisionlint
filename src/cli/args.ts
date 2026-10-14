@@ -2,7 +2,7 @@ import { ENV_KEY } from '../ask/client';
 import { VENDOR_KEYS } from '../ask/provider';
 import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../ask/review';
 import { LEVELS, readRule } from '../config/projectConfig';
-import type { Shape } from '../lint/targets';
+import { ASK_PLATFORM_IDS, type Shape } from '../lint/targets';
 import type { LintOptions } from '../types';
 
 const OPENAI_ENV_KEY = VENDOR_KEYS.openai.envKey;
@@ -29,18 +29,20 @@ export type CliOptions = Readonly<{
 	version: boolean;
 	/** Run as an MCP server on standard input and output. */
 	mcp: boolean;
-	/** Ask Jev about the questions after linting them. The only thing that sends anything. */
-	jev: boolean;
-	/** Say what `jev` would send, and send nothing. */
-	jevPlan: boolean;
-	jevModel: string | undefined;
-	/** The full URL --jev posts to, for a host the user runs or a gateway spelling that names none. */
-	jevEndpoint: string | undefined;
+	/** Ask a model about the questions after linting them. The only thing that sends anything. */
+	ask: boolean;
+	/** Say what `--ask` would send, and send nothing. */
+	askPlan: boolean;
+	/** The platform --ask sends to, named outright. Else the endpoint, else what the model id's spelling says. */
+	askPlatform: string | undefined;
+	askModel: string | undefined;
+	/** The full URL --ask posts to, for a host the user runs or a gateway spelling that names none. */
+	askEndpoint: string | undefined;
 	/** The shape sent to that endpoint, where its path does not say. */
-	jevShape: Shape | undefined;
+	askShape: Shape | undefined;
 	/** The most requests in the whole run. */
-	jevMaxCalls: number | undefined;
-	jevSendState: boolean;
+	askMaxCalls: number | undefined;
+	askSendState: boolean;
 	/** A run that finds no file to lint passes, where it would exit 2. */
 	allowNoFiles: boolean;
 	/** Write the safe fixes into the files before reporting. */
@@ -129,55 +131,64 @@ const FLAGS: ReadonlyArray<Flag> = Object.freeze([
 		apply: (options) => ({ ...options, quiet: true }),
 	},
 	{
-		name: '--jev',
-		help: `Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with the key in ${ENV_KEY} by default, OpenAI with the key in ${OPENAI_ENV_KEY} under --jev-model gpt-6-luna, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever --jev-endpoint says.`,
-		apply: (options) => ({ ...options, jev: true }),
+		name: '--ask',
+		help: `Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with the key in ${ENV_KEY} by default, OpenAI with the key in ${OPENAI_ENV_KEY} under --ask-model gpt-6-luna, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever --ask-endpoint says.`,
+		apply: (options) => ({ ...options, ask: true }),
 	},
 	{
-		name: '--jev-plan',
-		help: 'Say what --jev would send, and send nothing. Needs no key.',
-		apply: (options) => ({ ...options, jevPlan: true }),
+		name: '--ask-plan',
+		help: 'Say what --ask would send, and send nothing. Needs no key.',
+		apply: (options) => ({ ...options, askPlan: true }),
 	},
 	{
-		name: '--jev-model',
+		name: '--ask-platform',
 		value: 'id',
-		help: `The model --jev asks: a Jev version, gpt-6-luna for OpenAI's Decisions API, or a model id in another platform's spelling. Default ${DEFAULT_MODEL}, which the checks were measured on.`,
+		help: `Where --ask sends, named outright: ${ASK_PLATFORM_IDS.join(', ')}. Each has its own key variable and a default model in its own spelling. Without it a model id goes where its spelling says.`,
+		apply: (options, value) =>
+			ASK_PLATFORM_IDS.includes(value)
+				? { ...options, askPlatform: value }
+				: `'${value}' is not a platform. Use one of ${ASK_PLATFORM_IDS.join(', ')}.`,
+	},
+	{
+		name: '--ask-model',
+		value: 'id',
+		help: `The model --ask asks: a Jev version, gpt-6-luna for OpenAI's Decisions API, or a model id in another platform's spelling. Default ${DEFAULT_MODEL}, which the checks were measured on.`,
 		apply: (options, value) =>
 			value.trim()
-				? { ...options, jevModel: value.trim() }
+				? { ...options, askModel: value.trim() }
 				: 'a model id is needed.',
 	},
 	{
-		name: '--jev-endpoint',
+		name: '--ask-endpoint',
 		value: 'url',
-		help: 'The full URL --jev posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from DECISIONLINT_LE_ASK_ENDPOINT. A host this tool does not know is sent the key of the shape, or none.',
+		help: 'The full URL --ask posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from DECISIONLINT_LE_ASK_ENDPOINT. A host this tool does not know is sent the key of the shape, or none.',
 		apply: (options, value) =>
 			value.trim()
-				? { ...options, jevEndpoint: value.trim() }
+				? { ...options, askEndpoint: value.trim() }
 				: 'a URL is needed.',
 	},
 	{
-		name: '--jev-shape',
+		name: '--ask-shape',
 		value: 'shape',
-		help: 'The shape sent to --jev-endpoint where its path does not end in /systemone or /decisions: typesafe or openai. Also read from DECISIONLINT_LE_ASK_SHAPE.',
+		help: 'The shape sent to --ask-endpoint where its path does not end in /systemone or /decisions: typesafe or openai. Also read from DECISIONLINT_LE_ASK_SHAPE.',
 		apply: (options, value) =>
 			value === 'typesafe' || value === 'openai'
-				? { ...options, jevShape: value }
+				? { ...options, askShape: value }
 				: `'${value}' is not a shape. Use typesafe or openai.`,
 	},
 	{
-		name: '--jev-max-calls',
+		name: '--ask-max-calls',
 		value: 'n',
-		help: `The most requests --jev may send in the run. Default ${DEFAULT_MAX_CALLS}. The run fails if more are needed.`,
+		help: `The most requests --ask may send in the run. Default ${DEFAULT_MAX_CALLS}. The run fails if more are needed.`,
 		apply: (options, value) =>
 			/^[1-9]\d*$/.test(value)
-				? { ...options, jevMaxCalls: Number(value) }
+				? { ...options, askMaxCalls: Number(value) }
 				: `'${value}' is not a whole number above zero.`,
 	},
 	{
-		name: '--jev-send-state',
-		help: 'With --jev, also send state that is written out in a file.',
-		apply: (options) => ({ ...options, jevSendState: true }),
+		name: '--ask-send-state',
+		help: 'With --ask, also send state that is written out in a file.',
+		apply: (options) => ({ ...options, askSendState: true }),
 	},
 	{
 		name: '--color',
@@ -226,13 +237,14 @@ const DEFAULTS: CliOptions = Object.freeze({
 	help: false,
 	version: false,
 	mcp: false,
-	jev: false,
-	jevPlan: false,
-	jevModel: undefined,
-	jevEndpoint: undefined,
-	jevShape: undefined,
-	jevMaxCalls: undefined,
-	jevSendState: false,
+	ask: false,
+	askPlan: false,
+	askPlatform: undefined,
+	askModel: undefined,
+	askEndpoint: undefined,
+	askShape: undefined,
+	askMaxCalls: undefined,
+	askSendState: false,
 	allowNoFiles: false,
 	fix: false,
 	color: undefined,
@@ -248,7 +260,7 @@ export function helpText(): string {
 		'Usage: decisionlint-le [options] [file or directory ...]',
 		'',
 		'Lints the questions written for the Jev model. With no path it lints the',
-		'current directory. It sends nothing over the network unless --jev is given.',
+		'current directory. It sends nothing over the network unless --ask is given.',
 		'',
 		...FLAGS.map(
 			(flag, i) => `  ${(usage[i] ?? '').padEnd(width)}  ${flag.help}`,

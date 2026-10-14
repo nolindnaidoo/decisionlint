@@ -4,11 +4,12 @@ import * as vscode from 'vscode';
 import { _reset, _secrets, _state } from './__mocks__/vscode';
 import { run as runCli } from './cli/run';
 import { COMMANDS } from './commands';
-import { JEV_COMMANDS } from './commands/ask';
+import { ASK_COMMANDS, SLOTS } from './commands/ask';
 import { PROBE_COMMAND } from './commands/probe';
 import { CONFIG_DEFAULTS, getConfiguration } from './config/config';
 import { activate } from './extension';
 import { lintText } from './lint/lint';
+import { ASK_PLATFORM_IDS } from './lint/targets';
 import { LANGUAGES } from './services/linter';
 import { MCP_BUNDLE, MCP_PROVIDER_ID } from './services/mcpProvider';
 
@@ -160,7 +161,9 @@ describe('configuration', () => {
 		expect(
 			[
 				...Object.values(COMMANDS),
-				...Object.values(JEV_COMMANDS),
+				...Object.values(ASK_COMMANDS.ask),
+				...Object.values(ASK_COMMANDS.setKey),
+				ASK_COMMANDS.clearKeys,
 				PROBE_COMMAND,
 			].sort(),
 		).toEqual(declared);
@@ -590,7 +593,7 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('No TypeSafe API key');
 	});
@@ -598,20 +601,20 @@ describe('check with Jev', () => {
 	it('keeps the key in the keychain and out of settings and messages', async () => {
 		start(doc(VAGUE));
 		_state.input = '  apikey_secret_value  ';
-		await run(JEV_COMMANDS.setApiKey);
+		await run(ASK_COMMANDS.setKey.typesafe);
 		expect([..._state.secrets.values()]).toEqual(['apikey_secret_value']);
 		expect(JSON.stringify(_state.config)).not.toContain('apikey_secret_value');
 		expect(_state.messages.join(' ')).not.toContain('apikey_secret_value');
-		await run(JEV_COMMANDS.clearApiKey);
+		await run(ASK_COMMANDS.clearKeys);
 		expect(_state.secrets.size).toBe(0);
 	});
 
 	it('stores nothing when the box is dismissed or left blank', async () => {
 		start(doc(VAGUE));
 		_state.input = '   ';
-		await run(JEV_COMMANDS.setApiKey);
+		await run(ASK_COMMANDS.setKey.typesafe);
 		_state.input = undefined;
-		await run(JEV_COMMANDS.setApiKey);
+		await run(ASK_COMMANDS.setKey.typesafe);
 		expect(_state.secrets.size).toBe(0);
 	});
 
@@ -619,8 +622,8 @@ describe('check with Jev', () => {
 		const fetch = jevSays({ JEV301: { noul: 0.02 }, JEV302: { noul: 0.91 } });
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		const found = diagnostics(FROM_JEV).filter(
 			(d) => (d.code as { value: string }).value === 'JEV302',
@@ -644,18 +647,17 @@ describe('check with Jev', () => {
 			text: async () => '',
 		}));
 		vi.stubGlobal('fetch', luna);
-		_state.config = { 'jev.model': 'gpt-6-luna' };
 		start(doc(VAGUE));
 		// A TypeSafe key is not an OpenAI key.
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.openai);
 		expect(luna).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('No OpenAI API key');
 
 		_state.input = 'sk-test';
-		await run(JEV_COMMANDS.setOpenAIApiKey);
-		expect(_state.secrets.get('decisionlint-le.openaiApiKey')).toBe('sk-test');
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.setKey.openai);
+		expect(_state.secrets.get('decisionlint-le.key.openai')).toBe('sk-test');
+		await run(ASK_COMMANDS.ask.openai);
 		expect(luna).toHaveBeenCalledTimes(1);
 		const [url, init] = luna.mock.calls[0] as unknown as [
 			string,
@@ -670,18 +672,8 @@ describe('check with Jev', () => {
 		expect(_state.messages.at(-1)).toBe(
 			'DecisionLint-LE: Luna answered 1 request and flagged 1, 200 input tokens on gpt-6-luna.',
 		);
-		await run(JEV_COMMANDS.clearApiKey);
+		await run(ASK_COMMANDS.clearKeys);
 		expect(_state.secrets.size).toBe(0);
-	});
-
-	it('refuses to probe on Luna, and says which setting to change', async () => {
-		const luna = vi.fn();
-		vi.stubGlobal('fetch', luna);
-		_state.config = { 'jev.model': 'gpt-6-luna' };
-		start(doc(VAGUE));
-		await run('decisionlint-le.probeQuestion');
-		expect(luna).not.toHaveBeenCalled();
-		expect(_state.messages.at(-1)).toContain('The probe asks Jev only.');
 	});
 
 	it('underlines the option Jev points at and names the pair', async () => {
@@ -696,8 +688,8 @@ describe('check with Jev', () => {
 			}),
 		);
 		start(doc(overlapping));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		const found = diagnostics(FROM_JEV)[0];
 		expect(found?.message).toContain("Jev points at 'pet' and 'dog'.");
 		expect(found?.range.start.character).toBe(overlapping.indexOf('pet:'));
@@ -706,11 +698,11 @@ describe('check with Jev', () => {
 	it('says what it will send and what it will cost before sending, and stops on no', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.confirm': true };
+		_state.config = { 'ask.confirm': true };
 		start(doc(VAGUE));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		_state.answer = undefined;
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).not.toHaveBeenCalled();
 		// One question, one line under it: how much, what it costs, what leaves the machine.
 		expect(_state.modals[0]).toMatch(
@@ -720,7 +712,7 @@ describe('check with Jev', () => {
 
 	it('says so in the question when the state will be sent', async () => {
 		vi.stubGlobal('fetch', jevSays({}));
-		_state.config = { 'jev.sendState': true, 'jev.confirm': true };
+		_state.config = { 'ask.sendState': true, 'ask.confirm': true };
 		start(
 			doc(
 				`{ "state": "note", "questions": { "a": { "type": "noul", "instructions": "Is there one?" } } }`,
@@ -728,21 +720,21 @@ describe('check with Jev', () => {
 				'json',
 			),
 		);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.modals[0]).toContain('Your state is sent too.');
 	});
 
 	it('says in the question what it is leaving out', async () => {
 		vi.stubGlobal('fetch', jevSays({}));
-		_state.config = { 'jev.confirm': true };
+		_state.config = { 'ask.confirm': true };
 		start(
 			doc(
 				`const r = { questions: { a: { type: 'noul', instructions: 'Is the order large?' }, b: { type: 'noul', instructions: build() } } };`,
 			),
 		);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.modals[0]?.split('\n')[2]).toBe(
 			'Skipped: 1 built at runtime.',
 		);
@@ -751,15 +743,21 @@ describe('check with Jev', () => {
 	it('keeps to the vendor and model it started with when the setting changes mid-run', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
-		start(doc(VAGUE));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		// The user switches the model while the confirmation is on screen. The
-		// run was planned, priced and keyed for Jev, so that is what it asks.
-		_state.onModal = () => {
-			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
+		_state.config = {
+			'ask.confirm': true,
+			'ask.models': { typesafe: 'jev-1.13.0' },
 		};
-		await run(JEV_COMMANDS.checkWithJev);
+		start(doc(VAGUE));
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		// The user switches the model while the confirmation is on screen. The
+		// run was planned, priced and keyed for one model, so that is what it asks.
+		_state.onModal = () => {
+			_state.config = {
+				'ask.confirm': true,
+				'ask.models': { typesafe: 'jev-latest' },
+			};
+		};
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.modals[0]).toContain('to TypeSafe?');
 		expect(fetch).toHaveBeenCalledTimes(1);
 		const [url, init] = fetch.mock.calls[0] as unknown as [
@@ -775,20 +773,100 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		_state.answer = undefined;
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.modals).toEqual([]);
 		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+
+	describe('one Ask command per platform', () => {
+		it('has a command and a key slot for every platform in the table, and the endpoint', () => {
+			expect([...SLOTS].sort()).toEqual(
+				[...ASK_PLATFORM_IDS, 'endpoint'].sort(),
+			);
+			for (const slot of SLOTS) {
+				expect(ASK_COMMANDS.ask[slot]).toMatch(/^decisionlint-le\.ask/);
+				expect(ASK_COMMANDS.setKey[slot]).toMatch(
+					/^decisionlint-le\.set\w+ApiKey$/,
+				);
+			}
+		});
+
+		it('asks via OpenRouter with the OpenRouter key and its default model, whatever the TypeSafe one is', async () => {
+			const fetch = jevSays({});
+			vi.stubGlobal('fetch', fetch);
+			_state.secrets.set('decisionlint-le.key.typesafe', 'ts-key');
+			start(doc(VAGUE));
+			await run(ASK_COMMANDS.ask.openrouter);
+			expect(fetch).not.toHaveBeenCalled();
+			expect(_state.messages.at(-1)).toContain('No OpenRouter API key');
+			_state.secrets.set('decisionlint-le.key.openrouter', 'or-key');
+			await run(ASK_COMMANDS.ask.openrouter);
+			expect(fetch).toHaveBeenCalledTimes(1);
+			const [url, init] = fetch.mock.calls[0] as unknown as [
+				string,
+				{ body: string; headers: Record<string, string> },
+			];
+			expect(url).toBe('https://openrouter.ai/api/v1/systemone');
+			expect(init.headers.Authorization).toBe('Bearer or-key');
+			expect(JSON.parse(init.body).model).toBe('typesafe/jev-1.13');
+			expect(_state.messages.at(-1)).toContain('Jev answered 1 request');
+		});
+
+		it("sends the model set for a platform in that platform's slot", async () => {
+			const fetch = jevSays({});
+			vi.stubGlobal('fetch', fetch);
+			_state.config = { 'ask.models': { openrouter: '~typesafe/jev-latest' } };
+			_state.secrets.set('decisionlint-le.key.openrouter', 'or-key');
+			start(doc(VAGUE));
+			await run(ASK_COMMANDS.ask.openrouter);
+			const [, init] = fetch.mock.calls[0] as unknown as [
+				string,
+				{ body: string },
+			];
+			expect(JSON.parse(init.body).model).toBe('~typesafe/jev-latest');
+		});
+
+		it('stores a key per slot and clears them all at once', async () => {
+			start(doc(VAGUE));
+			_state.input = 'liq-key';
+			await run(ASK_COMMANDS.setKey.liquid);
+			expect(_state.secrets.get('decisionlint-le.key.liquid')).toBe('liq-key');
+			_state.input = 'ep-key';
+			await run(ASK_COMMANDS.setKey.endpoint);
+			expect(_state.secrets.get('decisionlint-le.key.endpoint')).toBe('ep-key');
+			expect(_state.messages.at(-1)).toContain('Endpoint API key saved');
+			await run(ASK_COMMANDS.clearKeys);
+			expect(_state.secrets.size).toBe(0);
+		});
+
+		it("sends the endpoint key to a host the user names, ahead of the shape vendor's variable", async () => {
+			const fetch = jevSays({});
+			vi.stubGlobal('fetch', fetch);
+			_state.config = {
+				'ask.endpoint': 'http://localhost:8080/v1/systemone',
+				'ask.endpointModel': 'laya',
+				'ask.keys': { endpoint: 'ep-key' },
+			};
+			process.env.TYPESAFE_API_KEY = 'ts-env';
+			start(doc(VAGUE));
+			await run(ASK_COMMANDS.ask.endpoint);
+			const [, init] = fetch.mock.calls[0] as unknown as [
+				string,
+				{ headers: Record<string, string> },
+			];
+			expect(init.headers.Authorization).toBe('Bearer ep-key');
+		});
 	});
 
 	it('uses a key typed into the settings, ahead of the keychain', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.apiKey': '  typed-key  ' };
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'stored-key');
+		_state.config = { 'ask.keys': { typesafe: '  typed-key  ' } };
+		_state.secrets.set('decisionlint-le.key.typesafe', 'stored-key');
 		start(doc(VAGUE));
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		const init = (
 			fetch.mock.calls[0] as unknown as [
 				string,
@@ -802,9 +880,7 @@ describe('check with Jev', () => {
 
 	it('lets the key be set only in user settings, and keeps it out of sync', () => {
 		const setting =
-			manifest.contributes.configuration.properties[
-				'decisionlint-le.jev.apiKey'
-			];
+			manifest.contributes.configuration.properties['decisionlint-le.ask.keys'];
 		// A workspace setting lives in the repository, where a key would be committed.
 		expect(setting.scope).toBe('application');
 		expect(setting.ignoreSync).toBe(true);
@@ -812,22 +888,31 @@ describe('check with Jev', () => {
 
 	it('lets the endpoint be set only in user settings, so a repository cannot point the key at a host', () => {
 		const { properties } = manifest.contributes.configuration;
-		expect(properties['decisionlint-le.jev.endpoint'].scope).toBe(
+		expect(properties['decisionlint-le.ask.endpoint'].scope).toBe(
 			'application',
 		);
-		expect(properties['decisionlint-le.jev.shape'].scope).toBe('application');
+		expect(properties['decisionlint-le.ask.endpointShape'].scope).toBe(
+			'application',
+		);
+		expect(properties['decisionlint-le.ask.endpointModel'].scope).toBe(
+			'application',
+		);
 	});
 
-	it('refuses a gateway spelling that names no host, and says which setting names one', async () => {
+	it('refuses to ask at an endpoint until one and its model are set, and says which settings', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.model': 'openai/gpt-6-luna-decisions' };
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		start(doc(VAGUE));
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.endpoint);
 		expect(fetch).not.toHaveBeenCalled();
-		expect(_state.messages.at(-1)).toBe(
-			"DecisionLint-LE: 'openai/gpt-6-luna-decisions' names no platform this tool knows the host of. Set the endpoint it is sent to. Set decisionlint-le.jev.endpoint, and decisionlint-le.jev.shape where its path does not say.",
+		expect(_state.messages.at(-1)).toContain(
+			'No endpoint is set. Set decisionlint-le.ask.endpoint to the full URL the host listens at',
+		);
+		_state.config = { 'ask.endpoint': 'http://localhost:8080/v1/systemone' };
+		await run(ASK_COMMANDS.ask.endpoint);
+		expect(fetch).not.toHaveBeenCalled();
+		expect(_state.messages.at(-1)).toContain(
+			'No model is set for the endpoint.',
 		);
 	});
 
@@ -835,11 +920,11 @@ describe('check with Jev', () => {
 		const fetch = jevSays({ JEV302: { noul: 0.91 } });
 		vi.stubGlobal('fetch', fetch);
 		_state.config = {
-			'jev.model': 'ggml-org/OpenJev-GGUF',
-			'jev.endpoint': 'http://localhost:8080/v1/systemone',
+			'ask.endpoint': 'http://localhost:8080/v1/systemone',
+			'ask.endpointModel': 'ggml-org/OpenJev-GGUF',
 		};
 		start(doc(VAGUE));
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.endpoint);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		const [url, init] = fetch.mock.calls[0] as unknown as [
 			string,
@@ -858,7 +943,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		process.env.TYPESAFE_API_KEY = 'from-env';
 		start(doc(VAGUE));
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		const init = (
 			fetch.mock.calls[0] as unknown as [
 				string,
@@ -876,24 +961,24 @@ describe('check with Jev', () => {
 				`const r = { questions: { a: { type: 'noul', instructions: build() } } };`,
 			),
 		);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('1 built at runtime and not sent');
 	});
 
-	it('stops at jev.maxCalls and counts what it did not send', async () => {
+	it('stops at ask.maxCalls and counts what it did not send', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.maxCalls': 2 };
+		_state.config = { 'ask.maxCalls': 2 };
 		const many = `const r = { questions: { a: { type: 'noul', instructions: 'Is there one?' }, b: { type: 'noul', instructions: 'Are there two?' }, c: { type: 'noul', instructions: 'Are there three?' } } };`;
 		start(doc(many));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).toHaveBeenCalledTimes(2);
 		// The third question, and the one request about the three as a set.
 		expect(_state.messages.at(-1)).toContain(
-			'2 over the jev.maxCalls limit and not sent',
+			'2 over the ask.maxCalls limit and not sent',
 		);
 	});
 
@@ -902,8 +987,8 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		const two = `const r = { questions: { a: { type: 'noul', instructions: 'Is there one?' }, b: { type: 'noul', instructions: 'Are there two?' } } };`;
 		start(doc(two));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'wrong');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'wrong');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		expect(_state.messages.at(-1)).toContain('rejected the API key');
 		expect(_state.messages.join(' ')).not.toContain('wrong');
@@ -923,8 +1008,8 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO, 'file:///a.ts', 'json'));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(JSON.stringify(bodies(fetch))).not.toContain('Wheel wobbles');
 		expect(bodies(fetch)[0].state.other_questions).toEqual(['b']);
 	});
@@ -933,11 +1018,11 @@ describe('check with Jev', () => {
 		const fromEditor = jevSays({});
 		vi.stubGlobal('fetch', fromEditor);
 		start(doc(TWO, 'file:///a.json', 'json'));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 
 		const fromCli = jevSays({});
-		await runCli(['--jev', 'a.json'], {
+		await runCli(['--ask', 'a.json'], {
 			files: {
 				stat: (path) =>
 					path === 'a.json' ? { kind: 'file', size: 1 } : undefined,
@@ -963,10 +1048,10 @@ describe('check with Jev', () => {
 	it('sends the state, and checks it, once the user switches that on', async () => {
 		const fetch = jevSays({ JEV312: { noul: 0.99 } });
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.sendState': true };
+		_state.config = { 'ask.sendState': true };
 		start(doc(TWO, 'file:///a.ts', 'json'));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(bodies(fetch)[0].state.state).toEqual({ note: 'Wheel wobbles.' });
 		expect(jevCode('JEV312')?.range.start.character).toBe(
 			TWO.indexOf('"state"'),
@@ -976,8 +1061,8 @@ describe('check with Jev', () => {
 	it('reports two questions that ask the same thing, on the second', async () => {
 		vi.stubGlobal('fetch', jevSays({ 'JEV310.0.1': { noul: 0.8 } }));
 		start(doc(TWO, 'file:///a.ts', 'json'));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(jevCode('JEV310')?.message).toContain("this question and 'a'");
 		expect(jevCode('JEV310')?.range.start.character).toBe(TWO.indexOf('"b"'));
 	});
@@ -987,9 +1072,9 @@ describe('check with Jev', () => {
 		start(doc(VAGUE));
 		_state.press = 'Set API Key';
 		_state.input = 'fresh-key';
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		await vi.waitFor(() =>
-			expect(_state.executed).toContainEqual([JEV_COMMANDS.setApiKey]),
+			expect(_state.executed).toContainEqual([ASK_COMMANDS.setKey.typesafe]),
 		);
 		expect(_state.buttons).toEqual(['Set API Key']);
 		expect(_state.messages[0]).toContain('No TypeSafe API key');
@@ -999,7 +1084,7 @@ describe('check with Jev', () => {
 		start(doc(VAGUE));
 		_state.trusted = false;
 		_state.press = 'Manage Workspace Trust';
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		await vi.waitFor(() =>
 			expect(_state.executed).toContainEqual(['workbench.trust.manage']),
 		);
@@ -1009,9 +1094,9 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		_state.trusted = false;
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('untrusted workspace');
 		// The message has to say what to do about it, not only what is wrong.
@@ -1022,8 +1107,8 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', jevSays({ JEV302: { noul: 0.91 } }));
 		const document = doc(VAGUE);
 		start(document);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(diagnostics(FROM_JEV)).toHaveLength(1);
 		_state.listeners.change?.({ document });
 		expect(diagnostics(FROM_JEV)).toEqual([]);
@@ -1081,7 +1166,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		await run(PROBE_COMMAND);
 		expect(fetch).toHaveBeenCalledTimes(5);
 		// Running the command is the decision to send, so nothing is asked by default.
@@ -1098,7 +1183,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		await run(PROBE_COMMAND);
 		const preview = _state.executed.find(
 			([name]) => name === 'markdown.showPreview',
@@ -1112,7 +1197,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		await run(PROBE_COMMAND);
 		const body = JSON.parse(
 			(fetch.mock.calls[0] as unknown as [string, { body: string }])[1].body,
@@ -1146,22 +1231,41 @@ describe('probe a question', () => {
 		const document = doc(text);
 		start(document);
 		cursorIn(document, at);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		await run(PROBE_COMMAND);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain(reason);
 	});
 
-	it('keeps to the model it started with when the setting changes mid-run', async () => {
-		const fetch = answering(Array(5).fill('damaged'));
+	it('probes with Jev at TypeSafe, whatever the other platforms are set to', async () => {
+		const fetch = vi.fn();
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
+		_state.config = { 'ask.models': { openai: 'gpt-6-luna' } };
+		_state.secrets.set('decisionlint-le.key.openai', 'sk-test');
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		await run('decisionlint-le.probeQuestion');
+		expect(fetch).not.toHaveBeenCalled();
+		expect(_state.messages.at(-1)).toContain('No TypeSafe API key');
+	});
+
+	it('keeps to the model it started with when the setting changes mid-run', async () => {
+		const fetch = answering(Array(5).fill('damaged'));
+		vi.stubGlobal('fetch', fetch);
+		_state.config = {
+			'ask.confirm': true,
+			'ask.models': { typesafe: 'jev-1.13.0' },
+		};
+		const document = doc(REQUEST, 'file:///a.ts', 'json');
+		start(document);
+		cursorIn(document, 'What went wrong');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		_state.onModal = () => {
-			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
+			_state.config = {
+				'ask.confirm': true,
+				'ask.models': { typesafe: 'jev-latest' },
+			};
 		};
 		await run(PROBE_COMMAND);
 		expect(fetch).toHaveBeenCalledTimes(5);
@@ -1198,7 +1302,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		const first = run(PROBE_COMMAND);
 		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 		await run(PROBE_COMMAND);
@@ -1227,11 +1331,11 @@ describe('probe a question', () => {
 	it('asks first when the question is switched on, and sends nothing on no', async () => {
 		const fetch = answering([]);
 		vi.stubGlobal('fetch', fetch);
-		_state.config = { 'jev.confirm': true };
+		_state.config = { 'ask.confirm': true };
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		_state.answer = undefined;
 		await run(PROBE_COMMAND);
 		expect(fetch).not.toHaveBeenCalled();
@@ -1246,7 +1350,7 @@ describe('a command whose body throws', () => {
 
 	it.each([
 		[COMMANDS.lintFile, 'Linting this file'],
-		[JEV_COMMANDS.checkWithJev, 'The check with Jev'],
+		[ASK_COMMANDS.ask.typesafe, 'Asking TypeSafe'],
 		[PROBE_COMMAND, 'The probe'],
 	])('%s says so, instead of doing nothing', async (command, what) => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
@@ -1255,7 +1359,7 @@ describe('a command whose body throws', () => {
 			document,
 			selection: { active: new vscode.Position(0, 0) },
 		};
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 		// After activation, so the first lint of the open file is not what throws.
 		(document as { getText: () => string }).getText = () => {
 			throw new Error('the document is gone');
@@ -1287,8 +1391,8 @@ describe('how much it says', () => {
 		vi.stubGlobal('fetch', reply(cancel));
 		_state.config = { notificationsLevel: level };
 		start(doc(VAGUE));
-		if (key) _state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		if (key) _state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		return _state.messages;
 	};
 
@@ -1354,11 +1458,11 @@ describe('how much it says', () => {
 		_state.suite = {};
 		vi.stubGlobal('fetch', reply());
 		start(doc(VAGUE));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.messages).toEqual([]);
 		_state.config = { notificationsLevel: 'quiet' };
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.messages).toEqual([]);
 	});
 });
@@ -1406,7 +1510,7 @@ describe('when the editor fails', () => {
 				active: new vscode.Position(0, REQUEST.indexOf('What went wrong')),
 			},
 		};
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
 	};
 
 	afterEach(() => vi.unstubAllGlobals());
@@ -1419,8 +1523,8 @@ describe('when the editor fails', () => {
 			),
 		);
 		start(doc(TWO));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).not.toEqual([]);
 		_state.listeners.config?.({ affectsConfiguration: () => true });
 		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).toEqual([]);
@@ -1436,8 +1540,8 @@ describe('when the editor fails', () => {
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(document);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).toEqual([]);
 		// The edit also stops the run, so nothing more is paid for.
 		expect(fetch).toHaveBeenCalledTimes(1);
@@ -1456,8 +1560,8 @@ describe('when the editor fails', () => {
 			}),
 		);
 		start(document);
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).toEqual([]);
 	});
 
@@ -1471,11 +1575,13 @@ describe('when the editor fails', () => {
 		);
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		const first = run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		const first = run(ASK_COMMANDS.ask.typesafe);
 		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-		await run(JEV_COMMANDS.checkWithJev);
-		expect(_state.messages.at(-1)).toContain('already checking this file');
+		await run(ASK_COMMANDS.ask.typesafe);
+		expect(_state.messages.at(-1)).toContain(
+			'already answering about this file',
+		);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		// Let the first run finish, one answer at a time.
 		for (let i = 0; i < 3; i += 1) {
@@ -1496,8 +1602,8 @@ describe('when the editor fails', () => {
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		expect(_state.messages.at(-1)).toContain('Cancelled after 1 of 3 requests');
 	});
@@ -1512,8 +1618,8 @@ describe('when the editor fails', () => {
 		);
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(_state.messages.at(-1)).toContain('Cancelled');
 		expect(_state.messages.at(-1)).not.toContain('Could not reach');
 	});
@@ -1552,9 +1658,9 @@ describe('when the editor fails', () => {
 	});
 
 	it.each([
-		['checking with Jev', JEV_COMMANDS.checkWithJev],
-		['clearing the key', JEV_COMMANDS.clearApiKey],
-		['saving the key', JEV_COMMANDS.setApiKey],
+		['checking with Jev', ASK_COMMANDS.ask.typesafe],
+		['clearing the key', ASK_COMMANDS.clearKeys],
+		['saving the key', ASK_COMMANDS.setKey.typesafe],
 		['probing', PROBE_COMMAND],
 	])('says the keychain could not be used when %s', async (_name, command) => {
 		const fetch = vi.fn();
@@ -1575,7 +1681,7 @@ describe('when the editor fails', () => {
 		vi.stubEnv('TYPESAFE_API_KEY', 'from-env');
 		start(doc(TWO));
 		_state.secretsError = new Error('locked');
-		await run(JEV_COMMANDS.checkWithJev);
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).toHaveBeenCalled();
 		vi.unstubAllEnvs();
 	});
@@ -1986,8 +2092,8 @@ describe('a project settings file in the editor', () => {
 		const fetch = vi.fn();
 		vi.stubGlobal('fetch', fetch);
 		within({ '/work/app/decisionlint-le.json': '{ "rule": {} }' }, file());
-		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
-		await run(JEV_COMMANDS.checkWithJev);
+		_state.secrets.set('decisionlint-le.key.typesafe', 'k');
+		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain("'rule' is not a setting");
 		vi.unstubAllGlobals();

@@ -116,10 +116,15 @@ describe('where a model id is sent', () => {
 		});
 	});
 
-	it('keeps a keychain slot only for the two vendors that have one', () => {
-		expect(JEV.keychain).toBe('typesafe');
-		expect(LUNA.keychain).toBe('openai');
-		expect(must(providerFor('~typesafe/jev-latest')).keychain).toBeUndefined();
+	it("names each platform's key slot by its id, and a host the user names by 'endpoint'", () => {
+		expect(JEV.slot).toBe('typesafe');
+		expect(LUNA.slot).toBe('openai');
+		expect(must(providerFor('~typesafe/jev-latest')).slot).toBe('openrouter');
+		expect(
+			must(
+				providerFor('laya', { endpoint: 'http://localhost:8080/v1/systemone' }),
+			).slot,
+		).toBe('endpoint');
 	});
 
 	it.each(['openai/gpt-6-luna-decisions', 'ZefanCai/Open-Jev-9B', 'laya:en'])(
@@ -149,7 +154,7 @@ describe('where a model id is sent', () => {
 			model: 'the model',
 			endpoint: 'http://localhost:8080/v1/systemone',
 			envKey: 'TYPESAFE_API_KEY',
-			keychain: undefined,
+			slot: 'endpoint',
 			keyOptional: true,
 			pricePerMillionTokens: undefined,
 		});

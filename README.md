@@ -131,7 +131,7 @@ Each finding links to [its own page](https://github.com/nolindnaidoo/decisionlin
   with its `OfPredicate`, `OfChoice` and `OfScore` questions.
 - A request pasted as JSON into a string, in any of these languages.
 - Any other language: have your program write the request it sends to a
-  `.jev.json` file and open that. Every check runs on it, and nothing in it
+  `.ask.json` file and open that. Every check runs on it, and nothing in it
   is built at runtime, so nothing is skipped.
 - `jev/ask` rules in an `oxlint-plugin-jev` config.
 
@@ -158,8 +158,8 @@ covers, exactly:
   written as a map or as bare names, a Choice with no `choices`, a Score
   with no `levels`. A mistyped `predicate` is fixed on the lightbulb. The
   reshape fix is Jev-only.
-- **Asking Luna.** Set `decisionlint-le.jev.model` to `gpt-6-luna`, or pass
-  `--jev-model gpt-6-luna`, with an OpenAI key. The next section says how.
+- **Asking Luna.** Run **Ask Luna About This File**, or pass
+  `--ask-platform openai`, with an OpenAI key. The next section says how.
 - **Measured on Jev, not yet on Luna.** Every default in these rules was
   set by measuring what the defect costs `jev-1.13.0`. Luna has not been
   measured, so on a Luna question they are the same rules with Jev's
@@ -212,41 +212,52 @@ Three things follow from the table:
 unrelated projects that reimplement `/v1/systemone`; the one llama.cpp
 serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 
-## Check a file with Jev
+## Ask a model about a file
 
 Rules `JEV301` to `JEV312` are not part of linting. They run only when you run
-**DecisionLint-LE: Check This File with Jev**, or pass `--jev` on the command
-line. Either sends each question in the file to a model and asks it about
-problems a text pattern cannot see: options that overlap, an option whose
-name contradicts its description, criteria about the wrong thing, a Choice
-that should be a Score, two questions that ask the same thing, a question
-that needs another question's answer.
+one of the **Ask** commands, or pass `--ask` on the command line. Each sends
+every question in the file to a decision model and asks it about problems a
+text pattern cannot see: options that overlap, an option whose name
+contradicts its description, criteria about the wrong thing, a Choice that
+should be a Score, two questions that ask the same thing, a question that
+needs another question's answer.
 
-1. Give it your key, in either of two ways. Run **DecisionLint-LE: Set TypeSafe
-   API Key** and paste it, which stores it in your operating system keychain.
-   Or type it into **Settings** under `decisionlint-le.jev.apiKey`, which can only
-   be set in your user settings and is left out of Settings Sync.
-2. Open a file with questions and run **DecisionLint-LE: Check This File with
-   Jev**.
+There is one command per platform, and each has its own key:
 
-**To ask Luna instead**, set `decisionlint-le.jev.model` to `gpt-6-luna` and give
-it an OpenAI key the same two ways: **DecisionLint-LE: Set OpenAI API Key**, or
-`decisionlint-le.jev.openaiApiKey`. The same checks go to OpenAI's Decisions API
-as predicates. One thing to know: the cutoffs that decide when a check fires
-were set on `jev-1.13.0`, and every finding from Luna says so until Luna is
-measured the same way. The probe asks Jev only.
+| Command | Sends to | Model by default | Key |
+|---|---|---|---|
+| **Ask Jev About This File** | TypeSafe | `jev-1.13.0` | **Set TypeSafe API Key**, or `TYPESAFE_API_KEY` |
+| **Ask Luna About This File** | OpenAI | `gpt-6-luna` | **Set OpenAI API Key**, or `OPENAI_API_KEY` |
+| **Ask via OpenRouter About This File** | OpenRouter | `typesafe/jev-1.13` | **Set OpenRouter API Key**, or `OPENROUTER_API_KEY` |
+| **Ask via Vercel AI Gateway About This File** | Vercel AI Gateway | `typesafe-ai/jev` | **Set Vercel AI Gateway API Key**, or `AI_GATEWAY_API_KEY` |
+| **Ask via LLM Gateway About This File** | LLM Gateway | `jev-1.13.0` | **Set LLM Gateway API Key**, or `LLM_GATEWAY_API_KEY` |
+| **Ask Liquid d1 About This File** | Liquid AI | `d1` | **Set Liquid AI API Key**, or `LIQUID_API_KEY` |
+| **Ask the Model at My Endpoint About This File** | `decisionlint-le.ask.endpoint` | `decisionlint-le.ask.endpointModel` | **Set Endpoint API Key**, or none |
 
-**To ask another platform**, set `decisionlint-le.jev.model` to its spelling of
-the model, `~typesafe/jev-latest` for OpenRouter or `d1` for Liquid AI, and
-put that platform's key in the variable it names, `OPENROUTER_API_KEY` or
-`LIQUID_API_KEY`, in the environment VS Code runs in. For a platform you
-host, a llama.cpp, vLLM, LiteLLM or Ollaya, set `decisionlint-le.jev.endpoint`
-to the full URL it listens at, and `decisionlint-le.jev.shape` to `typesafe` or
-`openai` when the path does not end in `/systemone` or `/decisions`. A host
-DecisionLint-LE does not know gets the key in `TYPESAFE_API_KEY` or
-`OPENAI_API_KEY`, whichever the shape's SDK reads, or no key when neither
-is set. The endpoint can only be set in your user settings, so a repository
-cannot point your key at a host of its choosing.
+1. Give it the platform's key, in any of three ways. Run its **Set ... API
+   Key** command and paste the key, which stores it in your operating system
+   keychain. Or type it into **Settings** under `decisionlint-le.ask.keys`,
+   by the platform's id, which can only be set in your user settings and is
+   left out of Settings Sync. Or put it in the environment variable the
+   platform names, in the environment VS Code runs in.
+2. Open a file with questions and run the platform's **Ask** command.
+
+The model each command sends is `decisionlint-le.ask.models`, by platform.
+The TypeSafe default is the version the checks' cutoffs were set on, and a
+finding from any other model, Luna included, says so until that model is
+measured the same way. The probe asks Jev at TypeSafe, with the TypeSafe
+key and model.
+
+**For a platform you host**, a llama.cpp, vLLM, LiteLLM or Ollaya, set
+`decisionlint-le.ask.endpoint` to the full URL it listens at,
+`decisionlint-le.ask.endpointModel` to the model id it serves, and
+`decisionlint-le.ask.endpointShape` to `typesafe` or `openai` when the path
+does not end in `/systemone` or `/decisions`. Then run **Ask the Model at My
+Endpoint**. It sends the `endpoint` key if you set one, else the key in
+`TYPESAFE_API_KEY` or `OPENAI_API_KEY`, whichever the shape's SDK reads, or
+no key when there is none, which is how a local llama.cpp is reached. The
+endpoint can only be set in your user settings, so a repository cannot point
+your key at a host of its choosing.
 
 What to know before you run it:
 
@@ -255,13 +266,13 @@ What to know before you run it:
   that is roughly three thousandths of a cent per question, and at OpenAI's
   about a hundredth of a cent.
 - **Only questions are sent**: type, instructions, criteria and ids. Your
-  `state` is not, unless you turn on `decisionlint-le.jev.sendState`. With that on,
+  `state` is not, unless you turn on `decisionlint-le.ask.sendState`. With that on,
   a state written out in the file is sent too, and two more checks run: does
   the state hold what each question asks about, and does it carry text that
   gives orders to its reader.
 - **A question with a part built at runtime is not sent.** The summary says
   how many were held back.
-- **A run sends at most `decisionlint-le.jev.maxCalls` requests**, 25 by default.
+- **A run sends at most `decisionlint-le.ask.maxCalls` requests**, 25 by default.
 - **It is disabled in an untrusted workspace.** Run **Workspaces: Manage
   Workspace Trust** and trust the folder to turn it on.
 - **Findings disappear when you edit the file**, because they were about the
@@ -269,7 +280,7 @@ What to know before you run it:
 - **Each finding shows the probability Jev gave it.** Treat it as an argument
   with a number attached, not a verdict.
 
-Turn on `decisionlint-le.jev.confirm` and it first tells you how many requests it
+Turn on `decisionlint-le.ask.confirm` and it first tells you how many requests it
 will make, roughly how many tokens and what that costs, and waits for a yes.
 It is off by default: running the command is the decision to send.
 
@@ -339,7 +350,7 @@ code, whatever the project installs.
 
 ```bash
 npx decisionlint-le src/                 # a directory, searched for files it reads
-npx decisionlint-le request.jev.json     # one file
+npx decisionlint-le request.ask.json     # one file
 npx decisionlint-le --format github .    # annotations on a pull request
 ```
 
@@ -356,13 +367,14 @@ read. Errors always fail a run. Warnings fail it only past `--max-warnings`.
 | `--stdin-filename <path>` | Lint standard input as if it were that file |
 | `--fix` | Write the fixes that only mend what the API would refuse |
 | `--quiet` | Print errors only |
-| `--jev` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--jev-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--jev-endpoint` says |
-| `--jev-plan` | Say what `--jev` would send, and send nothing |
-| `--jev-model <id>` | The model `--jev` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
-| `--jev-endpoint <url>` | The full URL `--jev` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_LE_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
-| `--jev-shape <shape>` | The shape sent to `--jev-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_LE_ASK_SHAPE` |
-| `--jev-max-calls <n>` | The most requests `--jev` may send in the run. Default 25 |
-| `--jev-send-state` | With `--jev`, also send state written out in a file |
+| `--ask` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--ask-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--ask-endpoint` says |
+| `--ask-plan` | Say what `--ask` would send, and send nothing |
+| `--ask-platform <id>` | Where `--ask` sends, named outright: `typesafe`, `openai`, `openrouter`, `vercel`, `llmgateway` or `liquid`, each with its own key variable and a default model in its own spelling. Without it a model id goes where its spelling says |
+| `--ask-model <id>` | The model `--ask` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
+| `--ask-endpoint <url>` | The full URL `--ask` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_LE_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
+| `--ask-shape <shape>` | The shape sent to `--ask-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_LE_ASK_SHAPE` |
+| `--ask-max-calls <n>` | The most requests `--ask` may send in the run. Default 25 |
+| `--ask-send-state` | With `--ask`, also send state written out in a file |
 | `--color`, `--no-color` | Colour the default format, or do not. Without either it is coloured in a terminal, unless `NO_COLOR` is set |
 | `--no-error-on-unmatched-pattern` | Pass when the paths hold no file to lint |
 | `--mcp` | Run as an MCP server |
@@ -370,7 +382,7 @@ read. Errors always fail a run. Warnings fail it only past `--max-warnings`.
 The summary line always says how many questions could not be read in full
 and names any file skipped for its size and any folder or file it could not
 read. It does not follow linked folders. It does not run the checks that ask
-Jev, and it never uses the network, unless you pass `--jev`.
+Jev, and it never uses the network, unless you pass `--ask`.
 
 ### In CI and before a commit
 
@@ -404,29 +416,33 @@ With [pre-commit](https://pre-commit.com):
     - id: decisionlint-le
 ```
 
-### Checking with Jev
+### Asking a model
 
-`--jev` runs the checks that ask Jev itself, `JEV301` to `JEV312`, after the
-linting. It is the only option that uses the network, and nothing in a
+`--ask` runs the checks that ask a decision model, `JEV301` to `JEV312`, after
+the linting. It is the only option that uses the network, and nothing in a
 settings file can turn it on.
 
 ```bash
-npx decisionlint-le --jev-plan src/                    # what it would send. No key, nothing sent
-TYPESAFE_API_KEY=... npx decisionlint-le --jev src/    # send it
+npx decisionlint-le --ask-plan src/                    # what it would send. No key, nothing sent
+TYPESAFE_API_KEY=... npx decisionlint-le --ask src/    # send it
 ```
 
-- The key is read from the variable the platform names, `TYPESAFE_API_KEY`
-  by default, and from nowhere else. It is never printed. `--jev-model`
-  with another platform's spelling, `~typesafe/jev-latest` or
-  `gpt-6-luna-decisions`, sends there with that platform's key.
-- `--jev-endpoint`, or `DECISIONLINT_LE_ASK_ENDPOINT`, sends to a platform you
-  host, with `--jev-shape` where the path does not say which shape it takes.
+- `--ask-platform` names where it goes: `typesafe`, `openai`, `openrouter`,
+  `vercel`, `llmgateway` or `liquid`, each with a default model in its own
+  spelling and its own key variable, `TYPESAFE_API_KEY`, `OPENAI_API_KEY`,
+  `OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`, `LLM_GATEWAY_API_KEY` or
+  `LIQUID_API_KEY`. Without it, `--ask-model` with a platform's spelling,
+  `~typesafe/jev-latest` for OpenRouter, sends there, and a bare id goes to
+  its vendor. The key is read from that variable and from nowhere else, and
+  is never printed.
+- `--ask-endpoint`, or `DECISIONLINT_LE_ASK_ENDPOINT`, sends to a platform you
+  host, with `--ask-shape` where the path does not say which shape it takes.
   A spelling that names no host, such as `openai/gpt-6-luna-decisions`, is
   refused without it, with nothing sent.
 - A question with a part built at runtime is never sent. The summary counts
   the ones held back.
-- State is not sent unless you add `--jev-send-state`.
-- `--jev-max-calls` is a limit for the whole run. A run that needs more exits
+- State is not sent unless you add `--ask-send-state`.
+- `--ask-max-calls` is a limit for the whole run. A run that needs more exits
   2, so a job cannot pass after checking part of a project.
 - A rejected key, a failed request or a run you stop also exits 2, and says
   how many requests were answered of how many were planned.
@@ -465,9 +481,9 @@ page, with an example that is flagged and one that is not. Those send
 nothing and need no key.
 
 The other three are the editor's **Check This File with Jev** and **Probe**
-for an agent. `check_with_jev` asks Jev, or Luna with `model: gpt-6-luna`,
+for an agent. `ask_model` asks Jev, or Luna with `model: gpt-6-luna`,
 to check the questions in text or in files, and returns the lint report with
-the model's findings added. `plan_jev` says what that would send, and sends
+the model's findings added. `plan_ask` says what that would send, and sends
 nothing. `probe_question` sends one question with its layout varied and
 reports whether the answer held. The two that send use your key and cost
 money, and their descriptions tell an agent to call them only when you ask.
@@ -496,7 +512,7 @@ It needs the state written out in the file, it sends that state, and it costs
 five or six requests.
 
 Nothing else in this extension uses the network. On the command line, only
-`--jev` does.
+`--ask` does.
 
 ## What it will not tell you
 
@@ -572,23 +588,34 @@ Or write them into `keybindings.json`. The keys here are only an example:
 ```json
 [
   { "key": "ctrl+alt+j", "command": "decisionlint-le.lintFile", "when": "editorTextFocus" },
-  { "key": "ctrl+alt+k", "command": "decisionlint-le.checkWithJev", "when": "editorTextFocus" }
+  { "key": "ctrl+alt+k", "command": "decisionlint-le.askJev", "when": "editorTextFocus" }
 ]
 ```
 
 | Command | Id |
 |---|---|
-| Lint Jev Questions in This File | `decisionlint-le.lintFile` |
-| Lint Jev Questions in the Workspace | `decisionlint-le.lintWorkspace` |
-| Check This File with Jev | `decisionlint-le.checkWithJev` |
-| Probe the Jev Question at the Cursor | `decisionlint-le.probeQuestion` |
-| Set TypeSafe API Key | `decisionlint-le.setApiKey` |
-| Set OpenAI API Key | `decisionlint-le.setOpenAIApiKey` |
-| Clear API Keys | `decisionlint-le.clearApiKey` |
+| Lint the Questions in This File | `decisionlint-le.lintFile` |
+| Lint the Questions in the Workspace | `decisionlint-le.lintWorkspace` |
 | Open Settings | `decisionlint-le.openSettings` |
+| Ask Jev About This File | `decisionlint-le.askJev` |
+| Ask Luna About This File | `decisionlint-le.askLuna` |
+| Ask via OpenRouter About This File | `decisionlint-le.askOpenRouter` |
+| Ask via Vercel AI Gateway About This File | `decisionlint-le.askVercel` |
+| Ask via LLM Gateway About This File | `decisionlint-le.askLlmGateway` |
+| Ask Liquid d1 About This File | `decisionlint-le.askLiquid` |
+| Ask the Model at My Endpoint About This File | `decisionlint-le.askEndpoint` |
+| Set TypeSafe API Key | `decisionlint-le.setTypeSafeApiKey` |
+| Set OpenAI API Key | `decisionlint-le.setOpenAIApiKey` |
+| Set OpenRouter API Key | `decisionlint-le.setOpenRouterApiKey` |
+| Set Vercel AI Gateway API Key | `decisionlint-le.setVercelApiKey` |
+| Set LLM Gateway API Key | `decisionlint-le.setLlmGatewayApiKey` |
+| Set Liquid AI API Key | `decisionlint-le.setLiquidApiKey` |
+| Set Endpoint API Key | `decisionlint-le.setEndpointApiKey` |
+| Clear API Keys | `decisionlint-le.clearApiKeys` |
+| Probe the Question at the Cursor | `decisionlint-le.probeQuestion` |
 
-The two that say Jev send requests with your key, so pick keys for them you
-will not press by accident.
+The Ask commands and the probe send requests with your key, so pick keys for
+them you will not press by accident.
 
 ## Settings
 
@@ -598,18 +625,18 @@ will not press by accident.
 | `decisionlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `decisionlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `decisionlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `decisionlint-le.jev.endpoint` | `""` | The URL the check posts to, for a platform you host. Empty sends a model id where its spelling says |
-| `decisionlint-le.jev.shape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `decisionlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `decisionlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
+| `decisionlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
+| `decisionlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `decisionlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
+| `decisionlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
+| `decisionlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
+| `decisionlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
 | `decisionlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `decisionlint-le.exclude` | `node_modules` and build output | Files the workspace command skips |
 | `decisionlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
 | `decisionlint-le.notificationsLevel` | `important` | How much is said in notifications. `all` adds a summary after each command, and `silent` shows a message only when a command could not run. Findings always show in the editor |
-| `decisionlint-le.jev.model` | `jev-1.13.0` | The model **Check This File with Jev** asks: a Jev version, or `gpt-6-luna` for OpenAI's Decisions API. Pinned to the version its checks were calibrated on |
-| `decisionlint-le.jev.maxCalls` | `25` | The most requests one check may send |
-| `decisionlint-le.jev.sendState` | `false` | Also send a state written in the file, so Jev can check it |
-| `decisionlint-le.jev.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
-| `decisionlint-le.jev.apiKey` | empty | Your TypeSafe key, if you would rather type it here than use the keychain. User settings only |
-| `decisionlint-le.jev.openaiApiKey` | empty | Your OpenAI key, the same way, used when the model is `gpt-6-luna` |
 
 ## Development
 

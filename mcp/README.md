@@ -89,21 +89,21 @@ printf '%s\n' \
 | `fix_text` | Returns the text with the safe fixes applied, and the report of what is left. Writes nothing | nothing |
 | `list_rules` | Lists every rule with what it means, its default level and its pages | nothing |
 | `explain_rule` | A rule's own page as Markdown: an example that is flagged, one that is not, how to fix it and how to silence it | nothing |
-| `plan_jev` | What `check_with_jev` would send for the text or files: requests, model, tokens, questions held back | nothing |
-| `check_with_jev` | Asks Jev, or Luna with `model: gpt-6-luna`, to check the questions in text or files, and returns the lint report with the model's findings added | the questions, with your key |
+| `plan_ask` | What `ask_model` would send for the text or files: requests, model, tokens, questions held back | nothing |
+| `ask_model` | Asks a decision model to check the questions in text or files, and returns the lint report with the model's findings added. `platform` names where: `typesafe` for Jev, `openai` for Luna, `openrouter`, `vercel`, `llmgateway` or `liquid`, each with its own key variable | the questions, with your key |
 | `probe_question` | Sends one question as written and with its layout varied, and reports whether the answer held | about a dozen requests, with your key |
 
 Every tool answers as structured content beside its text. The first six are
 read-only and offline, so a host can let an agent call them without asking.
 The two that send are marked open-world and not idempotent, each call costs,
 and their descriptions tell an agent to call them only when you ask for a
-check or a probe. `lint_paths` and `check_with_jev` read the files under the
+check or a probe. `lint_paths` and `ask_model` read the files under the
 paths they are given and nothing else. A `decisionlint-le.json` near those files
 applies as it does on the command line, and `rules` on any call overrides it.
 
 ## The key
 
-`check_with_jev` and `probe_question` look for `TYPESAFE_API_KEY`, or
+`ask_model` and `probe_question` look for `TYPESAFE_API_KEY`, or
 `OPENAI_API_KEY` for Luna, in this order, and use the first they find:
 
 1. The environment the client started the server with. Most clients take an

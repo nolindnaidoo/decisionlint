@@ -2,7 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import * as vscode from 'vscode';
 import type { Fetch } from './ask/client';
 import { COMMANDS, registerCommands } from './commands';
-import { registerJevCommands } from './commands/ask';
+import { registerAskCommands } from './commands/ask';
 import { registerProbeCommand } from './commands/probe';
 import { getConfiguration, SECTION } from './config/config';
 import type { ConfigFs } from './config/projectConfig';
@@ -120,7 +120,7 @@ export function activate(
 		statusBar,
 		projectConfigs,
 		...registerCommands({ linter, getConfiguration }),
-		...registerJevCommands({
+		...registerAskCommands({
 			reviewer,
 			getConfiguration,
 			lintOptionsFor,

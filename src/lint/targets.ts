@@ -1,5 +1,5 @@
 import type { Dialect } from '../types';
-import { LIMITS } from './limits';
+import { LIMITS, MEASURED_ON } from './limits';
 import { parseModelId } from './models';
 
 /**
@@ -37,6 +37,8 @@ export type Target = Readonly<{
 	endpoints: Readonly<Partial<Record<Shape, string>>>;
 	/** The environment variable the platform's own examples read the key from. */
 	envKey: string | undefined;
+	/** The id an Ask command sends by default: the platform's own spelling of the measured model, or of what it serves. */
+	defaultModel: string | undefined;
 	/** Dollars per million input tokens on the platform's price page, and when that was read. */
 	price:
 		| Readonly<{ perMillionInputTokens: number; readOn: string }>
@@ -55,6 +57,8 @@ const TYPESAFE: Target = Object.freeze<Target>({
 	hosts: ['api.typesafe.ai'],
 	endpoints: { typesafe: 'https://api.typesafe.ai/v1/systemone' },
 	envKey: 'TYPESAFE_API_KEY',
+	// The version the checks' cutoffs were set on.
+	defaultModel: MEASURED_ON,
 	// TypeSafe's published price on the day the checks were calibrated.
 	price: { perMillionInputTokens: 0.042, readOn: '2026-10-04' },
 	// The numbers in `limits.ts`, which carry their own page and date.
@@ -74,6 +78,8 @@ const OPENAI: Target = Object.freeze<Target>({
 	hosts: ['api.openai.com'],
 	endpoints: { openai: 'https://api.openai.com/v1/decisions' },
 	envKey: 'OPENAI_API_KEY',
+	// "`gpt-6-luna` is the only model currently available."
+	defaultModel: 'gpt-6-luna',
 	// OpenAI's published price for the Decisions API beta.
 	price: { perMillionInputTokens: 0.1, readOn: '2026-10-08' },
 	// The guide states no limit on choices, levels or questions, so none is checked.
@@ -92,6 +98,7 @@ const VERCEL: Target = Object.freeze<Target>({
 	// path a request is posted to, so only the OpenAI-shaped endpoint is here.
 	endpoints: { openai: 'https://ai-gateway.vercel.sh/v1/decisions' },
 	envKey: 'AI_GATEWAY_API_KEY',
+	defaultModel: 'typesafe-ai/jev',
 	price: undefined,
 	// On its OpenAI-compatible path: "between 1 and 255 `choices`" and
 	// "between 2 and 10 `levels`". Its TypeSafe-compatible path states none.
@@ -109,6 +116,7 @@ const LITELLM: Target = Object.freeze<Target>({
 	hosts: [],
 	endpoints: {},
 	envKey: undefined,
+	defaultModel: undefined,
 	price: undefined,
 	// "more than 128 questions, a single-option question or a body that is
 	// not JSON returns 400", before anything is sent upstream.
@@ -128,6 +136,8 @@ const OPENROUTER: Target = Object.freeze<Target>({
 	// reads: https://openrouter.ai/docs/guides/community/typesafe-sdk.md.
 	endpoints: { typesafe: 'https://openrouter.ai/api/v1/systemone' },
 	envKey: 'OPENROUTER_API_KEY',
+	// "**Model ID:** `typesafe/jev-1.13`", the pinned spelling.
+	defaultModel: 'typesafe/jev-1.13',
 	price: undefined,
 	// The guide states the context length and no limit on options, levels or questions.
 	limits: {},
@@ -144,6 +154,8 @@ const LLM_GATEWAY: Target = Object.freeze<Target>({
 	// Its `/v1/systemone` is marked "deprecated soon", so only the OpenAI-shaped one is here.
 	endpoints: { openai: 'https://api.llmgateway.io/v1/decisions' },
 	envKey: 'LLM_GATEWAY_API_KEY',
+	// Its ids carry no prefix: "Text-only models such as `jev-1.13.0`".
+	defaultModel: 'jev-1.13.0',
 	price: undefined,
 	limits: {},
 	docs: 'https://docs.llmgateway.io/features/decisions',
@@ -159,6 +171,7 @@ const EDEN_AI: Target = Object.freeze<Target>({
 	hosts: [],
 	endpoints: {},
 	envKey: undefined,
+	defaultModel: undefined,
 	price: undefined,
 	// "Up to 255 options."
 	limits: { choiceMaxOptions: 255 },
@@ -174,6 +187,8 @@ const LIQUID: Target = Object.freeze<Target>({
 	hosts: ['api.liquid.ai'],
 	endpoints: { typesafe: 'https://api.liquid.ai/decisions/v1/systemone' },
 	envKey: 'LIQUID_API_KEY',
+	// "the paid `d1` model. `d1:free` is text-only."
+	defaultModel: 'd1',
 	price: undefined,
 	// The page limits images and body size, and states no limit on options, levels or questions.
 	limits: {},
@@ -190,6 +205,7 @@ const LLAMA_CPP: Target = Object.freeze<Target>({
 	hosts: [],
 	endpoints: {},
 	envKey: undefined,
+	defaultModel: undefined,
 	price: undefined,
 	// A Score takes "2 to 10 levels, lowest first".
 	limits: { scoreMaxLevels: 10 },
@@ -211,6 +227,19 @@ export const TARGETS: ReadonlyArray<Target> = Object.freeze([
 
 export const TARGET_IDS: ReadonlyArray<string> = Object.freeze(
 	TARGETS.map((target) => target.id),
+);
+
+/** The platforms an Ask command exists for: those with a published endpoint and a default model. */
+export const ASK_TARGETS: ReadonlyArray<Target> = Object.freeze(
+	TARGETS.filter(
+		(target) =>
+			target.defaultModel !== undefined &&
+			target.shapes.some((shape) => target.endpoints[shape]),
+	),
+);
+
+export const ASK_PLATFORM_IDS: ReadonlyArray<string> = Object.freeze(
+	ASK_TARGETS.map((target) => target.id),
 );
 
 // A Map: the id comes from a settings file or an editor setting.

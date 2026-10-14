@@ -7,14 +7,14 @@ import {
 	readProbe,
 	summarize,
 } from '../ask/probe';
-import { type Provider, providerFor } from '../ask/provider';
-import { DEFAULT_MODEL } from '../ask/review';
+import type { Provider } from '../ask/provider';
 import { readQuestions, syntaxFor } from '../lint/lint';
 import { blocked, caution } from '../ui/notifier';
 import {
 	failureMessage,
 	findKey,
 	type KeySource,
+	providerForSlot,
 	refuseUntrusted,
 	reportNoKey,
 	SEND,
@@ -112,23 +112,15 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	// Read once, before the first await, so the key, the count the user agrees
 	// to and the requests all name the same model.
 	const config = deps.getConfiguration();
-	const provider = providerFor(config.jev.model, {
-		endpoint: config.jev.endpoint,
-		shape: config.jev.shape,
-	});
-	if (typeof provider === 'string') {
-		blocked(
-			`${provider} Set decisionlint-le.jev.endpoint, and decisionlint-le.jev.shape where its path does not say.`,
-		);
+	// The variants are built and read in System One's shape, so the probe asks
+	// Jev at TypeSafe, with the model Ask Jev sends. Luna's reply for a Choice
+	// or a Score is not read yet.
+	const routed = providerForSlot(config, 'typesafe');
+	if (typeof routed === 'string') {
+		blocked(routed);
 		return;
 	}
-	// The variants are built and read in System One's shape. Luna's reply for a Choice or a Score is not read yet.
-	if (provider.shape !== 'typesafe') {
-		blocked(
-			`The probe asks Jev only. Set decisionlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
-		);
-		return;
-	}
+	const { provider, model } = routed;
 	if (!vscode.workspace.isTrusted) {
 		refuseUntrusted(
 			`A probe sends a question and its state to ${provider.vendor}`,
@@ -149,12 +141,8 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		return;
 	}
 	const { key } = found;
-	const count = buildProbe(
-		target.state,
-		target.question,
-		config.jev.model,
-	).length;
-	if (config.jev.confirm) {
+	const count = buildProbe(target.state, target.question, model).length;
+	if (config.ask.confirm) {
 		const answer = await vscode.window.showInformationMessage(
 			`Probe '${target.id}' with ${count} requests to ${provider.vendor}?`,
 			{
@@ -174,14 +162,7 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		(_progress, token) => {
 			const abort = new AbortController();
 			token.onCancellationRequested(() => abort.abort());
-			return runProbe(
-				deps,
-				target,
-				key,
-				provider,
-				abort.signal,
-				config.jev.model,
-			);
+			return runProbe(deps, target, key, provider, abort.signal, model);
 		},
 	);
 	if (probed.kind === 'failed') {

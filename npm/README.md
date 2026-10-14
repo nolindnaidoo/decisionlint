@@ -12,20 +12,20 @@ rules with Jev's defaults.
 This package is the command line and the library, with the MCP server behind
 `--mcp`. An agent host installs the server on its own as
 [`decisionlint-le-mcp`](https://www.npmjs.com/package/decisionlint-le-mcp). None of it
-needs an API key or uses the network, unless you pass `--jev` to the command
+needs an API key or uses the network, unless you pass `--ask` to the command
 line.
 
 ## Command line
 
 ```bash
 npx decisionlint-le src/                 # a directory, searched for files it reads
-npx decisionlint-le request.jev.json     # one file
+npx decisionlint-le request.ask.json     # one file
 npx decisionlint-le --format github .    # annotations on a pull request
 ```
 
 It reads JSON, JavaScript, TypeScript, Python, Rust and Go, in TypeSafe's
 request shape and in OpenAI's Decisions API shape. For any other language,
-have your program write the request it sends to a `.jev.json` file and lint
+have your program write the request it sends to a `.ask.json` file and lint
 that.
 
 It exits 0 when the run passes, 1 when a finding fails it, and 2 when it
@@ -41,42 +41,45 @@ past `--max-warnings`.
 | `--stdin-filename <path>` | Lint standard input as if it were that file |
 | `--fix` | Write the fixes that only mend what the API would refuse |
 | `--quiet` | Print errors only |
-| `--jev` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--jev-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--jev-endpoint` says |
-| `--jev-plan` | Say what `--jev` would send, and send nothing |
-| `--jev-model <id>` | The model `--jev` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
-| `--jev-endpoint <url>` | The full URL `--jev` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_LE_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
-| `--jev-shape <shape>` | The shape sent to `--jev-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_LE_ASK_SHAPE` |
-| `--jev-max-calls <n>` | The most requests `--jev` may send in the run. Default 25 |
-| `--jev-send-state` | With `--jev`, also send state written out in a file |
+| `--ask` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--ask-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--ask-endpoint` says |
+| `--ask-plan` | Say what `--ask` would send, and send nothing |
+| `--ask-platform <id>` | Where `--ask` sends, named outright: `typesafe`, `openai`, `openrouter`, `vercel`, `llmgateway` or `liquid`, each with its own key variable and a default model in its own spelling. Without it a model id goes where its spelling says |
+| `--ask-model <id>` | The model `--ask` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
+| `--ask-endpoint <url>` | The full URL `--ask` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_LE_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
+| `--ask-shape <shape>` | The shape sent to `--ask-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_LE_ASK_SHAPE` |
+| `--ask-max-calls <n>` | The most requests `--ask` may send in the run. Default 25 |
+| `--ask-send-state` | With `--ask`, also send state written out in a file |
 | `--color`, `--no-color` | Colour the default format, or do not. Without either it is coloured in a terminal, unless `NO_COLOR` is set |
 | `--no-error-on-unmatched-pattern` | Pass when the paths hold no file to lint |
 | `--mcp` | Run as an MCP server |
 
-### Checking with Jev
+### Asking a model
 
-`--jev` runs the checks that ask Jev itself, `JEV301` to `JEV312`, after the
-linting. It is the only option that uses the network, and nothing in a
+`--ask` runs the checks that ask a decision model, `JEV301` to `JEV312`, after
+the linting. It is the only option that uses the network, and nothing in a
 settings file can turn it on.
 
 ```bash
-npx decisionlint-le --jev-plan src/                    # what it would send. No key, nothing sent
-TYPESAFE_API_KEY=... npx decisionlint-le --jev src/    # send it
+npx decisionlint-le --ask-plan src/                    # what it would send. No key, nothing sent
+TYPESAFE_API_KEY=... npx decisionlint-le --ask src/    # send it
 ```
 
-- The key is read from the variable the platform names and from nowhere
-  else. It is never printed. `TYPESAFE_API_KEY` by default; with
-  `--jev-model gpt-6-luna` the checks go to OpenAI's Decisions API with the
-  key in `OPENAI_API_KEY`, and with another platform's spelling, such as
-  `~typesafe/jev-latest` for OpenRouter, to that platform with its key. Each
-  finding from any model but `jev-1.13.0` says that its cutoff was set on
-  Jev.
-- `--jev-endpoint`, or `DECISIONLINT_LE_ASK_ENDPOINT`, sends to a platform you
-  host, with `--jev-shape` where the path does not say which shape it takes.
+- `--ask-platform` names where it goes: `typesafe`, `openai`, `openrouter`,
+  `vercel`, `llmgateway` or `liquid`, each with a default model in its own
+  spelling and its own key variable, `TYPESAFE_API_KEY`, `OPENAI_API_KEY`,
+  `OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`, `LLM_GATEWAY_API_KEY` or
+  `LIQUID_API_KEY`. Without it, `--ask-model` with a platform's spelling,
+  `~typesafe/jev-latest` for OpenRouter, sends there, and a bare id goes to
+  its vendor. The key is read from that variable and from nowhere else, and
+  is never printed. Each finding from any model but `jev-1.13.0` says that
+  its cutoff was set on Jev.
+- `--ask-endpoint`, or `DECISIONLINT_LE_ASK_ENDPOINT`, sends to a platform you
+  host, with `--ask-shape` where the path does not say which shape it takes.
   A spelling that names no host is refused without it, with nothing sent.
 - A question with a part built at runtime is never sent. The summary counts
   the ones held back.
-- State is not sent unless you add `--jev-send-state`.
-- `--jev-max-calls` is a limit for the whole run. A run that needs more exits
+- State is not sent unless you add `--ask-send-state`.
+- `--ask-max-calls` is a limit for the whole run. A run that needs more exits
   2, so a job cannot pass after checking part of a project.
 - A rejected key, a failed request or a run you stop also exits 2, and says
   how many requests were answered of how many were planned.
@@ -135,8 +138,8 @@ has this package reaches the same server with the flag:
 | `fix_text` | Returns the text with the safe fixes applied, and the report of what is left. Writes nothing |
 | `list_rules` | Lists every rule with what it means, its default level and its pages |
 | `explain_rule` | A rule's own page as Markdown: an example that is flagged, one that is not, how to fix it and how to silence it |
-| `plan_jev` | What `check_with_jev` would send, and sends nothing |
-| `check_with_jev` | Asks Jev or Luna to check the questions in text or files, with your key, as `--jev` does |
+| `plan_ask` | What `ask_model` would send, and sends nothing |
+| `ask_model` | Asks Jev or Luna to check the questions in text or files, with your key, as `--ask` does |
 | `probe_question` | Sends one question with its layout varied and reports whether the answer held, with your key |
 
 Every tool answers as structured content beside the text. The first six send
@@ -165,6 +168,6 @@ removes or alters one raises `api`.
 
 ## What it does not do
 
-Nothing here reaches the network unless asked to: `--jev` on the command
-line, and `check_with_jev` and `probe_question` on the server, each with your
+Nothing here reaches the network unless asked to: `--ask` on the command
+line, and `ask_model` and `probe_question` on the server, each with your
 key. Linting, fixing and the rule pages are offline.

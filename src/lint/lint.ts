@@ -24,7 +24,13 @@ import { check } from './checks';
 import { normalizeOption } from './finding';
 import { RULES } from './rules';
 import { suppression, type UnusedDirective } from './suppress';
-import { TARGET_IDS, type Target, targetById, targetOfModel } from './targets';
+import {
+	TARGET_IDS,
+	type Target,
+	targetByHost,
+	targetById,
+	targetOfModel,
+} from './targets';
 
 /**
  * An option counts as a fallback when one of these is a word in its name, so
@@ -97,6 +103,24 @@ function importedHelpers(text: string): ReadonlySet<string> {
 			.filter((name) => HELPERS.has(name)),
 	);
 	return new Set(names);
+}
+
+const URL_HOST = /https?:\/\/([a-z0-9.-]+)/gi;
+
+/**
+ * The platform a file's URLs name, when they name exactly one: a base URL
+ * in a client's constructor, an endpoint in a request, a `TYPESAFE_BASE_URL`
+ * written out. Two platforms in one file settle nothing, and a host the
+ * table does not list is one the user runs, which says nothing about limits.
+ */
+function hostTarget(text: string): Target | undefined {
+	const found = new Set<Target>();
+	for (const match of text.matchAll(URL_HOST)) {
+		const target = targetByHost((match[1] ?? '').toLowerCase());
+		if (target) found.add(target);
+	}
+	const [only] = found;
+	return found.size === 1 ? only : undefined;
 }
 
 /** Larger files are not read, in the editor or on the command line. */
@@ -308,8 +332,12 @@ export function lintText(
 	const syntaxAt = (offset: number): Syntax => (inside(offset) ? 'js' : syntax);
 	const fallback = new Set(options.fallbackOptions.map(normalizeOption));
 	const fallbackName = options.fallbackOptions[0] ?? 'other';
+	// The setting, else the one platform the file's URLs name, else what the
+	// request's model id says by its spelling. A URL outranks the id because a
+	// bare id is the vendor's spelling even when a gateway forwards it.
+	const inFile = configured ?? hostTarget(text);
 	const targetFor = (map: number | undefined): Target | undefined => {
-		if (configured) return configured;
+		if (inFile) return inFile;
 		const model = map === undefined ? undefined : extraction.maps[map]?.model;
 		return model ? targetOfModel(model.value) : undefined;
 	};

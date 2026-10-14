@@ -63,10 +63,16 @@ npx jevlint-le --jev-plan src/                    # what it would send. No key, 
 TYPESAFE_API_KEY=... npx jevlint-le --jev src/    # send it
 ```
 
-- The key is read from `TYPESAFE_API_KEY` and from nowhere else. It is never
-  printed. With `--jev-model gpt-6-luna` the checks go to OpenAI's Decisions
-  API instead, with the key in `OPENAI_API_KEY`, and each finding says that
-  its cutoff was set on Jev.
+- The key is read from the variable the platform names and from nowhere
+  else. It is never printed. `TYPESAFE_API_KEY` by default; with
+  `--jev-model gpt-6-luna` the checks go to OpenAI's Decisions API with the
+  key in `OPENAI_API_KEY`, and with another platform's spelling, such as
+  `~typesafe/jev-latest` for OpenRouter, to that platform with its key. Each
+  finding from any model but `jev-1.13.0` says that its cutoff was set on
+  Jev.
+- `--jev-endpoint`, or `JEVLINT_LE_JEV_ENDPOINT`, sends to a platform you
+  host, with `--jev-shape` where the path does not say which shape it takes.
+  A spelling that names no host is refused without it, with nothing sent.
 - A question with a part built at runtime is never sent. The summary counts
   the ones held back.
 - State is not sent unless you add `--jev-send-state`.

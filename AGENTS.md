@@ -5,12 +5,15 @@ product is and what is planned. [README.md](README.md) is user-facing.
 
 ## What this is
 
-A VS Code extension that finds the questions a project sends to TypeSafe's Jev
-model or to OpenAI's Decisions API (`gpt-6-luna`), in JSON, JavaScript,
-TypeScript, Python, Rust and Go, and reports the ones written in a way
-measured to fail. Linting uses no network and no API key. One command, run by
-the user with their own key, asks the model to check a file. No filesystem
-writes outside an accepted quick fix.
+A VS Code extension that finds the questions a project sends to a decision
+model, TypeSafe's Jev, OpenAI's Decisions API (`gpt-6-luna`), or any of the
+platforms that serve either shape, in JSON, JavaScript, TypeScript, Python,
+Rust and Go, and reports the ones written in a way measured to fail. Linting
+uses no network and no API key. One command, run by the user with their own
+key, asks the model to check a file, at whichever platform the user sends it
+to. No filesystem writes outside an accepted quick fix. The research that
+settled which platforms exist and what each publishes is in
+`docs/research/`, and what the code takes from it is in `lint/targets.ts`.
 
 **Status:** released; the current version is the top heading of `CHANGELOG.md`.
 The name appears in `package.json`, the `jevlint-le.*` settings and commands,

@@ -1,10 +1,12 @@
 # JevLint-LE
 
-Lint the questions you send to TypeSafe's Jev model, and to OpenAI's Decisions
-API. JevLint-LE reads them out of your JSON and your code, and reports the ones
-written in a way that is measured to produce bad answers. Linting makes no API
-calls and needs no key. One optional command asks the model itself, Jev or
-Luna, to check a file, using your own key.
+Lint the questions you send to a decision model: TypeSafe's Jev, OpenAI's
+Decisions API, and every platform that serves either shape, from OpenRouter
+and Vercel AI Gateway to a llama.cpp on your own machine. JevLint-LE reads
+them out of your JSON and your code, and reports the ones written in a way
+that is measured to produce bad answers. Linting makes no API calls and needs
+no key. One optional command asks the model itself to check a file, using
+your own key, at whichever platform you send it to.
 
 Part of the LE family.
 
@@ -26,13 +28,17 @@ Part of the LE family.
   a finding you disagree with.
 - **The same rules in CI**, from a command line, and for AI agents, from an
   MCP server. One settings file covers all three.
-- **Two vendors, one set of rules.** TypeSafe's `/v1/systemone` shape and
+- **Every platform, one set of rules.** TypeSafe's `/v1/systemone` shape and
   OpenAI's `/v1/decisions` shape, `predicate`, `choices` and `levels`, are
   read into the same rules, and the AI SDK's `decide()` call for either.
-- **Two optional commands that use your own key**: one asks the model, Jev or
-  Luna, whether your questions have problems a text pattern cannot see, and
-  one re-sends a question with its layout changed to see whether the answer
-  holds.
+  The limits a request is held to are the platform's own, read from the
+  model id's spelling, a URL in the file or a `target` setting: Vercel's 255
+  choices, LiteLLM's 128 questions, none where a platform publishes none.
+- **Two optional commands that use your own key**: one asks the model
+  whether your questions have problems a text pattern cannot see, and one
+  re-sends a question with its layout changed to see whether the answer
+  holds. Both go to the platform the model id names, or to an endpoint you
+  set, a local llama.cpp included.
 
 A request like this one looks fine and has three problems:
 
@@ -110,16 +116,19 @@ Each finding links to [its own page](https://github.com/nolindnaidoo/jevlint-le/
 - JSON and JSONC request bodies, in TypeSafe's shape or OpenAI's.
 - Object literals in JavaScript and TypeScript, including requests passed
   inline to `client.systemOne(...)` and `client.decisions.create(...)`, and
-  the Vercel AI SDK's `decide({ questions })` for either vendor.
+  the Vercel AI SDK's `decide({ questions })` for either vendor, with the
+  model id inside `typeSafeAi.decisionModel('...')` read as the model.
 - `noul()`, `choice()` and `score()` calls in files that use
   `@typesafe-ai/sdk`.
 - Python: dicts, `Noul(...)`, `Choice(...)` and `Score(...)` from
-  `typesafe_sdk` or a library that wraps it, and requests passed to
-  `system_one(...)` or `client.decisions.create(...)`.
+  `typesafe_sdk`, from LangChain's `langchain_typesafe` with its
+  `NoulCriteria(...)`, or from a library that wraps either, and requests
+  passed to `system_one(...)` or `client.decisions.create(...)`.
 - Rust: the JSON inside `json!`, structs and enum variants named for a
   question type, and `::noul(...)` style constructors.
-- Go: maps with string keys, structs with a `Type` field, and structs named
-  for a question type.
+- Go: maps with string keys, structs with a `Type` field, structs named
+  for a question type, and OpenAI's Go SDK, `openai.DecisionNewParams{...}`
+  with its `OfPredicate`, `OfChoice` and `OfScore` questions.
 - A request pasted as JSON into a string, in any of these languages.
 - Any other language: have your program write the request it sends to a
   `.jev.json` file and open that. Every check runs on it, and nothing in it
@@ -141,9 +150,10 @@ covers, exactly:
   option, a description that only repeats its name, terse instructions,
   degree levels, duplicates, counting, an undefined boundary and the rest.
   Findings name Luna. OpenAI's own guide asks for the same things.
-- **Held back.** `JEV002` and `JEV003` are about TypeSafe's request limits,
-  and OpenAI publishes none. `JEV001` is about Jev's moving aliases, and
-  OpenAI has one model id.
+- **Held back.** `JEV002` and `JEV003` check a platform's published
+  limits, and OpenAI publishes none, so a request bound for OpenAI gets
+  neither. One bound for a gateway that does, such as Vercel's, gets both.
+  `JEV001` is about Jev's moving aliases, and OpenAI has one model id.
 - **Shape mistakes** are reported in OpenAI's own field names: `choices`
   written as a map or as bare names, a Choice with no `choices`, a Score
   with no `levels`. A mistyped `predicate` is fixed on the lightbulb. The
@@ -156,6 +166,51 @@ covers, exactly:
   defaults, and every finding from asking Luna says its cutoff was set on
   Jev. The request sent to Luna follows OpenAI's API reference and has not
   yet been run against the live API. Both wait on a key.
+
+## Every platform
+
+Jev and Luna are two of the models, and TypeSafe and OpenAI two of the
+places a request can go. Microsoft, Liquid AI and Cloudflare serve their own
+models in TypeSafe's shape. OpenRouter, Vercel AI Gateway, LiteLLM and LLM
+Gateway forward to any of them, in either shape. llama.cpp, vLLM and Ollaya
+run open models on your own machine. JevLint-LE reads the two shapes, so
+every one of them is covered by the same rules. What differs between them
+is held in one table, `src/lint/targets.ts`, with the page each fact was
+read from:
+
+| Platform | Reached as | Key variable | Limits it publishes |
+|---|---|---|---|
+| TypeSafe | `jev-1.13.0`, `jev-latest` | `TYPESAFE_API_KEY` | 255 options, 10 levels |
+| OpenAI | `gpt-6-luna` | `OPENAI_API_KEY` | none |
+| OpenRouter | `~typesafe/jev-latest`, `typesafe/jev-1.13` | `OPENROUTER_API_KEY` | none |
+| Vercel AI Gateway | `typesafe-ai/jev`, `openai/gpt-6-luna-decisions` | `AI_GATEWAY_API_KEY` | 255 choices, 10 levels |
+| LLM Gateway | `gpt-6-luna-decisions`, `microsoft-decision-1` | `LLM_GATEWAY_API_KEY` | none |
+| Liquid AI | `d1`, `d1:free` | `LIQUID_API_KEY` | none |
+| LiteLLM | an endpoint you set | the shape's | 128 questions per request |
+| Eden AI | its own path | its own | 255 options |
+| llama.cpp | an endpoint you set | none | 10 levels |
+
+Three things follow from the table:
+
+- **The limits a request is held to are its platform's.** The platform is
+  read from the model id where its spelling says, from the one platform a
+  URL in the file names, or from `target` in `jevlint-le.json` or
+  `jevlint-le.target` for a project that sends everything to one place. A
+  platform that publishes no limit gets no finding for it. Nothing says
+  where a request goes: a TypeSafe-shaped question keeps TypeSafe's limits,
+  and any other shape keeps none.
+- **A floating alias is caught in every spelling**, and pinned in the
+  spelling the platform documents: `jev-latest` to `jev-1.13.0`,
+  `~typesafe/jev-latest` to `typesafe/jev-1.13`.
+- **A check with the model goes to the platform the id names**, with the key
+  in that platform's variable. A spelling that names no host, such as
+  `openai/gpt-6-luna-decisions`, which every gateway writes, is refused
+  rather than guessed at, until you set the endpoint. The next two sections
+  say how.
+
+"Open Jev" is not one of these. It is a name used by at least nine
+unrelated projects that reimplement `/v1/systemone`; the one llama.cpp
+serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 
 ## Check a file with Jev
 
@@ -180,6 +235,18 @@ it an OpenAI key the same two ways: **JevLint-LE: Set OpenAI API Key**, or
 as predicates. One thing to know: the cutoffs that decide when a check fires
 were set on `jev-1.13.0`, and every finding from Luna says so until Luna is
 measured the same way. The probe asks Jev only.
+
+**To ask another platform**, set `jevlint-le.jev.model` to its spelling of
+the model, `~typesafe/jev-latest` for OpenRouter or `d1` for Liquid AI, and
+put that platform's key in the variable it names, `OPENROUTER_API_KEY` or
+`LIQUID_API_KEY`, in the environment VS Code runs in. For a platform you
+host, a llama.cpp, vLLM, LiteLLM or Ollaya, set `jevlint-le.jev.endpoint`
+to the full URL it listens at, and `jevlint-le.jev.shape` to `typesafe` or
+`openai` when the path does not end in `/systemone` or `/decisions`. A host
+JevLint-LE does not know gets the key in `TYPESAFE_API_KEY` or
+`OPENAI_API_KEY`, whichever the shape's SDK reads, or no key when neither
+is set. The endpoint can only be set in your user settings, so a repository
+cannot point your key at a host of its choosing.
 
 What to know before you run it:
 
@@ -348,8 +415,14 @@ npx jevlint-le --jev-plan src/                    # what it would send. No key, 
 TYPESAFE_API_KEY=... npx jevlint-le --jev src/    # send it
 ```
 
-- The key is read from `TYPESAFE_API_KEY` and from nowhere else. It is never
-  printed.
+- The key is read from the variable the platform names, `TYPESAFE_API_KEY`
+  by default, and from nowhere else. It is never printed. `--jev-model`
+  with another platform's spelling, `~typesafe/jev-latest` or
+  `gpt-6-luna-decisions`, sends there with that platform's key.
+- `--jev-endpoint`, or `JEVLINT_LE_JEV_ENDPOINT`, sends to a platform you
+  host, with `--jev-shape` where the path does not say which shape it takes.
+  A spelling that names no host, such as `openai/gpt-6-luna-decisions`, is
+  refused without it, with nothing sent.
 - A question with a part built at runtime is never sent. The summary counts
   the ones held back.
 - State is not sent unless you add `--jev-send-state`.

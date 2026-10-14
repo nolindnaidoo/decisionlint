@@ -1256,7 +1256,10 @@ run on Luna are the next two measurements, and both wait on a key.
 
 ## Every provider
 
-Status: in progress since 2026-10-14, for 0.9.0. The research behind it is
+Status: built on 2026-10-14 as 0.9.0, all four phases. One thing is
+outstanding: the reading of OpenAI's Go SDK was added from the vendor's
+guide and has not yet had the run over public Go code that every other
+reader change had. The research behind it is
 `docs/research/reports/Decision model API providers.md`, with the notes
 beside it, and every claim below that is not already in the code comes from
 there.
@@ -1372,8 +1375,8 @@ version is finished in one pull request with its changelog dated.
 |---|---|---|
 | P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `JEV001` and `JEV013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `JEV003`, an unknown target changes nothing |
 | P2 | `jev/provider.ts` from the target table, `jev.endpoint` and `--jev-endpoint`, `--jev-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
-| P3 | The calls in D5, each after its run over public code | Each call is read as a request in its language's reader test |
-| P4 | A base URL in the file resolves the target, the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
+| P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go is still to do |
+| P4 | A URL in the file resolves the target, over the model id and under the setting; the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
 
 ### Not built, and why
 

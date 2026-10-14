@@ -18,7 +18,7 @@ function toFixAll(
 	fixed: string,
 ): vscode.CodeAction {
 	const action = new vscode.CodeAction(
-		'Fix all the Jev findings that can be fixed safely',
+		'Fix all the DecisionLint-LE findings that can be fixed safely',
 		FIX_ALL,
 	);
 	const edit = new vscode.WorkspaceEdit();

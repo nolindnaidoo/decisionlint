@@ -103,7 +103,7 @@ async function lintOne(
 
 function describe(tally: Tally): string {
 	const parts = [
-		`${tally.findings} findings in ${tally.questions} Jev questions across ${tally.files} files`,
+		`${tally.findings} findings in ${tally.questions} decision questions across ${tally.files} files`,
 	];
 	if (tally.unreadable)
 		parts.push(`${tally.unreadable} questions not fully read`);

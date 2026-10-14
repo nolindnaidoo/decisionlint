@@ -52,7 +52,7 @@ function targetAt(
 		(candidate) =>
 			candidate.span.start <= offset && offset <= candidate.span.end,
 	);
-	if (!question) return 'Put the cursor inside a Jev question first.';
+	if (!question) return 'Put the cursor inside a decision question first.';
 	const literal = toLiteral(question);
 	if (!literal)
 		return 'Part of this question is built at runtime, so it cannot be sent as written.';

@@ -180,7 +180,7 @@ describe('diagnostics', () => {
 		});
 		expect(diagnostics()[0]?.code).toMatchObject({ value: 'JEV004' });
 		expect(_state.statusBar).toMatchObject({
-			text: '$(checklist) Jev 1',
+			text: '$(checklist) DecisionLint 1',
 			visible: true,
 		});
 	});
@@ -192,7 +192,9 @@ describe('diagnostics', () => {
 
 	it('shows the unread count beside the findings', () => {
 		start(doc(`const q = { type: 'noul', instructions: build() };`));
-		expect(_state.statusBar.text).toBe('$(checklist) Jev 1 · 1 unread');
+		expect(_state.statusBar.text).toBe(
+			'$(checklist) DecisionLint 1 · 1 unread',
+		);
 	});
 
 	it('leaves unsupported languages alone', () => {
@@ -241,7 +243,7 @@ describe('diagnostics', () => {
 		start(doc(BARE_CHOICE));
 		expect(diagnostics()).toEqual([]);
 		expect(_state.statusBar).toMatchObject({
-			text: '$(warning) Jev not linted',
+			text: '$(warning) DecisionLint not linted',
 			tooltip:
 				"decisionlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
 		});
@@ -405,7 +407,7 @@ describe('commands', () => {
 		start(doc(BARE_CHOICE));
 		await run(COMMANDS.lintFile);
 		expect(_state.messages).toEqual([
-			'DecisionLint-LE: 1 finding in 1 Jev question.',
+			'DecisionLint-LE: 1 finding in 1 decision question.',
 		]);
 	});
 
@@ -438,7 +440,7 @@ describe('commands', () => {
 		];
 		await run(COMMANDS.lintWorkspace);
 		expect(_state.messages).toEqual([
-			'DecisionLint-LE: 2 findings in 2 Jev questions across 2 files, 1 questions not fully read, 1 files skipped as too large, 1 files could not be opened.',
+			'DecisionLint-LE: 2 findings in 2 decision questions across 2 files, 1 questions not fully read, 1 files skipped as too large, 1 files could not be opened.',
 		]);
 		expect(diagnostics('file:///good.ts')).toHaveLength(1);
 	});
@@ -1211,7 +1213,7 @@ describe('probe a question', () => {
 			'the cursor is outside any question',
 			REQUEST,
 			'"model"',
-			'Put the cursor inside a Jev question',
+			'Put the cursor inside a decision question',
 		],
 		[
 			'the state is not written in the file',
@@ -1828,7 +1830,7 @@ describe('a project settings file in the editor', () => {
 			expect(messages()).toEqual(['From the project copy.']);
 			expect(loaded).toEqual([LIBRARY]);
 			expect(_state.statusBar.text).toBe(
-				`$(checklist) Jev 1 · project ${NEWER}`,
+				`$(checklist) DecisionLint 1 · project ${NEWER}`,
 			);
 			expect(_state.statusBar.tooltip).toContain(
 				`Linting with this project's own decisionlint-le ${NEWER}`,
@@ -1953,7 +1955,7 @@ describe('a project settings file in the editor', () => {
 			};
 			within(installed(manifest.version), file());
 			expect(loads).toBe(0);
-			expect(_state.statusBar.text).toBe('$(checklist) Jev 1');
+			expect(_state.statusBar.text).toBe('$(checklist) DecisionLint 1');
 		});
 
 		it('names a copy whose manifest cannot be read, and lints with its own', () => {
@@ -1964,7 +1966,7 @@ describe('a project settings file in the editor', () => {
 			expect(messages().join(' ')).toContain(BUNDLED);
 			// A copy that is there and cannot be named is not "none installed", so it is said.
 			expect(_state.statusBar.text).toBe(
-				'$(checklist) Jev 1 · project copy unreadable',
+				'$(checklist) DecisionLint 1 · project copy unreadable',
 			);
 			expect(_state.statusBar.tooltip).toContain(
 				'its package.json is not JSON',
@@ -1974,7 +1976,7 @@ describe('a project settings file in the editor', () => {
 		it('does not stop the editor linting when the project has none', () => {
 			within({}, file());
 			expect(messages().join(' ')).toContain(BUNDLED);
-			expect(_state.statusBar.text).toBe('$(checklist) Jev 1');
+			expect(_state.statusBar.text).toBe('$(checklist) DecisionLint 1');
 		});
 
 		it("says the file could not be linted when the project's copy throws", () => {
@@ -2078,7 +2080,7 @@ describe('a project settings file in the editor', () => {
 		within({ '/work/app/decisionlint-le.json': '{ "rule": {} }' }, file());
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
 		expect(_state.statusBar).toMatchObject({
-			text: '$(warning) Jev not linted',
+			text: '$(warning) DecisionLint not linted',
 			tooltip: expect.stringContaining(
 				"decisionlint-le.json: 'rule' is not a setting",
 			),

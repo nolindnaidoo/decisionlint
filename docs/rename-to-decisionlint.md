@@ -20,22 +20,30 @@ its new surfaces are named right here instead of aliased.
   npm and the Marketplace is a shim that points here.
 - **D4. The repository is renamed in place.** GitHub redirects clones, web
   links, the rule pages and `uses:` in workflows.
+- **D5. The extension keeps its install identity.** The Marketplace lets a
+  display name change and never an id, and a new id is a new listing at
+  zero installs. So `nolindnaidoo.jevlint-le`, the `jevlint-le.*` settings
+  and the `jevlint-le.*` command ids stay, and the keychain still reads the
+  two keys JevLint-LE stored. The npm packages and the MCP server take the
+  new names in full, with shims for the old. Decided on 2026-10-14 after
+  the first cut had renamed the id.
 
 ## The names
 
 | Was | Is | Old spelling kept as |
 |---|---|---|
 | `JevLint-LE` | `DecisionLint-LE` | nothing, branding only |
-| `jevlint-le` (npm, extension, repo) | `decisionlint-le` | a shim package and a final extension release that point here |
+| `jevlint-le` on npm, the repo | `decisionlint-le` | a shim package |
+| `nolindnaidoo.jevlint-le`, the extension id | unchanged | nothing needed |
 | `jevlint-le-mcp` | `decisionlint-le-mcp` | a shim package |
 | `io.github.nolindnaidoo/jevlint-le` | `io.github.nolindnaidoo/decisionlint-le` | the old listing, marked deprecated if the registry allows |
 | `jevlint-le.json` | `decisionlint-le.json` | read when the new file is absent, with a notice. Permanent |
 | `jevlint-le-disable*` | `decisionlint-le-disable*` | still silences. Permanent |
-| `jevlint-le.*` settings | `decisionlint-le.*` | nothing. A new extension id has new settings |
-| `jevlint-le.jev.model` | `decisionlint-le.ask.models` (one id per platform) | nothing, unpublished shape |
-| `jevlint-le.jev.apiKey`, `.openaiApiKey` | `decisionlint-le.ask.keys` (one per platform) | nothing |
-| `jevlint-le.jev.endpoint`, `.shape` | `decisionlint-le.ask.endpoint`, `.endpointShape`, `.endpointModel` | nothing, unpublished |
-| `jevlint-le.checkWithJev` | `decisionlint-le.askJev`, `askLuna`, `askOpenRouter`, `askVercel`, `askLlmGateway`, `askLiquid`, `askEndpoint` | nothing |
+| `jevlint-le.*` settings and command ids | unchanged | nothing needed |
+| `jevlint-le.jev.model` | `jevlint-le.ask.models` (one id per platform) | nothing, unpublished shape |
+| `jevlint-le.jev.apiKey`, `.openaiApiKey` | `jevlint-le.ask.keys` (one per platform) | the keychain slots they filled are still read |
+| `jevlint-le.jev.endpoint`, `.shape` | `jevlint-le.ask.endpoint`, `.endpointShape`, `.endpointModel` | nothing, unpublished |
+| `jevlint-le.checkWithJev` | `jevlint-le.askJev`, `askLuna`, `askOpenRouter`, `askVercel`, `askLlmGateway`, `askLiquid`, `askEndpoint` | nothing |
 | `--jev`, `--jev-plan`, `--jev-model`, `--jev-max-calls`, `--jev-send-state` | `--ask`, `--ask-plan`, `--ask-model`, `--ask-max-calls`, `--ask-send-state`, and `--ask-platform` | nothing. The command line's flags are read from the help, and 1.0 is where they change |
 | `--jev-endpoint`, `--jev-shape`, `JEVLINT_LE_JEV_*` | `--ask-endpoint`, `--ask-shape`, `DECISIONLINT_LE_ASK_*` | nothing, unpublished |
 | `check_with_jev`, `plan_jev` | `ask_model`, `plan_ask`, with a `platform` argument | nothing. The server's tools change with its name |
@@ -88,18 +96,20 @@ endpoint when its shape is `typesafe`.
    by the registry id.
 5. Publish 1.0.0: Marketplace, Open VSX, npm (two packages), the MCP
    registry. Four authorizations, each its own.
-6. Bridge the old names, each its own authorization: `jevlint-le@0.9.0` and
-   `jevlint-le-mcp@0.9.0` as shims that depend on the new packages, then
-   `npm deprecate` both; a final `jevlint-le` extension release that shows
-   one notice naming the replacement; a second `jevlint-le` hook id in
-   `.pre-commit-hooks.yaml` beside the new one.
+6. Bridge the old npm names, each its own authorization: `jevlint-le@0.9.0`
+   and `jevlint-le-mcp@0.9.0` as shims that depend on the new packages, then
+   `npm deprecate` both; the old MCP listing marked deprecated through
+   `PATCH /v0.1/servers/{name}/status`, which the registry grants the
+   namespace's publisher; a second `jevlint-le` hook id in
+   `.pre-commit-hooks.yaml` beside the new one. The extension needs no
+   bridge under D5.
 
 ## Outstanding
 
-- Whether the MCP registry lets a publisher mark the old server deprecated
-  with a pointer, and whether the Marketplace's deprecation banner is set by
-  the publisher or granted by the VS Code team. Both are a read before step 6.
+- The MCP registry's status route was read from an extracted page on
+  2026-10-14, not the raw API doc. Confirm it against the raw doc before
+  step 6.
 - The two demo recordings show the old name in the editor's UI and the
   command line's output. Record both again after step 3.
-- The keychain of the old extension is not visible to the new one, so a
-  user with a TypeSafe key stored by JevLint-LE sets it again once.
+- Under D5 the keychain is the same, and `commands/ask.ts` reads the two
+  old slots, so no key needs setting again.

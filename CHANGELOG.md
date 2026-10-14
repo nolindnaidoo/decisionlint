@@ -5,17 +5,20 @@
 **JevLint-LE is DecisionLint-LE.** It lints the questions sent to any
 decision model, and nine platforms serve one, so the name says what it does
 rather than which model came first. Everything that carried the old name is
-renamed: the npm packages are `decisionlint-le` and `decisionlint-le-mcp`,
-the extension is `nolindnaidoo.decisionlint-le`, the MCP server is
-`io.github.nolindnaidoo/decisionlint-le`, the settings are
-`decisionlint-le.*`, the settings file is `decisionlint-le.json` and the
-directive is `decisionlint-le-disable`. Two spellings a repository may
+renamed where a rename costs nobody anything: the npm packages are
+`decisionlint-le` and `decisionlint-le-mcp`, the MCP server is
+`io.github.nolindnaidoo/decisionlint-le`, the settings file is
+`decisionlint-le.json`, the directive is `decisionlint-le-disable` and the
+diagnostic source is `decisionlint-le`. The extension keeps its id,
+`nolindnaidoo.jevlint-le`, its `jevlint-le.*` settings and its `jevlint-le.*`
+command ids, so everyone who has it gets this version in place with their
+settings, keybindings and stored keys intact. Two spellings a repository may
 already hold are kept for ever: a `jevlint-le.json` is read where no
 `decisionlint-le.json` sits beside it, and a `jevlint-le-disable` comment
 still silences. The rule codes stay `JEV`: a code is an identifier in
 comments and settings files that nothing ever updates, and the number ranges
-already say what each rule is about. The old packages and the old extension
-get one final release that points here.
+already say what each rule is about. The old npm packages get one final
+release that points here.
 
 **The verb is ask, and there is one command per platform.** `--jev` and the
 `jev.*` settings were named after one model and now reach nine platforms.
@@ -34,12 +37,12 @@ carried `jev`. The probe asks Jev at TypeSafe.
 | Was | Is |
 |---|---|
 | `jevlint-le`, `jevlint-le-mcp` on npm | `decisionlint-le`, `decisionlint-le-mcp` |
-| `nolindnaidoo.jevlint-le` on the Marketplace and Open VSX | `nolindnaidoo.decisionlint-le` |
+| `nolindnaidoo.jevlint-le` on the Marketplace and Open VSX | unchanged, with the display name DecisionLint-LE |
 | `io.github.nolindnaidoo/jevlint-le` on the MCP registry | `io.github.nolindnaidoo/decisionlint-le` |
 | `jevlint-le.json` | `decisionlint-le.json`, the old name still read |
 | `jevlint-le-disable` | `decisionlint-le-disable`, the old name still honoured |
-| `jevlint-le.jev.model`, `.apiKey`, `.openaiApiKey` | `decisionlint-le.ask.models`, `decisionlint-le.ask.keys`, one entry per platform |
-| `jevlint-le.jev.maxCalls`, `.sendState`, `.confirm` | `decisionlint-le.ask.maxCalls`, `.sendState`, `.confirm` |
+| `jevlint-le.jev.model`, `.apiKey`, `.openaiApiKey` | `jevlint-le.ask.models`, `jevlint-le.ask.keys`, one entry per platform |
+| `jevlint-le.jev.maxCalls`, `.sendState`, `.confirm` | `jevlint-le.ask.maxCalls`, `.sendState`, `.confirm` |
 | Check This File with Jev; Set TypeSafe API Key, Set OpenAI API Key | one Ask command and one Set API Key command per platform |
 | `--jev`, `--jev-*` | `--ask`, `--ask-*`, plus `--ask-platform` |
 | `check_with_jev`, `plan_jev` | `ask_model`, `plan_ask` |

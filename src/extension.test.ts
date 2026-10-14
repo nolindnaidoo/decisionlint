@@ -83,11 +83,11 @@ describe('configuration', () => {
 	it('declares the same defaults as package.json', () => {
 		const declared = manifest.contributes.configuration.properties;
 		for (const [key, value] of Object.entries(CONFIG_DEFAULTS)) {
-			expect(declared[`decisionlint-le.${key}`]?.default, key).toEqual(value);
+			expect(declared[`jevlint-le.${key}`]?.default, key).toEqual(value);
 		}
 		expect(Object.keys(declared).sort()).toEqual(
 			Object.keys(CONFIG_DEFAULTS)
-				.map((key) => `decisionlint-le.${key}`)
+				.map((key) => `jevlint-le.${key}`)
 				.sort(),
 		);
 	});
@@ -109,25 +109,25 @@ describe('configuration', () => {
 	it("reads the lint settings with the settings file's reader, and refuses what it refuses", () => {
 		_state.config = { rules: { JEV004: 'off', JEV999: 'off' } };
 		expect(getConfiguration().lint).toBe(
-			"decisionlint-le settings: rules: 'JEV999' is not a rule code or a rule name.",
+			"jevlint-le settings: rules: 'JEV999' is not a rule code or a rule name.",
 		);
 		_state.config = { rules: { JEV001: 'loud' } };
 		expect(getConfiguration().lint).toBe(
-			"decisionlint-le settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
+			"jevlint-le settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
 		);
 		_state.config = { ignore: 'JEV004:team' };
 		expect(getConfiguration().lint).toBe(
-			"decisionlint-le settings: 'ignore' must be a list of strings.",
+			"jevlint-le settings: 'ignore' must be a list of strings.",
 		);
 		// A lint setting of the wrong shape is refused, not defaulted: a default
 		// would show findings the author believes are off.
 		_state.config = { rules: 'nope' };
 		expect(getConfiguration().lint).toBe(
-			"decisionlint-le settings: 'rules' must be an object of rule code to level.",
+			"jevlint-le settings: 'rules' must be an object of rule code to level.",
 		);
 		_state.config = { fallbackOptions: 3 };
 		expect(getConfiguration().lint).toBe(
-			"decisionlint-le settings: 'fallbackOptions' must be a list of strings.",
+			"jevlint-le settings: 'fallbackOptions' must be a list of strings.",
 		);
 		// A rule by its name and a level by its alias, as the file takes them.
 		_state.config = { rules: { 'no-fallback-option': 'warn' } };
@@ -232,7 +232,7 @@ describe('diagnostics', () => {
 		start(doc(BARE_CHOICE));
 		_state.config = { rules: { JEV004: 'off' } };
 		_state.listeners.config?.({
-			affectsConfiguration: (section: string) => section === 'decisionlint-le',
+			affectsConfiguration: (section: string) => section === 'jevlint-le',
 		});
 		expect(diagnostics()).toHaveLength(0);
 	});
@@ -245,11 +245,11 @@ describe('diagnostics', () => {
 		expect(_state.statusBar).toMatchObject({
 			text: '$(warning) DecisionLint not linted',
 			tooltip:
-				"decisionlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
+				"jevlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
 		});
 		_state.config = {};
 		_state.listeners.config?.({
-			affectsConfiguration: (section: string) => section === 'decisionlint-le',
+			affectsConfiguration: (section: string) => section === 'jevlint-le',
 		});
 		expect(diagnostics()).toHaveLength(1);
 	});
@@ -566,7 +566,7 @@ describe('commands', () => {
 		start();
 		await run(COMMANDS.openSettings);
 		expect(_state.executed).toEqual([
-			['workbench.action.openSettings', '@ext:nolindnaidoo.decisionlint-le'],
+			['workbench.action.openSettings', '@ext:nolindnaidoo.jevlint-le'],
 		]);
 	});
 });
@@ -788,10 +788,8 @@ describe('check with Jev', () => {
 				[...ASK_PLATFORM_IDS, 'endpoint'].sort(),
 			);
 			for (const slot of SLOTS) {
-				expect(ASK_COMMANDS.ask[slot]).toMatch(/^decisionlint-le\.ask/);
-				expect(ASK_COMMANDS.setKey[slot]).toMatch(
-					/^decisionlint-le\.set\w+ApiKey$/,
-				);
+				expect(ASK_COMMANDS.ask[slot]).toMatch(/^jevlint-le\.ask/);
+				expect(ASK_COMMANDS.setKey[slot]).toMatch(/^jevlint-le\.set\w+ApiKey$/);
 			}
 		});
 
@@ -862,6 +860,21 @@ describe('check with Jev', () => {
 		});
 	});
 
+	it('still reads a key JevLint-LE stored, and clears it with the rest', async () => {
+		const fetch = jevSays({});
+		vi.stubGlobal('fetch', fetch);
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'old-key');
+		start(doc(VAGUE));
+		await run(ASK_COMMANDS.ask.typesafe);
+		const [, init] = fetch.mock.calls[0] as unknown as [
+			string,
+			{ headers: Record<string, string> },
+		];
+		expect(init.headers.Authorization).toBe('Bearer old-key');
+		await run(ASK_COMMANDS.clearKeys);
+		expect(_state.secrets.size).toBe(0);
+	});
+
 	it('uses a key typed into the settings, ahead of the keychain', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
@@ -882,7 +895,7 @@ describe('check with Jev', () => {
 
 	it('lets the key be set only in user settings, and keeps it out of sync', () => {
 		const setting =
-			manifest.contributes.configuration.properties['decisionlint-le.ask.keys'];
+			manifest.contributes.configuration.properties['jevlint-le.ask.keys'];
 		// A workspace setting lives in the repository, where a key would be committed.
 		expect(setting.scope).toBe('application');
 		expect(setting.ignoreSync).toBe(true);
@@ -890,13 +903,11 @@ describe('check with Jev', () => {
 
 	it('lets the endpoint be set only in user settings, so a repository cannot point the key at a host', () => {
 		const { properties } = manifest.contributes.configuration;
-		expect(properties['decisionlint-le.ask.endpoint'].scope).toBe(
+		expect(properties['jevlint-le.ask.endpoint'].scope).toBe('application');
+		expect(properties['jevlint-le.ask.endpointShape'].scope).toBe(
 			'application',
 		);
-		expect(properties['decisionlint-le.ask.endpointShape'].scope).toBe(
-			'application',
-		);
-		expect(properties['decisionlint-le.ask.endpointModel'].scope).toBe(
+		expect(properties['jevlint-le.ask.endpointModel'].scope).toBe(
 			'application',
 		);
 	});
@@ -908,7 +919,7 @@ describe('check with Jev', () => {
 		await run(ASK_COMMANDS.ask.endpoint);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain(
-			'No endpoint is set. Set decisionlint-le.ask.endpoint to the full URL the host listens at',
+			'No endpoint is set. Set jevlint-le.ask.endpoint to the full URL the host listens at',
 		);
 		_state.config = { 'ask.endpoint': 'http://localhost:8080/v1/systemone' };
 		await run(ASK_COMMANDS.ask.endpoint);
@@ -1247,7 +1258,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		await run('decisionlint-le.probeQuestion');
+		await run('jevlint-le.probeQuestion');
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('No TypeSafe API key');
 	});

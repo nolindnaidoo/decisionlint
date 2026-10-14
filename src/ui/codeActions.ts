@@ -10,7 +10,8 @@ type Deps = Readonly<{
 
 /** What `editor.codeActionsOnSave` asks for by name, as it does of other linters. */
 export const FIX_ALL =
-	vscode.CodeActionKind.SourceFixAll.append('decisionlint-le');
+	// Kept as `source.fixAll.jevlint-le`: it is what users' `codeActionsOnSave` already names.
+	vscode.CodeActionKind.SourceFixAll.append('jevlint-le');
 
 // One edit for the whole file: the fixes were worked out together, so they go in together.
 function toFixAll(

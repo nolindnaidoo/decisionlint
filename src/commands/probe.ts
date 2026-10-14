@@ -27,7 +27,7 @@ type Deps = KeySource &
 		wait: (ms: number) => Promise<void>;
 	}>;
 
-export const PROBE_COMMAND = 'decisionlint-le.probeQuestion';
+export const PROBE_COMMAND = 'jevlint-le.probeQuestion';
 
 type Target = Readonly<{
 	id: string;

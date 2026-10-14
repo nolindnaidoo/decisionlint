@@ -89,7 +89,7 @@ TYPESAFE_API_KEY=... npx decisionlint-le --ask src/    # send it
 ## In the editor
 
 Installed in a project's dev dependencies, this package is also what the
-[DecisionLint-LE extension](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint-le)
+[DecisionLint-LE extension](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le)
 lints with in VS Code, so the editor and CI report the same findings from the
 same version. It needs 0.3.0 or newer and a trusted workspace.
 

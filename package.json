@@ -2,7 +2,7 @@
   "name": "decisionlint",
   "publisher": "nolindnaidoo",
   "displayName": "DecisionLint",
-  "description": "Lint the questions you send to TypeSafe's Jev model and OpenAI's Decisions API (gpt-6-luna) as you type, with no API key and no network calls. An optional command asks Jev or Luna itself to check a file",
+  "description": "Lint the questions you send to a decision model, TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna) or any platform that serves one: OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. No API key and no network calls. One command asks the model itself to check a file.",
   "icon": "src/assets/images/icon.png",
   "version": "1.0.0",
   "private": true,
@@ -26,7 +26,7 @@
   "categories": [
     "Linters"
   ],
-  "keywords": ["decisionlint", "decision lint", "decision linter", "jevlint", "jev", "jev linter", "typesafe", "system one", "luna", "gpt-6-luna", "openai", "openai decisions", "decisions api", "lunalint", "luna linter", "decision model", "lint", "linter", "noul", "predicate", "choice", "score", "questions", "prompt lint", "python", "typescript", "javascript", "rust", "go", "json", "mcp", "cli", "ci"],
+  "keywords": ["decisionlint", "decision lint", "decision linter", "decision model", "decision model linter", "decisions api", "openai decisions", "gpt-6-luna", "luna", "openai", "typesafe", "jev", "jevlint", "jev linter", "system one", "openrouter", "vercel ai gateway", "ai gateway", "litellm", "llm gateway", "eden ai", "liquid ai", "liquid d1", "microsoft decision-1", "cloudflare", "llama.cpp", "vllm", "ollaya", "noul", "predicate", "choice", "score", "questions", "prompt lint", "lint", "linter", "python", "typescript", "javascript", "rust", "go", "json", "mcp", "cli", "ci"],
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:json",

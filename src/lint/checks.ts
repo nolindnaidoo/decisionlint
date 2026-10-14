@@ -21,7 +21,8 @@ import {
 	renameKeyFix,
 	scoreArrayFix,
 } from './fix';
-import { MEASURED_ON, MODEL_ALIASES, NOUL_CRITERIA_KEYS } from './limits';
+import { KNOWN_VERSION, MEASURED_ON, NOUL_CRITERIA_KEYS } from './limits';
+import { isFloatingJev, isNewerJev, pinnedSpelling } from './models';
 import { OPTION_CHECKS, wrapsList } from './optionChecks';
 import { isEnglish, WORDING_CHECKS } from './wordingChecks';
 
@@ -386,32 +387,23 @@ function checkModels(
 	text: string,
 ): ReadonlyArray<Finding> {
 	return extraction.models
-		.filter((model) => MODEL_ALIASES.has(model.value))
-		.map((model) => ({
-			code: 'JEV001' as const,
-			message: `'${model.value}' is an alias that moves to each new release, so answers can change with no change on your side. Pin the versioned id from a response's 'model' field once your thresholds are tuned.`,
-			span: model.span,
-			questionId: undefined,
-			fix: pinModelFix(text, model.span),
-		}));
-}
-
-/** The numbers of a versioned id, or nothing for an alias, a suffixed build or another vendor's model. */
-function versionOf(model: string): ReadonlyArray<number> | undefined {
-	const parts = /^jev-(\d+)\.(\d+)\.(\d+)$/.exec(model);
-	return parts?.slice(1).map(Number);
-}
-
-function isNewer(model: string, than: string): boolean {
-	const [ours, theirs] = [versionOf(model), versionOf(than)];
-	if (!ours || !theirs) return false;
-	const differs = ours.findIndex((part, index) => part !== theirs[index]);
-	return differs !== -1 && (ours[differs] ?? 0) > (theirs[differs] ?? 0);
+		.filter((model) => isFloatingJev(model.value))
+		.map((model) => {
+			// No fix where no platform documents a pinned spelling for this one.
+			const pinned = pinnedSpelling(model.value, KNOWN_VERSION);
+			return {
+				code: 'JEV001' as const,
+				message: `'${model.value}' is an alias that moves to each new release, so answers can change with no change on your side. Pin the versioned id from a response's 'model' field once your thresholds are tuned.`,
+				span: model.span,
+				questionId: undefined,
+				fix: pinned ? pinModelFix(text, model.span, pinned) : undefined,
+			};
+		});
 }
 
 function checkNewerModels(extraction: Extraction): ReadonlyArray<Finding> {
 	return extraction.models
-		.filter((model) => isNewer(model.value, MEASURED_ON))
+		.filter((model) => isNewerJev(model.value, MEASURED_ON))
 		.map((model) => ({
 			code: 'JEV013' as const,
 			message: `'${model.value}' is newer than ${MEASURED_ON}, the version these rules were measured on. A finding may cost no answers on it, and a weakness new to it is not looked for. A later JevLint-LE may have measured it.`,
@@ -419,6 +411,29 @@ function checkNewerModels(extraction: Extraction): ReadonlyArray<Finding> {
 			questionId: undefined,
 			fix: undefined,
 		}));
+}
+
+/** A request with more questions than its platform takes in one call. Only a platform that publishes the number is checked. */
+function checkQuestionCounts(
+	extraction: Extraction,
+	context: CheckContext,
+): ReadonlyArray<Finding> {
+	return extraction.maps.flatMap((map, index) => {
+		const target = context.targetFor(index);
+		const limit = target?.limits.maxQuestions;
+		// The first question past the limit is the one to underline.
+		const first = limit === undefined ? undefined : map.entries[limit];
+		if (!target || limit === undefined || !first) return NONE;
+		return [
+			{
+				code: 'JEV014' as const,
+				message: `This request has ${map.entries.length} questions. ${target.name} accepts at most ${limit} in one request.`,
+				span: first.idSpan,
+				questionId: first.id,
+				fix: undefined,
+			},
+		];
+	});
 }
 
 /** Runs every rule. Severity, suppression and rule switches are applied by the caller. */
@@ -436,5 +451,6 @@ export function check(
 		...checkDuplicateIds(extraction),
 		...checkModels(extraction, context.text),
 		...checkNewerModels(extraction),
+		...checkQuestionCounts(extraction, context),
 	];
 }

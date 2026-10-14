@@ -37,6 +37,7 @@ export const CONFIG_DEFAULTS = Object.freeze({
 	rules: Object.freeze({}),
 	fallbackOptions: DEFAULT_FALLBACK_OPTIONS,
 	ignore: Object.freeze([] as string[]),
+	target: '',
 	include: `**/*.{${[...EXTENSIONS.keys()].join(',')}}`,
 	exclude: '**/{node_modules,dist,out,build,coverage,.git}/**',
 	maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
@@ -81,6 +82,7 @@ function readLint(
 		rules: settings.get('rules'),
 		fallbackOptions: settings.get('fallbackOptions'),
 		ignore: settings.get('ignore'),
+		target: settings.get('target'),
 	});
 	return typeof read === 'string' ? `${SECTION} settings: ${read}` : read;
 }

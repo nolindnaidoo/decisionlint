@@ -24,6 +24,7 @@ import { check } from './checks';
 import { normalizeOption } from './finding';
 import { RULES } from './rules';
 import { suppression, type UnusedDirective } from './suppress';
+import { TARGET_IDS, type Target, targetById, targetOfModel } from './targets';
 
 /**
  * An option counts as a fallback when one of these is a word in its name, so
@@ -290,6 +291,14 @@ export function lintText(
 			`Unknown syntax ${JSON.stringify(syntax)}. Use one of: ${Object.keys(TRIGGERS).join(', ')}.`,
 		);
 	}
+	// A configured target speaks for the whole project. Otherwise each
+	// request's model id may say where it goes, and nothing else is guessed.
+	const configured = options.target ? targetById(options.target) : undefined;
+	if (options.target && !configured) {
+		throw new Error(
+			`Unknown target ${JSON.stringify(options.target)}. Use one of: ${TARGET_IDS.join(', ')}.`,
+		);
+	}
 	if (!TRIGGERS[syntax].test(text) && !namesQuestions(text)) return EMPTY;
 
 	const { extraction, embedded } = read(text, syntax);
@@ -299,7 +308,18 @@ export function lintText(
 	const syntaxAt = (offset: number): Syntax => (inside(offset) ? 'js' : syntax);
 	const fallback = new Set(options.fallbackOptions.map(normalizeOption));
 	const fallbackName = options.fallbackOptions[0] ?? 'other';
-	const all = check(extraction, { text, fallback, fallbackName, syntaxAt });
+	const targetFor = (map: number | undefined): Target | undefined => {
+		if (configured) return configured;
+		const model = map === undefined ? undefined : extraction.maps[map]?.model;
+		return model ? targetOfModel(model.value) : undefined;
+	};
+	const all = check(extraction, {
+		text,
+		fallback,
+		fallbackName,
+		syntaxAt,
+		targetFor,
+	});
 
 	const comments = suppression(text);
 	const seen = new Set<string>();

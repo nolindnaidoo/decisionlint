@@ -125,6 +125,8 @@ export type QuestionMap = Readonly<{
 	state: Node | undefined;
 	/** The `state` key itself: where a finding about the state is underlined. */
 	stateKey: Span | undefined;
+	/** The `model` beside this `questions` map, whose spelling can say which platform the request goes to. */
+	model: ModelRef | undefined;
 }>;
 
 export type Malformed = Readonly<{
@@ -162,6 +164,7 @@ export type RuleCode =
 	| 'JEV011'
 	| 'JEV012'
 	| 'JEV013'
+	| 'JEV014'
 	| 'JEV101'
 	| 'JEV102'
 	| 'JEV103'
@@ -219,6 +222,8 @@ export type LintOptions = Readonly<{
 	ignore: ReadonlyArray<string>;
 	/** Files a settings file leaves out, as patterns relative to that file. Only a settings file sets it. */
 	exclude?: ReadonlyArray<string>;
+	/** The platform every request goes to, by its id in `lint/targets.ts`, where the model id does not say. */
+	target?: string;
 }>;
 
 export type LintResult = Readonly<{

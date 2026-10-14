@@ -1,5 +1,6 @@
 import { DEFAULT_FALLBACK_OPTIONS } from '../lint/lint';
 import { RULE_CODES, RULES } from '../lint/rules';
+import { TARGET_IDS, targetById } from '../lint/targets';
 import type { LintOptions, RuleCode, Severity } from '../types';
 
 /**
@@ -13,6 +14,7 @@ export const CONFIG_KEYS: ReadonlyArray<string> = [
 	'fallbackOptions',
 	'ignore',
 	'exclude',
+	'target',
 ];
 export const LEVELS: ReadonlyArray<string> = [
 	'off',
@@ -99,12 +101,22 @@ export function readLintOptions(
 		fallbackOptions = DEFAULT_FALLBACK_OPTIONS,
 		ignore = [],
 		exclude = [],
+		target = '',
 	} = config;
 	if (!isStrings(fallbackOptions))
 		return "'fallbackOptions' must be a list of strings.";
 	if (!isStrings(ignore)) return "'ignore' must be a list of strings.";
 	if (!isStrings(exclude)) return "'exclude' must be a list of strings.";
-	return { rules, fallbackOptions, ignore, exclude };
+	// An empty string is the editor's "not set". Anything else must name a row of the table.
+	if (typeof target !== 'string' || (target && !targetById(target)))
+		return `'target' must be one of ${TARGET_IDS.join(', ')}.`;
+	return {
+		rules,
+		fallbackOptions,
+		ignore,
+		exclude,
+		...(target ? { target } : {}),
+	};
 }
 
 const SPECIAL = /[.+^${}()|[\]\\]/g;

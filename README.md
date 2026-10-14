@@ -66,7 +66,7 @@ the mistakes that can be read from the text.
 | Code | Name | Default | What it means |
 |---|---|---|---|
 | JEV000 | unreadable | hint | Part of the question is built at runtime, so the rules that need it did not run |
-| JEV001 | unpinned-model | warning | `jev-latest` and `jev-preview` move with each release, so answers can change with no change on your side |
+| JEV001 | unpinned-model | warning | An alias such as `jev-latest` moves with each release, so answers can change with no change on your side |
 | JEV002 | choice-option-limit | error | A Choice has more than 255 options. The API rejects it |
 | JEV003 | score-level-limit | error | A Score has more than 10 levels. The API rejects it |
 | JEV004 | no-fallback-option | info | A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text |
@@ -79,6 +79,7 @@ the mistakes that can be read from the text.
 | JEV011 | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
 | JEV012 | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
 | JEV013 | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
+| JEV014 | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
 | JEV101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | JEV102 | arithmetic | warning | The question asks Jev to count or compare numbers |
 | JEV103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
@@ -521,6 +522,7 @@ will not press by accident.
 | `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as it would in a `jevlint-le.json` |
 | `jevlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
 | `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `jevlint-le.exclude` | `node_modules` and build output | Files the workspace command skips |
 | `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |

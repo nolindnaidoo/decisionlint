@@ -107,7 +107,7 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | Code | Name | Default | Fires when |
 |---|---|---|---|
 | JEV000 | unreadable | hint | A field a rule needs is built at runtime |
-| JEV001 | unpinned-model | warning | `model` is the literal `jev-latest` or `jev-preview` |
+| JEV001 | unpinned-model | warning | `model` is a floating Jev alias in any platform's spelling: `jev-latest`, `jev-preview`, `~typesafe/jev-latest` |
 | JEV002 | choice-option-limit | error | A Choice has more than 255 options |
 | JEV003 | score-level-limit | error | A Score has more than 10 levels |
 | JEV004 | no-fallback-option | info | A Choice has two or more options and none has a fallback word in its name |
@@ -119,7 +119,8 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | JEV010 | unused-disable | warning | A `jevlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
 | JEV011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
 | JEV012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
-| JEV013 | newer-model | info | `model` is a versioned Jev id, three numbers and nothing after them, above the version the rules were measured on |
+| JEV013 | newer-model | info | `model` is a versioned Jev id in any platform's spelling, numbers and nothing after them, above the version the rules were measured on |
+| JEV014 | question-limit | error | A `questions` map or list has more entries than its target takes in one request. Only a target in `lint/targets.ts` that publishes the number is checked |
 
 **JEV001's fix is never applied for you.** It offers to pin to `KNOWN_VERSION`,
 the version `jev-latest` pointed to when the repo last checked, and is marked
@@ -219,6 +220,7 @@ Scores sent with no levels.
 | `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `jevlint-le.json` |
 | `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
 | `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
 | `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
@@ -1243,6 +1245,142 @@ not read yet.
 Whether Luna fails the same way is unknown, and the rule pages say "measured
 on Jev". A labelled sample of public Decisions requests and a bad-against-good
 run on Luna are the next two measurements, and both wait on a key.
+
+## Every provider
+
+Status: in progress since 2026-10-14, for 0.9.0. The research behind it is
+`docs/research/reports/Decision model API providers.md`, with the notes
+beside it, and every claim below that is not already in the code comes from
+there.
+
+**What the research found.** Four weeks after Jev shipped, every typed
+decision API found speaks one of two wire shapes. TypeSafe's, `state` with a
+`questions` map and the types `noul`, `choice` and `score`, is used by
+Microsoft-Decision-1, Liquid d1, Cloudflare Clef, Upstage, llama.cpp, vLLM
+and nine community projects that each call themselves "Open Jev". OpenAI's,
+`input` with a `questions` list and the type `predicate`, is used by OpenAI
+and spreading through the gateways: Vercel, LiteLLM, OpenRouter and LLM
+Gateway serve both shapes and convert between them. The AI SDK adds a third
+word for yes/no, `boolean`. No model, vendor or API named "JAY" was found.
+The three dialects this linter reads already cover every body shape seen.
+What differs between the platforms is everything around the body: the
+limits, the spelling of a model id, the host, and the call that sends it.
+
+The platforms differ in three ways the rules do not yet know:
+
+1. **Limits are per platform, and most are unpublished.** OpenAI states
+   none. Vercel's OpenAI-shaped path takes 1 to 255 choices and 2 to 10
+   levels. LiteLLM refuses more than 128 questions and refuses a single
+   option. Together's Tev1 takes 2 to 24 options. The rules today apply
+   Jev's limits to the TypeSafe dialect and none to the others.
+2. **A model id has fifteen spellings for two models.** Jev is `jev-1.13.0`,
+   `jev-latest`, `typesafe/jev-1.13`, `~typesafe/jev-latest`,
+   `typesafe-ai/jev` and `jev-1.13.0` unprefixed on LLM Gateway. Luna is
+   `gpt-6-luna`, `openai/gpt-6-luna`, `gpt-6-luna-decisions`,
+   `openai/gpt-6-luna-decisions` and a dated `-20261006`. Other platforms
+   use tier suffixes (`d1:free`), `@cf/` paths, Azure deployment names,
+   Ollama tags and Hugging Face repo ids. `JEV001` knows two aliases and
+   `JEV013` one version pattern, and `jev/provider.ts` picks the host by
+   matching the id against `gpt-6-luna`.
+3. **The path and the model id do not say which shape a request is in.**
+   Ollaya serves TypeSafe bodies on `/v1/decisions`, Eden AI on
+   `/v3/alpha/decisions`, and LiteLLM serves `openai/gpt-6-luna` on
+   `/v1/systemone`. The body decides, which is what the reader already does.
+
+### Design
+
+**D1. A platform is a row in a table, not a branch in the code.**
+`lint/targets.ts`, beside `limits.ts`, holds every platform as data: an id,
+a name, its kind (a vendor, a gateway or a runtime a user hosts), the wire
+shapes it accepts, the hosts it is reached at, how its model ids are spelt,
+which of them are floating aliases and what the pinned spelling is, and its
+limits, each with the page and the date it was read from. A limit the
+platform does not publish is absent, not borrowed from a neighbour. A number
+enters the table only from the platform's own page. The research marks
+every secondary figure, and those stay in the report until a primary page
+says them. Adding a platform is a row and a test, and never a change to a
+rule.
+
+**D2. The target of a request is resolved from the file, and resolved is not
+guessed.** In order: the `target` setting in `jevlint-le.json` or
+`jevlint-le.target`, for a project that sends everything to one platform;
+a base URL written in the file whose host a target claims; the model id,
+where its spelling names a platform (`@cf/`, `~typesafe/`, a `liquid`
+model) or a family of them (`openai/` is every gateway, so it resolves to
+"a gateway" and no further). What none of these settles is unknown. A rule
+that needs a limit asks the target. With the target unknown, the TypeSafe
+dialect keeps Jev's limits and the others keep none, as today, and the
+message says whose limit it is. With the target known and publishing no
+limit, the rule is silent.
+
+**D3. A model id is parsed, never matched.** `lint/models.ts` reads an id
+into its family, its version, whether it floats, and the spelling it was
+written in. `JEV001` fires on every floating spelling, and its fix pins in
+the same spelling: `~typesafe/jev-latest` becomes `typesafe/jev-1.13`, as
+OpenRouter writes it, and `jev-latest` becomes `jev-1.13.0`. `JEV013`
+compares the version out of any spelling. A Hugging Face repo id, an Ollama
+tag or a deployment name is not a Jev id, so neither rule reads it.
+
+**D4. Check with Jev reaches any target, and never guesses a host.**
+`jev/provider.ts` becomes a provider built from a target row: the wire
+shape, the endpoint and the name of the environment variable that holds the
+key. A vendor with a fixed host, TypeSafe, OpenAI, Liquid, OpenRouter, LLM
+Gateway and Vercel, needs nothing set. A runtime the user hosts, llama.cpp,
+vLLM, Ollaya, LiteLLM, needs an endpoint, from `jevlint-le.jev.endpoint` in
+the editor or `--jev-endpoint` on the command line, and the shape to send is
+the target's or, for a host the table does not know, `--jev-shape`. A model
+id that resolves to no fixed host, such as `openai/gpt-6-luna-decisions`
+with no endpoint set, is refused before anything is sent: routed by the
+old rule it would carry the OpenAI key to `api.openai.com` on a request that
+fails there. The endpoint is never read from `jevlint-le.json`, for the
+reason the key is not: a cloned repository could point the key at any host.
+The reply is read against the request, in the shape that was sent, as today.
+
+**D5. The calls that send a request are read, in every SDK the research
+found.** JavaScript and TypeScript: `client.decisions.create({...})` and
+`client.systemOne({...})` as requests, so an entry inside is `inRequest`;
+the AI SDK's `experimental_decide` and the older `experimental_evaluate`
+from `ai`, including the aliased import the docs themselves use,
+`experimental_decide as decide`, which is one named exception to the rule
+that an aliased import is not followed; and `*.decisionModel('<id>')` as a
+model reference, with the factory naming the platform. Python: the
+`langchain_typesafe` module beside `typesafe_sdk` for `Noul`, `Choice`,
+`Score` and `NoulCriteria`, after the run over public code the invariant
+asks for. Go: `openai.DecisionNewParams{...}`, once the SDK's struct fields
+are read from its source. Rust: `typesafe-rs` and `kunobi-jev`, the same.
+
+**D6. Messages name the platform.** "The API accepts at most 255" becomes
+"TypeSafe's API accepts at most 255", or the target's name when one is
+resolved. A finding about a question the AI SDK may send to a language model
+through `anthropic.decisionModel(...)` says that the model may not be a
+decision model at all.
+
+### Phases
+
+Each phase is a commit on `feat/every-provider`, gates green, and the
+version is finished in one pull request with its changelog dated.
+
+| Phase | Builds | Done when |
+|---|---|---|
+| P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `JEV001` and `JEV013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `JEV003`, an unknown target changes nothing |
+| P2 | `jev/provider.ts` from the target table, `jev.endpoint` and `--jev-endpoint`, `--jev-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
+| P3 | The calls in D5, each after its run over public code | Each call is read as a request in its language's reader test |
+| P4 | A base URL in the file resolves the target, the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
+
+### Not built, and why
+
+- **Field names from the unshipped "Open Jev" (`options` with `legend`).**
+  The project is at phase 0 with no weights and no server. Its fields are
+  already foreign fields, so a question written in them is `open` and gets
+  no shape finding, which is the right answer for a shape that may change.
+- **A limit from a secondary source.** Cloudflare's 64 questions,
+  Perplexity's 128 and OpenRouter's 200 for Luna each rest on one page that
+  is not the vendor's. They go in when read from the vendor.
+- **JAY.** Nothing by that name exists in any source searched. Built when
+  someone supplies a URL or a model id.
+- **Calibration of the checks on any model but `jev-1.13.0`.** Reaching a
+  platform is not the same as having measured it. A finding from any other
+  model keeps saying where the cutoff was set.
 
 ## Extended release 1: request-level rules
 

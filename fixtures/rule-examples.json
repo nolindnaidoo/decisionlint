@@ -67,6 +67,9 @@
   "bad": "{\n  \"model\": \"jev-99.0.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the customer ask for their money back?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the customer ask for their money back?\"\n    }\n  }\n}"
  },
+ "JEV014": {
+  "note": "It takes a `target` that publishes a limit, such as `litellm`, and 129 questions to trigger, which is too long to show here."
+ },
  "JEV101": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is it not the case that the order has not shipped?\"\n    }\n  }\n}",

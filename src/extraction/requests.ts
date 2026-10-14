@@ -384,6 +384,7 @@ function collectMap(node: ObjectNode, sink: Sink): boolean {
 		})),
 		state: prop(node, 'state')?.value,
 		stateKey: prop(node, 'state')?.keySpan,
+		model: modelOf(node),
 	});
 	for (const entry of questions.props) collectEntry(entry, sink, map);
 	for (const value of questions.loose ?? []) visit(value, undefined, sink);
@@ -418,6 +419,7 @@ function collectList(node: ObjectNode, sink: Sink): boolean {
 		}),
 		state: evidence?.value,
 		stateKey: evidence?.keySpan,
+		model: modelOf(node),
 	});
 	for (const item of questions.items) {
 		const named = nameOf(item);
@@ -449,10 +451,20 @@ function oxlintRules(node: ObjectNode): ArrayNode | undefined {
 	return rules?.kind === 'array' ? rules : undefined;
 }
 
+/** The `model` of a request, when it is written out. */
+function modelOf(node: ObjectNode): ModelRef | undefined {
+	const model = prop(node, 'model')?.value;
+	return model?.kind === 'string'
+		? { value: model.value, span: model.span }
+		: undefined;
+}
+
 /** Each `jev/ask` rule in an oxlint-plugin-jev config is a Noul question with its own id. */
 function collectOxlint(node: ObjectNode, sink: Sink): void {
 	const rules = oxlintRules(node);
 	if (!rules) return;
+	const setting = prop(node, OXLINT_RULE)?.value;
+	const options = setting?.kind === 'array' ? setting.items[1] : undefined;
 	const entries: { id: string; idSpan: Span }[] = [];
 	for (const rule of rules.items) {
 		if (rule.kind !== 'object') continue;
@@ -476,13 +488,17 @@ function collectOxlint(node: ObjectNode, sink: Sink): void {
 			map: undefined,
 		});
 	}
-	sink.maps.push({ entries, state: undefined, stateKey: undefined });
+	sink.maps.push({
+		entries,
+		state: undefined,
+		stateKey: undefined,
+		model: options?.kind === 'object' ? modelOf(options) : undefined,
+	});
 }
 
 function collectModel(node: ObjectNode, sink: Sink): void {
-	const model = prop(node, 'model')?.value;
-	if (model?.kind === 'string')
-		sink.models.push({ value: model.value, span: model.span });
+	const model = modelOf(node);
+	if (model) sink.models.push(model);
 }
 
 function visitObject(node: ObjectNode, named: Named, sink: Sink): void {

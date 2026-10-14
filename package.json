@@ -123,6 +123,12 @@
           "default": [],
           "markdownDescription": "Findings to drop, as `CODE:questionId`. Example: `JEV004:department`. This is the way to suppress a finding in JSON, which has no comments."
         },
+        "jevlint-le.target": {
+          "type": "string",
+          "enum": ["", "typesafe", "openai", "vercel", "litellm", "openrouter", "llmgateway", "edenai", "liquid", "llamacpp"],
+          "default": "",
+          "markdownDescription": "The platform this project sends every request to, which sets the limits the rules check: `litellm` holds a request to 128 questions, `openai` publishes none. Leave empty to read it from each request's model id, where the spelling says: `~typesafe/jev-latest` is OpenRouter, `typesafe-ai/jev` is Vercel. A `jevlint-le.json` with a `target` replaces this."
+        },
         "jevlint-le.include": {
           "type": "string",
           "default": "**/*.{json,jsonc,js,jsx,mjs,cjs,ts,tsx,mts,cts,py,rs,go}",

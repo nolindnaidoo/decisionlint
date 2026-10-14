@@ -47,7 +47,12 @@ extraction/
                          string, with a placeholder per runtime part
   requests.ts            tree -> questions, question maps, model names
 lint/
-  limits.ts              every vendor fact a rule depends on, with URL and date
+  limits.ts              every TypeSafe fact a rule depends on, with URL and date
+  targets.ts             every platform a request can go to, as a row: shapes,
+                         hosts, limits, each with URL and date. Resolves a
+                         target from a setting or a model id's spelling
+  models.ts              a model id read into prefix, family, version, alias
+                         and snapshot, so a rule never matches a spelling
   rules.ts               the rule registry: code, name, default severity, docs
   finding.ts             shared types and helpers for checks
   checks.ts              question-level rules and the `check` entry point
@@ -134,8 +139,29 @@ family's files, copied unchanged from `regex-le`.
   hides the hints and leaves the count, so an unread file never looks clean.
 - **Duplicate keys must survive the reader.** `JEV005` depends on it, which is
   why JSON is read by this reader and not by `JSON.parse`.
-- **No vendor number outside `lint/limits.ts`.** Each entry carries the page it
-  was read from. `VERIFIED_ON` is the date.
+- **No vendor number outside `lint/limits.ts` and `lint/targets.ts`.** Each
+  entry carries the page it was read from and the date. A number enters
+  `targets.ts` only from the platform's own page; a figure that rests on a
+  survey or an aggregator stays in `docs/research/` until the platform says
+  it. A platform that publishes no limit has none in its row, and a rule that
+  needs one stays silent there rather than borrow a neighbour's.
+- **A platform is a row in `lint/targets.ts`, never a branch in a rule.** A
+  rule asks `limitsFor` for the numbers and names the owner in its message.
+  The target of a request is the `target` setting, else what the model id's
+  spelling says (`~typesafe/` is OpenRouter, `typesafe-ai/` is Vercel, a
+  bare id is the vendor's own), else unknown. `openai/` is written by every
+  gateway, so it resolves to none. With the target unknown, a question in
+  TypeSafe's shape keeps TypeSafe's limits and the other shapes keep none.
+  `lintText` throws on a target id the table does not have, and the settings
+  readers refuse it first.
+- **A model id is parsed, never matched.** `lint/models.ts` reads every
+  spelling into its parts. `JEV001` fires on any floating Jev alias and its
+  fix pins in the spelling the platform documents, or offers none: a bare
+  alias becomes `KNOWN_VERSION`, `~typesafe/jev-latest` becomes
+  `typesafe/jev-1.13` as OpenRouter writes it, and `typesafe/jev-latest` gets
+  no fix because no page says what its pinned form is. `JEV013` compares the
+  version out of any spelling. A Hugging Face repo id, an Ollama tag or a
+  deployment name is no family this reads, so neither rule touches it.
 - **The rule tables in SPEC.md and README.md must equal `lint/rules.ts`.**
   `lint/rules.test.ts` fails when code, name or default severity differ, and
   when the README's "What it means" column is not the registry's `meaning`.
@@ -176,7 +202,7 @@ family's files, copied unchanged from `regex-le`.
   defaults would show findings CI does not, or hide ones it does. The editor
   clears the file's findings and says why. The command line exits 2.
 - **The editor's lint settings go through the settings file's reader.**
-  `jevlint-le.rules`, `fallbackOptions` and `ignore` are read by
+  `jevlint-le.rules`, `fallbackOptions`, `ignore` and `target` are read by
   `readLintOptions` in `config/projectConfig.ts`, so a rule entry that names
   no rule or no level, or a list that is not one, stops linting with the same
   sentence a `jevlint-le.json` would give, and a rule may be named by its
@@ -366,8 +392,8 @@ family's files, copied unchanged from `regex-le`.
 - **A question carries its dialect.** `extraction/requests.ts` reads
   TypeSafe's, OpenAI's and the AI SDK's shapes into the same `criteria`, so a
   rule never looks at `choices` or `options`. Only the shape rule and the
-  fixes read `criteriaRaw`. A rule about TypeSafe's API limits checks the
-  dialect first.
+  fixes read `criteriaRaw`. A rule about an API limit asks the target, and
+  the dialect only where the target is unknown.
 - **The editor and the command line send the same requests for the same
   text.** Both call `jev/review.ts`, and `extension.test.ts` compares the
   request bodies. A check added to one is added to both by construction.

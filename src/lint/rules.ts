@@ -25,7 +25,7 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		code: 'JEV001',
 		name: 'unpinned-model',
 		meaning:
-			'`jev-latest` and `jev-preview` move with each release, so answers can change with no change on your side',
+			'An alias such as `jev-latest` moves with each release, so answers can change with no change on your side',
 		severity: 'warning',
 		docs: DOCS.models,
 	},
@@ -141,6 +141,15 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 			'`model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for',
 		severity: 'info',
 		docs: DOCS.currentModels,
+	},
+	JEV014: {
+		code: 'JEV014',
+		name: 'question-limit',
+		meaning:
+			'A request has more questions than the platform it goes to takes in one call. The platform rejects it',
+		severity: 'error',
+		// The one platform in `lint/targets.ts` that publishes the number.
+		docs: 'https://docs.litellm.ai/release_notes/v1.104.2/v1-104-2.md',
 	},
 	JEV101: {
 		code: 'JEV101',

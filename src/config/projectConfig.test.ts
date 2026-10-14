@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { TARGET_IDS } from '../lint/targets';
 import {
 	CONFIG_FILE,
 	CONFIG_KEYS,
@@ -8,6 +9,7 @@ import {
 	LEVEL_ALIASES,
 	LEVELS,
 	parseConfig,
+	readLintOptions,
 } from './projectConfig';
 
 const disk = (tree: Record<string, string>) => {
@@ -45,17 +47,30 @@ describe('a project settings file', () => {
 		['{ "rules": { "JEV004": "loud" } }', "'loud' is not a level"],
 		['{ "ignore": "JEV004:team" }', "'ignore' must be a list of strings"],
 		['{ "exclude": "fixtures" }', "'exclude' must be a list of strings"],
+		['{ "target": "jay" }', "'target' must be one of typesafe, openai"],
+		['{ "target": ["litellm"] }', "'target' must be one of"],
 		['[]', 'it must hold a JSON object'],
 		['{', 'it is not valid JSON'],
 	])('is refused when it reads %s', (text, reason) => {
 		expect(parseConfig(text)).toContain(reason);
 	});
 
-	it('is described by a schema with the same keys and levels', () => {
+	it("names the platform every request goes to, and leaves it out when it is the editor's empty string", () => {
+		expect(parseConfig('{ "target": "litellm" }')).toMatchObject({
+			target: 'litellm',
+		});
+		expect(readLintOptions({ target: '' })).not.toHaveProperty('target');
+	});
+
+	it('is described by a schema with the same keys, levels and targets', () => {
 		const schema = JSON.parse(
 			readFileSync('schemas/config.schema.json', 'utf8'),
 		);
 		expect(Object.keys(schema.properties)).toEqual(CONFIG_KEYS);
+		expect(schema.properties.target.enum).toEqual(TARGET_IDS);
+		const manifestTargets = JSON.parse(readFileSync('package.json', 'utf8'))
+			.contributes.configuration.properties['jevlint-le.target'].enum;
+		expect(manifestTargets).toEqual(['', ...TARGET_IDS]);
 		expect(schema.properties.rules.additionalProperties.enum).toEqual([
 			...LEVELS,
 			...LEVEL_ALIASES.keys(),

@@ -164,7 +164,7 @@ describe('DecisionLint-LE in a real editor', function () {
 			(command: { command: string }) => command.command,
 		);
 		const registered = await vscode.commands.getCommands(true);
-		assert.strictEqual(declared.length, 8);
+		assert.strictEqual(declared.length, 19);
 		for (const id of declared)
 			assert.ok(registered.includes(id), `missing command: ${id}`);
 	});

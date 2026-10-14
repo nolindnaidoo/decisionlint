@@ -1,4 +1,4 @@
-# jevlint-le
+# decisionlint-le
 
 Lints the questions you write for TypeSafe's Jev model and for OpenAI's
 Decisions API (`gpt-6-luna`), before they are sent. Either model answers a
@@ -11,16 +11,16 @@ rules with Jev's defaults.
 
 This package is the command line and the library, with the MCP server behind
 `--mcp`. An agent host installs the server on its own as
-[`jevlint-le-mcp`](https://www.npmjs.com/package/jevlint-le-mcp). None of it
+[`decisionlint-le-mcp`](https://www.npmjs.com/package/decisionlint-le-mcp). None of it
 needs an API key or uses the network, unless you pass `--jev` to the command
 line.
 
 ## Command line
 
 ```bash
-npx jevlint-le src/                 # a directory, searched for files it reads
-npx jevlint-le request.jev.json     # one file
-npx jevlint-le --format github .    # annotations on a pull request
+npx decisionlint-le src/                 # a directory, searched for files it reads
+npx decisionlint-le request.jev.json     # one file
+npx decisionlint-le --format github .    # annotations on a pull request
 ```
 
 It reads JSON, JavaScript, TypeScript, Python, Rust and Go, in TypeSafe's
@@ -36,7 +36,7 @@ past `--max-warnings`.
 |---|---|
 | `--format <stylish\|compact\|json\|github\|sarif\|junit>` | How findings are printed. `stylish` groups them by file and is the default. `compact` is one per line as `path:line:column`. `sarif` is for code scanning and `junit` for test reporters. Also `-f` |
 | `--rule <CODE=level>` | Set one rule to `off`, `hint`, `info`, `warning` or `error`. A rule's name works in place of its code, and `warn` means `warning` |
-| `--config <file>` | Use this settings file, and no `jevlint-le.json` found near the files. Also `-c` |
+| `--config <file>` | Use this settings file, and no `decisionlint-le.json` found near the files. Also `-c` |
 | `--max-warnings <n>` | Fail when more than `n` warnings are reported |
 | `--stdin-filename <path>` | Lint standard input as if it were that file |
 | `--fix` | Write the fixes that only mend what the API would refuse |
@@ -44,8 +44,8 @@ past `--max-warnings`.
 | `--jev` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--jev-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--jev-endpoint` says |
 | `--jev-plan` | Say what `--jev` would send, and send nothing |
 | `--jev-model <id>` | The model `--jev` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
-| `--jev-endpoint <url>` | The full URL `--jev` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `JEVLINT_LE_JEV_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
-| `--jev-shape <shape>` | The shape sent to `--jev-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `JEVLINT_LE_JEV_SHAPE` |
+| `--jev-endpoint <url>` | The full URL `--jev` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_LE_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
+| `--jev-shape <shape>` | The shape sent to `--jev-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_LE_ASK_SHAPE` |
 | `--jev-max-calls <n>` | The most requests `--jev` may send in the run. Default 25 |
 | `--jev-send-state` | With `--jev`, also send state written out in a file |
 | `--color`, `--no-color` | Colour the default format, or do not. Without either it is coloured in a terminal, unless `NO_COLOR` is set |
@@ -59,8 +59,8 @@ linting. It is the only option that uses the network, and nothing in a
 settings file can turn it on.
 
 ```bash
-npx jevlint-le --jev-plan src/                    # what it would send. No key, nothing sent
-TYPESAFE_API_KEY=... npx jevlint-le --jev src/    # send it
+npx decisionlint-le --jev-plan src/                    # what it would send. No key, nothing sent
+TYPESAFE_API_KEY=... npx decisionlint-le --jev src/    # send it
 ```
 
 - The key is read from the variable the platform names and from nowhere
@@ -70,7 +70,7 @@ TYPESAFE_API_KEY=... npx jevlint-le --jev src/    # send it
   `~typesafe/jev-latest` for OpenRouter, to that platform with its key. Each
   finding from any model but `jev-1.13.0` says that its cutoff was set on
   Jev.
-- `--jev-endpoint`, or `JEVLINT_LE_JEV_ENDPOINT`, sends to a platform you
+- `--jev-endpoint`, or `DECISIONLINT_LE_ASK_ENDPOINT`, sends to a platform you
   host, with `--jev-shape` where the path does not say which shape it takes.
   A spelling that names no host is refused without it, with nothing sent.
 - A question with a part built at runtime is never sent. The summary counts
@@ -86,13 +86,13 @@ TYPESAFE_API_KEY=... npx jevlint-le --jev src/    # send it
 ## In the editor
 
 Installed in a project's dev dependencies, this package is also what the
-[JevLint-LE extension](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le)
+[DecisionLint-LE extension](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint-le)
 lints with in VS Code, so the editor and CI report the same findings from the
 same version. It needs 0.3.0 or newer and a trusted workspace.
 
 ## Settings
 
-A `jevlint-le.json` in your project sets rule levels, and the VS Code
+A `decisionlint-le.json` in your project sets rule levels, and the VS Code
 extension reads the same file, so the editor and CI agree.
 
 ```json
@@ -116,14 +116,14 @@ server's instructions name both vendors, so an agent knows to call it for
 either shape.
 
 An agent host should install
-[`jevlint-le-mcp`](https://www.npmjs.com/package/jevlint-le-mcp), which is
+[`decisionlint-le-mcp`](https://www.npmjs.com/package/decisionlint-le-mcp), which is
 this server and nothing else, with no flag to forget. A project that already
 has this package reaches the same server with the flag:
 
 ```json
 {
   "mcpServers": {
-    "jevlint-le": { "command": "npx", "args": ["-y", "jevlint-le", "--mcp"] }
+    "decisionlint-le": { "command": "npx", "args": ["-y", "decisionlint-le", "--mcp"] }
   }
 }
 ```
@@ -143,19 +143,19 @@ Every tool answers as structured content beside the text. The first six send
 nothing and need no key. The two that send read `TYPESAFE_API_KEY` or
 `OPENAI_API_KEY` from the server's environment, or from `.env.local` or
 `.env` in its working directory, never from an argument. The server is listed
-on the MCP registry as `io.github.nolindnaidoo/jevlint-le`.
+on the MCP registry as `io.github.nolindnaidoo/decisionlint-le`.
 
 ## As a library
 
 ```js
-const jevlint = require('jevlint-le');
+const jevlint = require('decisionlint-le');
 
 const { findings } = jevlint.lint(text, options, 'js');
 const { text: mended, fixed } = jevlint.fix(text, options, 'js');
 ```
 
 `lint` and `fix` are pure: no filesystem, no network. `options` takes the
-same `rules`, `fallbackOptions` and `ignore` as `jevlint-le.json`. The third
+same `rules`, `fallbackOptions` and `ignore` as `decisionlint-le.json`. The third
 argument is the syntax, one of `syntaxes`: `js` for JSON, JavaScript and
 TypeScript, then `python`, `rust` and `go`. Any other value throws, naming
 those four. `rules` lists every rule

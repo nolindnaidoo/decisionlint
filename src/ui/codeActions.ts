@@ -9,7 +9,8 @@ type Deps = Readonly<{
 }>;
 
 /** What `editor.codeActionsOnSave` asks for by name, as it does of other linters. */
-export const FIX_ALL = vscode.CodeActionKind.SourceFixAll.append('jevlint-le');
+export const FIX_ALL =
+	vscode.CodeActionKind.SourceFixAll.append('decisionlint-le');
 
 // One edit for the whole file: the fixes were worked out together, so they go in together.
 function toFixAll(
@@ -119,14 +120,14 @@ function toSilencers(
 			diagnostic,
 			`Disable ${finding.code} for this line`,
 			lineStart,
-			`${indent}${comment} jevlint-le-disable-next-line ${finding.code}\n`,
+			`${indent}${comment} decisionlint-le-disable-next-line ${finding.code}\n`,
 		),
 		inserting(
 			document,
 			diagnostic,
 			`Disable ${finding.code} for this file`,
 			top,
-			`${comment} jevlint-le-disable ${finding.code}\n`,
+			`${comment} decisionlint-le-disable ${finding.code}\n`,
 		),
 	];
 }

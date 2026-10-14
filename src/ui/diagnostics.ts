@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { pageFor, RULES } from '../lint/rules';
 import type { ReportedFinding, Severity, Span } from '../types';
 
-export const SOURCE = 'jevlint-le';
+export const SOURCE = 'decisionlint-le';
 
 const SEVERITIES: Readonly<Record<Severity, vscode.DiagnosticSeverity>> =
 	Object.freeze({

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import type { Fetch } from '../ask/client';
 import { rulePage } from '../docs/rulePages';
-import type { Fetch } from '../jev/client';
 import { EXTENSIONS } from '../lint/lint';
 import { RULE_CODES, RULES } from '../lint/rules';
 import { FLAG_NAMES, helpText, parseArgs } from './args';
@@ -147,7 +147,7 @@ describe('arguments', () => {
 	});
 
 	it.each([
-		[['-h'], 'Usage: jevlint-le'],
+		[['-h'], 'Usage: decisionlint-le'],
 		[['-v'], '9.9.9'],
 	])('takes %j as an option, not as a file', async (args, said) => {
 		const result = await cli(args);
@@ -193,7 +193,7 @@ describe('arguments', () => {
 	});
 
 	it('prints the help and the version', async () => {
-		expect((await cli(['--help'])).out).toContain('Usage: jevlint-le');
+		expect((await cli(['--help'])).out).toContain('Usage: decisionlint-le');
 		expect((await cli(['--version'])).out).toBe('9.9.9\n');
 	});
 });
@@ -259,7 +259,7 @@ describe('a run', () => {
 		[
 			'a file type it does not read',
 			['notes.md'],
-			'Not a file type jevlint-le reads: notes.md',
+			'Not a file type decisionlint-le reads: notes.md',
 		],
 		['a directory with nothing to read', ['empty'], 'No files to lint'],
 	])('refuses %s', async (_name, args, reason) => {
@@ -345,7 +345,7 @@ describe('settings', () => {
 		).toEqual(['warning']);
 		const inFile = await cli(['q.json'], {
 			'q.json': BAD,
-			'jevlint-le.json': '{ "rules": { "no-fallback-option": "off" } }',
+			'decisionlint-le.json': '{ "rules": { "no-fallback-option": "off" } }',
 		});
 		expect(inFile.out).not.toContain('JEV004');
 		const wrong = await cli(['--rule', 'no-such-rule=off', 'q.json'], {
@@ -406,7 +406,7 @@ describe('the project settings file', () => {
 	it('is found near the files and applied, with no flag', async () => {
 		const result = await cli(['src'], {
 			'src/a.json': BAD,
-			'jevlint-le.json': OFF,
+			'decisionlint-le.json': OFF,
 		});
 		expect(result.out).toContain('0 findings');
 		expect(result.status).toBe(EXIT.passed);
@@ -414,8 +414,8 @@ describe('the project settings file', () => {
 
 	it('is the nearest one, so a folder can have its own', async () => {
 		const result = await cli(['.', '--format', 'json'], {
-			'jevlint-le.json': OFF,
-			'app/jevlint-le.json': '{}',
+			'decisionlint-le.json': OFF,
+			'app/decisionlint-le.json': '{}',
 			'app/a.json': BAD,
 			'lib/a.json': BAD,
 		});
@@ -430,7 +430,11 @@ describe('the project settings file', () => {
 	});
 
 	it('gives way to --config, and to --rule for the rule it names', async () => {
-		const tree = { 'a.json': BAD, 'jevlint-le.json': OFF, 'other.json': '{}' };
+		const tree = {
+			'a.json': BAD,
+			'decisionlint-le.json': OFF,
+			'other.json': '{}',
+		};
 		expect(
 			(await cli(['a.json', '--config', 'other.json'], tree)).out,
 		).toContain('2 findings');
@@ -442,10 +446,12 @@ describe('the project settings file', () => {
 	it('stops the run when it cannot be used, and names it', async () => {
 		const result = await cli(['a.json'], {
 			'a.json': BAD,
-			'jevlint-le.json': '{ "rule": {} }',
+			'decisionlint-le.json': '{ "rule": {} }',
 		});
 		expect(result.status).toBe(EXIT.unusable);
-		expect(result.err).toContain("jevlint-le.json: 'rule' is not a setting");
+		expect(result.err).toContain(
+			"decisionlint-le.json: 'rule' is not a setting",
+		);
 		expect(result.out).toBe('');
 	});
 
@@ -461,7 +467,7 @@ describe('the project settings file', () => {
 		};
 		const result = await cli(
 			['--mcp'],
-			{ 'jevlint-le.json': OFF },
+			{ 'decisionlint-le.json': OFF },
 			JSON.stringify(call),
 		);
 		expect(
@@ -472,7 +478,7 @@ describe('the project settings file', () => {
 
 describe('exclude in the settings file', () => {
 	const tree = {
-		'jevlint-le.json': '{ "exclude": ["fixtures", "*.generated.json"] }',
+		'decisionlint-le.json': '{ "exclude": ["fixtures", "*.generated.json"] }',
 		'src/q.json': CLEAN,
 		'src/api.generated.json': BAD,
 		'fixtures/bad.json': BAD,
@@ -517,7 +523,7 @@ describe('exclude in the settings file', () => {
 		const result = await cli(['--mcp'], tree, input);
 		const report = JSON.parse(JSON.parse(result.out).result.content[0].text);
 		expect(report.files.map((file: { path: string }) => file.path)).toEqual([
-			'jevlint-le.json',
+			'decisionlint-le.json',
 			'src/q.json',
 		]);
 		expect(report.totals.excluded).toBe(2);
@@ -845,7 +851,7 @@ describe('formats for other tools', () => {
 		expect(sarif.version).toBe('2.1.0');
 		const [run] = sarif.runs;
 		expect(run.tool.driver).toMatchObject({
-			name: 'JevLint-LE',
+			name: 'DecisionLint-LE',
 			version: '9.9.9',
 		});
 		const ids = run.tool.driver.rules.map((rule: { id: string }) => rule.id);
@@ -884,7 +890,7 @@ describe('formats for other tools', () => {
 			tree,
 		);
 		expect(result.out).toMatch(
-			/^<\?xml version="1\.0" encoding="UTF-8"\?>\n<testsuites name="jevlint-le" tests="3" failures="1" errors="0">/,
+			/^<\?xml version="1\.0" encoding="UTF-8"\?>\n<testsuites name="decisionlint-le" tests="3" failures="1" errors="0">/,
 		);
 		expect(result.out).toContain(
 			'<testsuite name="src/a.json" tests="2" failures="1" errors="0">',
@@ -1004,7 +1010,7 @@ describe('the MCP server', () => {
 				}),
 			],
 			{},
-			world(fetch, { JEVLINT_LE_JEV_ENDPOINT: LOCAL }),
+			world(fetch, { DECISIONLINT_LE_ASK_ENDPOINT: LOCAL }),
 		);
 		expect(reply.result.isError).toBe(false);
 		const [url] = fetch.mock.calls[0] as unknown as [string];
@@ -1027,7 +1033,7 @@ describe('the MCP server', () => {
 		);
 		expect(refused.result.isError).toBe(true);
 		expect(refused.result.content[0].text).toContain(
-			'Set JEVLINT_LE_JEV_ENDPOINT, and JEVLINT_LE_JEV_SHAPE where its path does not say, in the environment the server was started with.',
+			'Set DECISIONLINT_LE_ASK_ENDPOINT, and DECISIONLINT_LE_ASK_SHAPE where its path does not say, in the environment the server was started with.',
 		);
 	});
 
@@ -1048,7 +1054,7 @@ describe('the MCP server', () => {
 		]);
 		expect(known.result).toMatchObject({
 			protocolVersion: '2024-11-05',
-			serverInfo: { name: 'jevlint-le', version: '9.9.9' },
+			serverInfo: { name: 'decisionlint-le', version: '9.9.9' },
 		});
 		expect(unknown.result.protocolVersion).toBe('2025-06-18');
 	});
@@ -1911,7 +1917,7 @@ describe('checking with Jev', () => {
 			'Jev answered 1 of 1 request on jev-1.13.0, 310 input tokens.',
 		);
 		expect(result.err).toMatch(
-			/^jevlint-le: Sending 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\. State is not sent\.\n$/,
+			/^decisionlint-le: Sending 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\. State is not sent\.\n$/,
 		);
 	});
 
@@ -2093,7 +2099,7 @@ describe('checking with Jev', () => {
 		const fetch = jevSays();
 		const result = await cli(
 			['q.ts'],
-			{ 'q.ts': VAGUE, 'jevlint-le.json': '{ "jev": true }' },
+			{ 'q.ts': VAGUE, 'decisionlint-le.json': '{ "jev": true }' },
 			'',
 			world(fetch),
 		);
@@ -2183,7 +2189,7 @@ describe('the files other tools run this through', () => {
 
 	it('pins the pre-commit hook to this release, and to the file types the tool reads', () => {
 		const hook = readFileSync('.pre-commit-hooks.yaml', 'utf8');
-		expect(hook).toContain(`entry: npx --yes jevlint-le@${version} `);
+		expect(hook).toContain(`entry: npx --yes decisionlint-le@${version} `);
 		expect(hook).toContain(`rev: v${version}`);
 		const listed = /files: \\\.\(([^)]+)\)\$/.exec(hook)?.[1]?.split('|');
 		expect(listed?.sort()).toEqual([...EXTENSIONS.keys()].sort());
@@ -2198,7 +2204,7 @@ describe('the files other tools run this through', () => {
 				`version:[\\s\\S]*?default: ${version.replace(/\./g, '\\.')}\\n`,
 			),
 		);
-		expect(action).toContain(`uses: nolindnaidoo/jevlint-le@v${version}`);
+		expect(action).toContain(`uses: nolindnaidoo/decisionlint-le@v${version}`);
 		// An input spliced into the script could be read as a command.
 		const script = action.slice(action.indexOf('      run: |'));
 		expect(script).not.toContain('${{');
@@ -2212,7 +2218,7 @@ describe('a file whose extension names a property of Object.prototype', () => {
 		const result = await cli(['a.constructor'], { 'a.constructor': NOUL });
 		expect(result.status).toBe(EXIT.unusable);
 		expect(result.err).toContain(
-			'Not a file type jevlint-le reads: a.constructor',
+			'Not a file type decisionlint-le reads: a.constructor',
 		);
 	});
 
@@ -2246,7 +2252,7 @@ describe('a file whose extension names a property of Object.prototype', () => {
 			.map((line) => JSON.parse(line));
 		expect(reply.result.isError).toBe(true);
 		expect(reply.result.content[0].text).toBe(
-			'Not a file type jevlint-le reads: x.constructor',
+			'Not a file type decisionlint-le reads: x.constructor',
 		);
 	});
 });
@@ -2345,8 +2351,8 @@ describe('where --jev sends', () => {
 			{ 'q.ts': VAGUE },
 			'',
 			world(fetch, {
-				JEVLINT_LE_JEV_ENDPOINT: 'http://localhost:11435/api/decide',
-				JEVLINT_LE_JEV_SHAPE: 'typesafe',
+				DECISIONLINT_LE_ASK_ENDPOINT: 'http://localhost:11435/api/decide',
+				DECISIONLINT_LE_ASK_SHAPE: 'typesafe',
 			}),
 		);
 		expect(result.status).toBe(EXIT.passed);
@@ -2414,11 +2420,11 @@ describe('where --jev sends', () => {
 			['--jev', '--jev-endpoint', LOCAL, 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
-			world(fetch, { JEVLINT_LE_JEV_SHAPE: 'xml' }),
+			world(fetch, { DECISIONLINT_LE_ASK_SHAPE: 'xml' }),
 		);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(result.err).toContain(
-			"JEVLINT_LE_JEV_SHAPE is 'xml', which is not a shape. Use typesafe or openai.",
+			"DECISIONLINT_LE_ASK_SHAPE is 'xml', which is not a shape. Use typesafe or openai.",
 		);
 	});
 

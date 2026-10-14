@@ -1,7 +1,7 @@
 {
-  "name": "jevlint-le",
+  "name": "decisionlint-le",
   "publisher": "nolindnaidoo",
-  "displayName": "JevLint-LE",
+  "displayName": "DecisionLint-LE",
   "description": "Lint the questions you send to TypeSafe's Jev model and OpenAI's Decisions API (gpt-6-luna) as you type, with no API key and no network calls. An optional command asks Jev or Luna itself to check a file",
   "icon": "src/assets/images/icon.png",
   "version": "0.9.0",
@@ -13,12 +13,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nolindnaidoo/jevlint-le.git"
+    "url": "https://github.com/nolindnaidoo/decisionlint-le.git"
   },
   "bugs": {
-    "url": "https://github.com/nolindnaidoo/jevlint-le/issues"
+    "url": "https://github.com/nolindnaidoo/decisionlint-le/issues"
   },
-  "homepage": "https://letools.dev/tools/jevlint-le",
+  "homepage": "https://letools.dev/tools/decisionlint-le",
   "engines": {
     "vscode": "^1.101.0",
     "node": ">=20.0.0"
@@ -49,53 +49,53 @@
   "contributes": {
     "commands": [
       {
-        "command": "jevlint-le.lintFile",
+        "command": "decisionlint-le.lintFile",
         "title": "Lint Jev Questions in This File",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.lintWorkspace",
+        "command": "decisionlint-le.lintWorkspace",
         "title": "Lint Jev Questions in the Workspace",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.openSettings",
+        "command": "decisionlint-le.openSettings",
         "title": "Open Settings",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.checkWithJev",
+        "command": "decisionlint-le.checkWithJev",
         "title": "Check This File with Jev (uses your API key)",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.setApiKey",
+        "command": "decisionlint-le.setApiKey",
         "title": "Set TypeSafe API Key",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.setOpenAIApiKey",
+        "command": "decisionlint-le.setOpenAIApiKey",
         "title": "Set OpenAI API Key",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.clearApiKey",
+        "command": "decisionlint-le.clearApiKey",
         "title": "Clear API Keys",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       },
       {
-        "command": "jevlint-le.probeQuestion",
+        "command": "decisionlint-le.probeQuestion",
         "title": "Probe the Jev Question at the Cursor (uses your API key)",
-        "category": "JevLint-LE"
+        "category": "DecisionLint-LE"
       }
     ],
     "configuration": {
-      "title": "JevLint-LE",
+      "title": "DecisionLint-LE",
       "properties": {
-        "jevlint-le.rules": {
+        "decisionlint-le.rules": {
           "type": "object",
           "default": {},
-          "markdownDescription": "Severity per rule, by code or name. Values: `off`, `hint`, `info`, `warning`, `error`. A rule not listed keeps its default. An entry that names no rule or no level stops linting and says why, as it would in a `jevlint-le.json`. Example: `{ \"JEV004\": \"off\" }`.",
+          "markdownDescription": "Severity per rule, by code or name. Values: `off`, `hint`, `info`, `warning`, `error`. A rule not listed keeps its default. An entry that names no rule or no level stops linting and says why, as it would in a `decisionlint-le.json`. Example: `{ \"JEV004\": \"off\" }`.",
           "additionalProperties": {
             "type": "string",
             "enum": [
@@ -107,7 +107,7 @@
             ]
           }
         },
-        "jevlint-le.fallbackOptions": {
+        "decisionlint-le.fallbackOptions": {
           "type": "array",
           "items": {
             "type": "string"
@@ -115,7 +115,7 @@
           "default": ["other", "none", "none of the above", "unknown", "unclear", "uncertain", "unsure", "ambiguous", "undetermined", "neither", "not stated", "not applicable", "insufficient evidence", "cannot tell", "n/a", "その他", "其他", "otro", "outro", "autre", "andere"],
           "markdownDescription": "Words that make a Choice option a fallback for `JEV004`. An option counts when one of these is a word in its name, matched case-insensitively with `_` and `-` read as spaces, so `none_implied` counts under `none`."
         },
-        "jevlint-le.ignore": {
+        "decisionlint-le.ignore": {
           "type": "array",
           "items": {
             "type": "string"
@@ -123,77 +123,77 @@
           "default": [],
           "markdownDescription": "Findings to drop, as `CODE:questionId`. Example: `JEV004:department`. This is the way to suppress a finding in JSON, which has no comments."
         },
-        "jevlint-le.target": {
+        "decisionlint-le.target": {
           "type": "string",
           "enum": ["", "typesafe", "openai", "vercel", "litellm", "openrouter", "llmgateway", "edenai", "liquid", "llamacpp"],
           "default": "",
-          "markdownDescription": "The platform this project sends every request to, which sets the limits the rules check: `litellm` holds a request to 128 questions, `openai` publishes none. Leave empty to read it from each request's model id, where the spelling says: `~typesafe/jev-latest` is OpenRouter, `typesafe-ai/jev` is Vercel. A `jevlint-le.json` with a `target` replaces this."
+          "markdownDescription": "The platform this project sends every request to, which sets the limits the rules check: `litellm` holds a request to 128 questions, `openai` publishes none. Leave empty to read it from each request's model id, where the spelling says: `~typesafe/jev-latest` is OpenRouter, `typesafe-ai/jev` is Vercel. A `decisionlint-le.json` with a `target` replaces this."
         },
-        "jevlint-le.include": {
+        "decisionlint-le.include": {
           "type": "string",
           "default": "**/*.{json,jsonc,js,jsx,mjs,cjs,ts,tsx,mts,cts,py,rs,go}",
           "markdownDescription": "Glob of files the workspace command lints."
         },
-        "jevlint-le.exclude": {
+        "decisionlint-le.exclude": {
           "type": "string",
           "default": "**/{node_modules,dist,out,build,coverage,.git}/**",
           "markdownDescription": "Glob of files the workspace command skips."
         },
-        "jevlint-le.maxFileSizeBytes": {
+        "decisionlint-le.maxFileSizeBytes": {
           "type": "number",
           "default": 1e6,
           "minimum": 1,
           "markdownDescription": "Files larger than this are reported as skipped, not linted."
         },
-        "jevlint-le.jev.model": {
+        "decisionlint-le.jev.model": {
           "type": "string",
           "default": "jev-1.13.0",
           "markdownDescription": "The model the **Check This File with Jev** command asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling, such as `~typesafe/jev-latest` for OpenRouter or `d1` for Liquid AI, each sent to that platform with the key in its own variable. Pinned to the version its checks were calibrated on. An alias such as `jev-latest` will move those cutoffs under you, and a finding from any other model says where the cutoff was set."
         },
-        "jevlint-le.jev.maxCalls": {
+        "decisionlint-le.jev.maxCalls": {
           "type": "number",
           "default": 25,
           "minimum": 1,
           "markdownDescription": "The most requests one **Check This File with Jev** run may send. Each question in the file costs one request. Questions past the limit are counted and not sent."
         },
-        "jevlint-le.jev.sendState": {
+        "decisionlint-le.jev.sendState": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Also send the `state` written beside a `questions` map, so Jev can check whether the state holds what each question asks about and whether it carries instructions. Off by default: with it off, only questions are sent. It applies only where the state is written out in the file."
         },
-        "jevlint-le.jev.confirm": {
+        "decisionlint-le.jev.confirm": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Before **Check This File with Jev** or the probe sends anything, show how many requests it will make, roughly what that costs and whether your state is sent, and wait for a yes. Off by default: running the command is taken as the decision to send."
         },
-        "jevlint-le.jev.apiKey": {
+        "decisionlint-le.jev.apiKey": {
           "type": "string",
           "default": "",
           "scope": "application",
           "ignoreSync": true,
           "markdownDescription": "Your TypeSafe API key, for **Check This File with Jev** and the probe. It can only be set in your user settings, never in a workspace, so it cannot end up in a repository, and it is left out of Settings Sync. **Set TypeSafe API Key** in the command palette stores it in the system keychain instead, which keeps it out of a plain-text file. A key set here is used ahead of one in the keychain."
         },
-        "jevlint-le.jev.openaiApiKey": {
+        "decisionlint-le.jev.openaiApiKey": {
           "type": "string",
           "default": "",
           "scope": "application",
           "ignoreSync": true,
-          "markdownDescription": "Your OpenAI API key, used by **Check This File with Jev** when `jevlint-le.jev.model` is `gpt-6-luna`. Held the same way as the TypeSafe key: user settings only, left out of Settings Sync, and **Set OpenAI API Key** stores it in the system keychain instead."
+          "markdownDescription": "Your OpenAI API key, used by **Check This File with Jev** when `decisionlint-le.jev.model` is `gpt-6-luna`. Held the same way as the TypeSafe key: user settings only, left out of Settings Sync, and **Set OpenAI API Key** stores it in the system keychain instead."
         },
-        "jevlint-le.jev.endpoint": {
+        "decisionlint-le.jev.endpoint": {
           "type": "string",
           "default": "",
           "scope": "application",
           "markdownDescription": "The full URL **Check This File with Jev** and the probe post to: a platform you host, such as llama.cpp, vLLM, LiteLLM or Ollaya, or a gateway spelling of the model id that names no host, such as `openai/gpt-6-luna-decisions`. Leave empty to send a model id to the platform its spelling names: `jev-1.13.0` to TypeSafe, `gpt-6-luna` to OpenAI, `~typesafe/jev-latest` to OpenRouter, `typesafe-ai/jev` to Vercel AI Gateway, `d1` to Liquid AI, each with the key in that platform's own variable. User settings only, never a workspace's, so a repository cannot point your key at a host of its choosing. A host this tool does not know is sent the key in `TYPESAFE_API_KEY` or `OPENAI_API_KEY`, whichever the shape's SDK reads, or no key when neither is set."
         },
-        "jevlint-le.jev.shape": {
+        "decisionlint-le.jev.shape": {
           "type": "string",
           "enum": ["", "typesafe", "openai"],
           "default": "",
           "scope": "application",
-          "markdownDescription": "The request shape sent to `jevlint-le.jev.endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` for a System One body, `openai` for a Decisions body. Leave empty otherwise."
+          "markdownDescription": "The request shape sent to `decisionlint-le.jev.endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` for a System One body, `openai` for a Decisions body. Leave empty otherwise."
         },
-        "jevlint-le.notificationsLevel": {
+        "decisionlint-le.notificationsLevel": {
           "type": "string",
           "default": "important",
           "enum": [
@@ -206,7 +206,7 @@
             "Hide the summaries. Still say when a run was cancelled or files were left out.",
             "Show a message only when a command you ran could not do anything."
           ],
-          "markdownDescription": "How much JevLint-LE tells you in notifications. Findings always appear in the editor and the Problems panel, whatever this is set to."
+          "markdownDescription": "How much DecisionLint-LE tells you in notifications. Findings always appear in the editor and the Problems panel, whatever this is set to."
         }
       }
     },
@@ -219,7 +219,7 @@
       },
       {
         "fileMatch": [
-          "jevlint-le.json"
+          "decisionlint-le.json"
         ],
         "url": "./schemas/config.schema.json"
       }
@@ -253,26 +253,26 @@
     "menus": {
       "editor/context": [
         {
-          "command": "jevlint-le.lintFile",
+          "command": "decisionlint-le.lintFile",
           "when": "editorLangId =~ /^(json|jsonc|javascript|javascriptreact|typescript|typescriptreact|python|rust|go)$/",
-          "group": "jevlint-le@1"
+          "group": "decisionlint-le@1"
         },
         {
-          "command": "jevlint-le.checkWithJev",
+          "command": "decisionlint-le.checkWithJev",
           "when": "editorLangId =~ /^(json|jsonc|javascript|javascriptreact|typescript|typescriptreact|python|rust|go)$/",
-          "group": "jevlint-le@2"
+          "group": "decisionlint-le@2"
         },
         {
-          "command": "jevlint-le.probeQuestion",
+          "command": "decisionlint-le.probeQuestion",
           "when": "editorLangId =~ /^(json|jsonc|javascript|javascriptreact|typescript|typescriptreact|python|rust|go)$/",
-          "group": "jevlint-le@3"
+          "group": "decisionlint-le@3"
         }
       ]
     },
     "mcpServerDefinitionProviders": [
       {
-        "id": "jevlint-le",
-        "label": "JevLint-LE"
+        "id": "decisionlint-le",
+        "label": "DecisionLint-LE"
       }
     ]
   },

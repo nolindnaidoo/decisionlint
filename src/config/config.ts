@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
+import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../ask/review';
 import {
 	DEFAULT_FALLBACK_OPTIONS,
 	EXTENSIONS,
@@ -9,7 +9,7 @@ import type { Shape } from '../lint/targets';
 import type { LintOptions } from '../types';
 import { readLintOptions } from './projectConfig';
 
-export const SECTION = 'jevlint-le';
+export const SECTION = 'decisionlint-le';
 
 /** `all` shows every message, `important` hides summaries, `silent` shows only why a command could not run. */
 export type NotificationsLevel = 'all' | 'important' | 'silent';

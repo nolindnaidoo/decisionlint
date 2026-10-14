@@ -1,11 +1,11 @@
 import { readFileSync, statSync } from 'node:fs';
 import * as vscode from 'vscode';
+import type { Fetch } from './ask/client';
 import { COMMANDS, registerCommands } from './commands';
-import { registerJevCommands } from './commands/jev';
+import { registerJevCommands } from './commands/ask';
 import { registerProbeCommand } from './commands/probe';
 import { getConfiguration, SECTION } from './config/config';
 import type { ConfigFs } from './config/projectConfig';
-import type { Fetch } from './jev/client';
 import { syntaxFor } from './lint/lint';
 import { createEngines } from './services/engines';
 import { createInstalledLookup } from './services/installedCopies';

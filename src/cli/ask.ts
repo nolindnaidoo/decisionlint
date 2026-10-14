@@ -1,5 +1,5 @@
-import type { Failure } from '../jev/client';
-import { type Provider, providerFor, type Route } from '../jev/provider';
+import type { Failure } from '../ask/client';
+import { type Provider, providerFor, type Route } from '../ask/provider';
 import {
 	DEFAULT_MAX_CALLS,
 	DEFAULT_MODEL,
@@ -7,7 +7,7 @@ import {
 	planReview,
 	type ReviewSettings,
 	runReview,
-} from '../jev/review';
+} from '../ask/review';
 import { syntaxForPath } from '../lint/lint';
 import type { LintOptions } from '../types';
 import type { CliOptions } from './args';
@@ -51,8 +51,8 @@ export function failureMessage(
 
 /** The environment variables that stand in for `--jev-endpoint` and `--jev-shape`, for a server started without flags. */
 export const ROUTE_ENV = Object.freeze({
-	endpoint: 'JEVLINT_LE_JEV_ENDPOINT',
-	shape: 'JEVLINT_LE_JEV_SHAPE',
+	endpoint: 'DECISIONLINT_LE_ASK_ENDPOINT',
+	shape: 'DECISIONLINT_LE_ASK_SHAPE',
 });
 
 type Env = Readonly<Record<string, string | undefined>>;

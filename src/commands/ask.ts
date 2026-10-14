@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import type { Configuration } from '../config/config';
-import type { Failure } from '../jev/client';
+import type { Failure } from '../ask/client';
 import {
 	asSubject,
 	type Provider,
 	providerFor,
 	VENDOR_KEYS,
-} from '../jev/provider';
+} from '../ask/provider';
+import type { Configuration } from '../config/config';
 import type { Resolved } from '../services/projectConfigs';
 import type {
 	Reviewer,
@@ -32,22 +32,22 @@ type Deps = KeySource &
 	}>;
 
 export const JEV_COMMANDS = Object.freeze({
-	checkWithJev: 'jevlint-le.checkWithJev',
-	setApiKey: 'jevlint-le.setApiKey',
-	setOpenAIApiKey: 'jevlint-le.setOpenAIApiKey',
-	clearApiKey: 'jevlint-le.clearApiKey',
+	checkWithJev: 'decisionlint-le.checkWithJev',
+	setApiKey: 'decisionlint-le.setApiKey',
+	setOpenAIApiKey: 'decisionlint-le.setOpenAIApiKey',
+	clearApiKey: 'decisionlint-le.clearApiKey',
 });
 
 type Keychain = keyof typeof VENDOR_KEYS;
 
 /** How an endpoint is set in the editor, after the sentence that says one is needed. */
 const HOW_TO_ROUTE =
-	'Set jevlint-le.jev.endpoint, and jevlint-le.jev.shape where its path does not say.';
+	'Set decisionlint-le.jev.endpoint, and decisionlint-le.jev.shape where its path does not say.';
 
 /** Where each vendor's key sits in the keychain. */
 const SECRETS: Readonly<Record<Keychain, string>> = Object.freeze({
-	typesafe: 'jevlint-le.typesafeApiKey',
-	openai: 'jevlint-le.openaiApiKey',
+	typesafe: 'decisionlint-le.typesafeApiKey',
+	openai: 'decisionlint-le.openaiApiKey',
 });
 const SET_COMMANDS: Readonly<Record<Keychain, string>> = Object.freeze({
 	typesafe: JEV_COMMANDS.setApiKey,
@@ -72,7 +72,7 @@ export function failureMessage(
 		keychain === 'typesafe' ? 'Set TypeSafe API Key' : 'Set OpenAI API Key';
 	const messages: Readonly<Record<Failure['kind'], string>> = {
 		key: keychain
-			? `${vendor} rejected the API key. Set a new one with "JevLint-LE: ${set}".`
+			? `${vendor} rejected the API key. Set a new one with "DecisionLint-LE: ${set}".`
 			: `${vendor} rejected the API key in ${provider.envKey}.`,
 		rejected: `${vendor} rejected the request.`,
 		busy: `${vendor} is busy or the rate limit was reached. Try again in a moment.`,
@@ -186,7 +186,7 @@ const locked = (provider: Provider) =>
 	`The keychain could not be read. Unlock it and try again, or set ${provider.envKey} in the environment.`;
 const noKey = (provider: Provider) =>
 	provider.keychain
-		? `No ${provider.vendor} API key. Set one with the button, in Settings under "JevLint-LE: ${KEY_SETTINGS[provider.keychain]}", or as ${provider.envKey} in the environment.`
+		? `No ${provider.vendor} API key. Set one with the button, in Settings under "DecisionLint-LE: ${KEY_SETTINGS[provider.keychain]}", or as ${provider.envKey} in the environment.`
 		: `No ${provider.vendor} API key. Set it as ${provider.envKey} in the environment.`;
 
 /** The key a user typed into settings for a vendor. Empty when it is kept elsewhere, or the vendor has no setting. */
@@ -293,7 +293,7 @@ async function checkWithJev(deps: Deps): Promise<void> {
 	const outcome = await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: `JevLint-LE: asking ${provider.model} about the questions in this file`,
+			title: `DecisionLint-LE: asking ${provider.model} about the questions in this file`,
 			cancellable: true,
 		},
 		(_progress, token) => {

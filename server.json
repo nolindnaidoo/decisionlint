@@ -1,12 +1,12 @@
 {
 	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-	"name": "io.github.nolindnaidoo/jevlint-le",
-	"title": "JevLint-LE",
+	"name": "io.github.nolindnaidoo/decisionlint-le",
+	"title": "DecisionLint-LE",
 	"description": "Lint questions for TypeSafe's Jev and OpenAI's Luna offline, or ask the model itself with your key.",
-	"websiteUrl": "https://letools.dev/tools/jevlint-le",
+	"websiteUrl": "https://letools.dev/tools/decisionlint-le",
 	"icons": [
 		{
-			"src": "https://raw.githubusercontent.com/nolindnaidoo/jevlint-le/main/src/assets/images/icon.png",
+			"src": "https://raw.githubusercontent.com/nolindnaidoo/decisionlint-le/main/src/assets/images/icon.png",
 			"mimeType": "image/png",
 			"sizes": [
 				"256x256"
@@ -14,7 +14,7 @@
 		}
 	],
 	"repository": {
-		"url": "https://github.com/nolindnaidoo/jevlint-le",
+		"url": "https://github.com/nolindnaidoo/decisionlint-le",
 		"source": "github"
 	},
 	"version": "0.9.0",
@@ -22,7 +22,7 @@
 		{
 			"registryType": "npm",
 			"registryBaseUrl": "https://registry.npmjs.org",
-			"identifier": "jevlint-le-mcp",
+			"identifier": "decisionlint-le-mcp",
 			"version": "0.9.0",
 			"runtimeHint": "npx",
 			"transport": {

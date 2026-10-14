@@ -1,16 +1,16 @@
-# jevlint-le-mcp
+# decisionlint-le-mcp
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le">
+  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint-le">
     <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
   </a>
-  <a href="https://open-vsx.org/extension/nolindnaidoo/jevlint-le">
-    <img src="https://img.shields.io/open-vsx/dt/nolindnaidoo/jevlint-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
+  <a href="https://open-vsx.org/extension/nolindnaidoo/decisionlint-le">
+    <img src="https://img.shields.io/open-vsx/dt/nolindnaidoo/decisionlint-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
   </a>
-  <a href="https://www.npmjs.com/package/jevlint-le-mcp">
-    <img src="https://img.shields.io/npm/v/jevlint-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="jevlint-le-mcp on npm" />
+  <a href="https://www.npmjs.com/package/decisionlint-le-mcp">
+    <img src="https://img.shields.io/npm/v/decisionlint-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="decisionlint-le-mcp on npm" />
   </a>
-  <a href="https://letools.dev/tools/jevlint-le">
+  <a href="https://letools.dev/tools/decisionlint-le">
     <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
   </a>
 </p>
@@ -18,7 +18,7 @@
 An [MCP](https://modelcontextprotocol.io) server that lints the questions a
 project sends to TypeSafe's Jev model or to OpenAI's Decisions API
 (`gpt-6-luna`) before they are sent, and mends the ones it can. It is the
-engine behind the [JevLint-LE](https://letools.dev/tools/jevlint-le) editor
+engine behind the [DecisionLint-LE](https://letools.dev/tools/decisionlint-le) editor
 extension, as eight tools an agent can call.
 
 Linting needs no API key and makes no network calls, and nothing here writes
@@ -26,12 +26,12 @@ a file. Two tools ask the model itself, with your key, when you ask them to.
 
 ## Use it
 
-Point any MCP host at `npx jevlint-le-mcp`.
+Point any MCP host at `npx decisionlint-le-mcp`.
 
 **Claude Code**
 
 ```bash
-claude mcp add jevlint-le -- npx -y jevlint-le-mcp
+claude mcp add decisionlint-le -- npx -y decisionlint-le-mcp
 ```
 
 **Anything with a JSON config**, such as Cursor, Windsurf or Claude Desktop:
@@ -39,9 +39,9 @@ claude mcp add jevlint-le -- npx -y jevlint-le-mcp
 ```json
 {
   "mcpServers": {
-    "jevlint-le": {
+    "decisionlint-le": {
       "command": "npx",
-      "args": ["-y", "jevlint-le-mcp"]
+      "args": ["-y", "decisionlint-le-mcp"]
     }
   }
 }
@@ -49,23 +49,23 @@ claude mcp add jevlint-le -- npx -y jevlint-le-mcp
 
 **VS Code** needs nothing here. Install the extension instead. It carries
 this server and registers it for you:
-[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le)
-· [Open VSX](https://open-vsx.org/extension/nolindnaidoo/jevlint-le)
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint-le)
+· [Open VSX](https://open-vsx.org/extension/nolindnaidoo/decisionlint-le)
 
-**Already running `jevlint-le` in CI?** The same server is
-`npx jevlint-le --mcp`. This package is the one with no flag to forget: a
-client that starts `jevlint-le` bare gets a linter that exits, not a server.
+**Already running `decisionlint-le` in CI?** The same server is
+`npx decisionlint-le --mcp`. This package is the one with no flag to forget: a
+client that starts `decisionlint-le` bare gets a linter that exits, not a server.
 
 Prefer a global install to `npx` on every launch:
 
 ```bash
-npm install -g jevlint-le-mcp
+npm install -g decisionlint-le-mcp
 ```
 
 ```json
 {
   "mcpServers": {
-    "jevlint-le": { "command": "jevlint-le-mcp" }
+    "decisionlint-le": { "command": "decisionlint-le-mcp" }
   }
 }
 ```
@@ -77,7 +77,7 @@ model. To check it before wiring it into anything:
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | npx -y jevlint-le-mcp
+  | npx -y decisionlint-le-mcp
 ```
 
 ## Tools
@@ -98,7 +98,7 @@ read-only and offline, so a host can let an agent call them without asking.
 The two that send are marked open-world and not idempotent, each call costs,
 and their descriptions tell an agent to call them only when you ask for a
 check or a probe. `lint_paths` and `check_with_jev` read the files under the
-paths they are given and nothing else. A `jevlint-le.json` near those files
+paths they are given and nothing else. A `decisionlint-le.json` near those files
 applies as it does on the command line, and `rules` on any call overrides it.
 
 ## The key
@@ -116,7 +116,7 @@ transcript or a host's log, and no answer ever carries one: the report says
 where the key came from, not what it was. With no key anywhere the call fails
 before anything is sent and says where it looked.
 
-It is listed on the MCP registry as `io.github.nolindnaidoo/jevlint-le`.
+It is listed on the MCP registry as `io.github.nolindnaidoo/decisionlint-le`.
 
 ## License
 

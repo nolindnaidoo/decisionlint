@@ -66,7 +66,7 @@
           "description": "noul: an optional object with 'true' and 'false'. choice: a map of option to description, at most 255. score: an ordered array of 2 to 10 level descriptions."
         }
       },
-      "description": "A typed question. JevLint-LE checks its shape and reports problems with a reason, so this schema only describes the fields."
+      "description": "A typed question. DecisionLint-LE checks its shape and reports problems with a reason, so this schema only describes the fields."
     }
   }
 }

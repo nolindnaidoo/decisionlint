@@ -887,20 +887,24 @@ describe('suppression', () => {
 
 	it('silences the next line, the same line and the whole file', () => {
 		expect(
-			codes(`// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`),
+			codes(`// decisionlint-le-disable-next-line JEV004\nconst q = ${bare};`),
 		).toEqual([]);
-		expect(codes(`const q = ${bare}; // jevlint-le-disable-line`)).toEqual([]);
+		expect(codes(`const q = ${bare}; // decisionlint-le-disable-line`)).toEqual(
+			[],
+		);
 		expect(
-			codes(`/* jevlint-le-disable JEV004 */\n\n\nconst q = ${bare};`),
+			codes(`/* decisionlint-le-disable JEV004 */\n\n\nconst q = ${bare};`),
 		).toEqual([]);
 	});
 
 	it('leaves other rules and other lines alone, and reports the comment that silenced nothing', () => {
 		expect(
-			codes(`// jevlint-le-disable-next-line JEV001\nconst q = ${bare};`),
+			codes(`// decisionlint-le-disable-next-line JEV001\nconst q = ${bare};`),
 		).toEqual(['JEV010', 'JEV004']);
 		expect(
-			codes(`// jevlint-le-disable-next-line JEV004\n\nconst q = ${bare};`),
+			codes(
+				`// decisionlint-le-disable-next-line JEV004\n\nconst q = ${bare};`,
+			),
 		).toEqual(['JEV010', 'JEV004']);
 	});
 
@@ -911,24 +915,28 @@ describe('suppression', () => {
 				.findings;
 
 		it('is reported, at the comment', () => {
-			const text = `// jevlint-le-disable-next-line JEV004\nconst q = ${clean};`;
+			const text = `// decisionlint-le-disable-next-line JEV004\nconst q = ${clean};`;
 			const [finding] = found(text);
 			expect(finding?.code).toBe('JEV010');
 			expect(finding?.severity).toBe('warning');
 			expect(text.slice(finding?.span.start, finding?.span.end)).toBe(
-				'jevlint-le-disable-next-line JEV004',
+				'decisionlint-le-disable-next-line JEV004',
 			);
 		});
 
 		it('is not reported when it silences a finding', () => {
 			expect(
-				codes(`// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`),
+				codes(
+					`// decisionlint-le-disable-next-line JEV004\nconst q = ${bare};`,
+				),
 			).toEqual([]);
-			expect(codes(`// jevlint-le-disable\nconst q = ${bare};`)).toEqual([]);
+			expect(codes(`// decisionlint-le-disable\nconst q = ${bare};`)).toEqual(
+				[],
+			);
 		});
 
 		it('is reported when the rule it names is switched off, since that rule reports nothing', () => {
-			const text = `// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`;
+			const text = `// decisionlint-le-disable-next-line JEV004\nconst q = ${bare};`;
 			expect(found(text, { JEV004: 'off' }).map((f) => f.code)).toEqual([
 				'JEV010',
 			]);
@@ -937,18 +945,20 @@ describe('suppression', () => {
 		it('is not reported when it names only rules that Jev checks, which linting never runs', () => {
 			expect(
 				codes(
-					`// jevlint-le-disable-next-line JEV303 JEV305\nconst q = ${clean};`,
+					`// decisionlint-le-disable-next-line JEV303 JEV305\nconst q = ${clean};`,
 				),
 			).toEqual([]);
 		});
 
 		it('says to name the rule when it names none', () => {
-			const [finding] = found(`// jevlint-le-disable\nconst q = ${clean};`);
+			const [finding] = found(
+				`// decisionlint-le-disable\nconst q = ${clean};`,
+			);
 			expect(finding?.message).toContain('name the rule');
 		});
 
 		it('can be switched off, and is not silenced by the comment it reports', () => {
-			const text = `// jevlint-le-disable\nconst q = ${clean};`;
+			const text = `// decisionlint-le-disable\nconst q = ${clean};`;
 			expect(found(text).map((f) => f.code)).toEqual(['JEV010']);
 			expect(found(text, { JEV010: 'off' })).toEqual([]);
 		});
@@ -1244,5 +1254,21 @@ describe('the file types the tool reads', () => {
 		).toThrow(
 			'Unknown syntax "constructor". Use one of: js, python, rust, go.',
 		);
+	});
+});
+
+describe("a directive written under the tool's old name", () => {
+	const bad = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } };`;
+
+	it('still silences', () => {
+		expect(codes(`// jevlint-le-disable-next-line JEV004\n${bad}`)).toEqual([]);
+		expect(codes(`// jevlint-le-disable JEV004\n${bad}`)).toEqual([]);
+	});
+
+	it('is still reported when it silences nothing', () => {
+		expect(codes(`// jevlint-le-disable-next-line JEV009\n${bad}`)).toEqual([
+			'JEV010',
+			'JEV004',
+		]);
 	});
 });

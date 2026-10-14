@@ -1,7 +1,7 @@
+import { ENV_KEY } from '../ask/client';
+import { VENDOR_KEYS } from '../ask/provider';
+import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../ask/review';
 import { LEVELS, readRule } from '../config/projectConfig';
-import { ENV_KEY } from '../jev/client';
-import { VENDOR_KEYS } from '../jev/provider';
-import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
 import type { Shape } from '../lint/targets';
 import type { LintOptions } from '../types';
 
@@ -100,7 +100,7 @@ const FLAGS: ReadonlyArray<Flag> = Object.freeze([
 		name: '--config',
 		short: '-c',
 		value: 'file',
-		help: 'Use this settings file, and no jevlint-le.json found near the files.',
+		help: 'Use this settings file, and no decisionlint-le.json found near the files.',
 		apply: (options, value) => ({ ...options, config: value }),
 	},
 	{
@@ -150,7 +150,7 @@ const FLAGS: ReadonlyArray<Flag> = Object.freeze([
 	{
 		name: '--jev-endpoint',
 		value: 'url',
-		help: 'The full URL --jev posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from JEVLINT_LE_JEV_ENDPOINT. A host this tool does not know is sent the key of the shape, or none.',
+		help: 'The full URL --jev posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from DECISIONLINT_LE_ASK_ENDPOINT. A host this tool does not know is sent the key of the shape, or none.',
 		apply: (options, value) =>
 			value.trim()
 				? { ...options, jevEndpoint: value.trim() }
@@ -159,7 +159,7 @@ const FLAGS: ReadonlyArray<Flag> = Object.freeze([
 	{
 		name: '--jev-shape',
 		value: 'shape',
-		help: 'The shape sent to --jev-endpoint where its path does not end in /systemone or /decisions: typesafe or openai. Also read from JEVLINT_LE_JEV_SHAPE.',
+		help: 'The shape sent to --jev-endpoint where its path does not end in /systemone or /decisions: typesafe or openai. Also read from DECISIONLINT_LE_ASK_SHAPE.',
 		apply: (options, value) =>
 			value === 'typesafe' || value === 'openai'
 				? { ...options, jevShape: value }
@@ -245,7 +245,7 @@ export function helpText(): string {
 	});
 	const width = Math.max(...usage.map((entry) => entry.length));
 	return [
-		'Usage: jevlint-le [options] [file or directory ...]',
+		'Usage: decisionlint-le [options] [file or directory ...]',
 		'',
 		'Lints the questions written for the Jev model. With no path it lints the',
 		'current directory. It sends nothing over the network unless --jev is given.',

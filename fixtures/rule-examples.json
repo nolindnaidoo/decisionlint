@@ -49,7 +49,7 @@
  },
  "JEV010": {
   "syntax": "js",
-  "bad": "// jevlint-le-disable-next-line JEV004\nconst late = { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' };",
+  "bad": "// decisionlint-le-disable-next-line JEV004\nconst late = { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' };",
   "good": "const late = { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' };"
  },
  "JEV011": {

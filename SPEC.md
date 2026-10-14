@@ -1,4 +1,4 @@
-# JevLint-LE — specification
+# DecisionLint-LE — specification
 
 **Status: released. The current version and its date are the top heading of
 [CHANGELOG.md](CHANGELOG.md); 0.1.0 shipped on 2026-10-04 and 0.2.0 on
@@ -122,7 +122,7 @@ what the text says. `JEV004` is the exception in spirit and is explained below.
 | JEV007 | invalid-question | error | The `type` is missing or unknown, or the instructions are an empty string |
 | JEV008 | numeric-levels | warning | Every level of a Score is a bare number |
 | JEV009 | too-few-options | info | A Choice has fewer than two options, or a Score fewer than two levels |
-| JEV010 | unused-disable | warning | A `jevlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
+| JEV010 | unused-disable | warning | A `decisionlint-le-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
 | JEV011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
 | JEV012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
 | JEV013 | newer-model | info | `model` is a versioned Jev id in any platform's spelling, numbers and nothing after them, above the version the rules were measured on |
@@ -187,7 +187,7 @@ Scores sent with no levels.
     names into a map.
   - `JEV007`: correct a mistyped type when exactly one real type is within two
     edits.
-- **Project settings file.** `jevlint-le.json`, read by the editor, the
+- **Project settings file.** `decisionlint-le.json`, read by the editor, the
   command line and the MCP server. The nearest one to a file applies, looking
   upward as far as the workspace folder in the editor and the working
   directory on the command line. Where one applies it replaces the editor's
@@ -208,8 +208,8 @@ Scores sent with no levels.
 - **Commands:** lint the active file, lint the workspace, open settings. The
   workspace command reports files skipped as too large and files it could not
   open.
-- **Suppression** by comment: `jevlint-le-disable-next-line JEV004`,
-  `jevlint-le-disable-line`, or `jevlint-le-disable` for the file. No code list means
+- **Suppression** by comment: `decisionlint-le-disable-next-line JEV004`,
+  `decisionlint-le-disable-line`, or `decisionlint-le-disable` for the file. No code list means
   every rule. JSON has no comments, so the `ignore` setting takes
   `CODE:questionId` entries.
 - **JSON schema** for request bodies, applied to files named `*.jev.json`. It
@@ -223,22 +223,22 @@ Scores sent with no levels.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `jevlint-le.json` |
-| `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
-| `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `jevlint-le.jev.endpoint` | `""` | The URL the check posts to, for a platform you host. Empty sends a model id where its spelling says |
-| `jevlint-le.jev.shape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
-| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
-| `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
-| `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
-| `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
-| `jevlint-le.jev.model` | `jev-1.13.0` | The model the Jev command asks |
-| `jevlint-le.jev.maxCalls` | `25` | The most requests one Jev check may send |
-| `jevlint-le.jev.sendState` | `false` | Also send a state written in the file, for `JEV311` and `JEV312` |
-| `jevlint-le.jev.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
-| `jevlint-le.jev.apiKey` | empty | The TypeSafe key, typed in. User settings only, not synced |
-| `jevlint-le.jev.openaiApiKey` | empty | The OpenAI key, typed in, used when the model is `gpt-6-luna`. User settings only, not synced |
+| `decisionlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `decisionlint-le.json` |
+| `decisionlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
+| `decisionlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `decisionlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `decisionlint-le.jev.endpoint` | `""` | The URL the check posts to, for a platform you host. Empty sends a model id where its spelling says |
+| `decisionlint-le.jev.shape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `decisionlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
+| `decisionlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
+| `decisionlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
+| `decisionlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
+| `decisionlint-le.jev.model` | `jev-1.13.0` | The model the Jev command asks |
+| `decisionlint-le.jev.maxCalls` | `25` | The most requests one Jev check may send |
+| `decisionlint-le.jev.sendState` | `false` | Also send a state written in the file, for `JEV311` and `JEV312` |
+| `decisionlint-le.jev.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
+| `decisionlint-le.jev.apiKey` | empty | The TypeSafe key, typed in. User settings only, not synced |
+| `decisionlint-le.jev.openaiApiKey` | empty | The OpenAI key, typed in, used when the model is `gpt-6-luna`. User settings only, not synced |
 
 ### Not built from the first draft of this spec
 
@@ -271,7 +271,7 @@ or its primitives guide.
 | JEV111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
 | JEV112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
 
-A rule that is `off` still runs when switched on in `jevlint-le.rules`.
+A rule that is `off` still runs when switched on in `decisionlint-le.rules`.
 
 Text inside backticks or double quotes is left out before a wording rule
 reads a question, because it is a field name or quoted data and not the
@@ -598,9 +598,9 @@ question costs one request. `JEV309` also sends the ids of the other questions
 in the request. One further request per `questions` map carries `JEV310`, a
 check on every pair of up to ten questions, and `JEV312`.
 
-**The key.** `JevLint-LE: Set TypeSafe API Key` stores it in the operating
+**The key.** `DecisionLint-LE: Set TypeSafe API Key` stores it in the operating
 system keychain through VS Code's secret storage. It can also be typed into
-the `jevlint-le.jev.apiKey` setting, by the owner's decision: a settings
+the `decisionlint-le.jev.apiKey` setting, by the owner's decision: a settings
 field is where people look. A settings file is plain text, so that setting
 has application scope, which means it can be set only in user settings and
 never in a workspace, where it would be committed with the repository, and
@@ -610,17 +610,17 @@ message and no log.
 
 **What is sent.** By default only questions: type, instructions, criteria and
 ids. The `state` a program would send with them is not. `JEV311` and `JEV312`
-read the state, so they run only when `jevlint-le.jev.sendState` is on, and
+read the state, so they run only when `decisionlint-le.jev.sendState` is on, and
 only where the state is written out in the file, which in practice means
 request JSON files.
 
 **What it will not send.** A question with any part built at runtime, since
 Jev would be judging something other than what runs. Anything in an untrusted
-workspace. More than `jevlint-le.jev.maxCalls` requests in one run, 25 by
+workspace. More than `decisionlint-le.jev.maxCalls` requests in one run, 25 by
 default. Each of these is counted in the summary, so a short run never looks
 like a complete one.
 
-**A confirmation, when asked for.** With `jevlint-le.jev.confirm` on, the
+**A confirmation, when asked for.** With `decisionlint-le.jev.confirm` on, the
 command first shows how many requests it will make, an estimate of the input
 tokens and the cost, whether the state is included, and what it is holding
 back, and waits for a yes. It is off by default, by the owner's decision:
@@ -633,7 +633,7 @@ errs high.
 **After an edit** the findings are removed. They were about text that has
 changed.
 
-**The model is pinned** to `jev-1.13.0` in `jevlint-le.jev.model`, because the
+**The model is pinned** to `jev-1.13.0` in `decisionlint-le.jev.model`, because the
 cutoffs below were set on that version.
 
 ### How the cutoffs were set
@@ -642,7 +642,7 @@ cutoffs below were set on that version.
 with the checks that apply and saves each probability in
 `fixtures/validation/calibration.json`, 390 calls so far. A cutoff is read off
 those numbers, so changing one costs nothing, and adding a check sends only
-that check. `src/jev/reviews.test.ts` holds each per-question cutoff to the
+that check. `src/ask/reviews.test.ts` holds each per-question cutoff to the
 saved numbers: a check may not flag a question the corpus calls good.
 
 | Check | Cutoff | Bad caught | Lowest bad | Highest good |
@@ -753,7 +753,7 @@ variable, and a `questions` dict passed to a function under another name.
 
 ## Command line
 
-It is one npm package, `jevlint-le`, assembled in
+It is one npm package, `decisionlint-le`, assembled in
 `npm/`, that is both the command line and the MCP server. `src/cli/` wraps
 `lintText` in a process: it finds
 files, lints each with the reader its extension calls for, prints, and sets
@@ -766,9 +766,9 @@ under `--jev`. The probe is not in it.
 | Formats | `stylish`, the default, grouped by file for a person to read. `compact`, one finding per line as `path:line:column`. `json`, with one-based positions, the rule name and its docs link. `github`, workflow annotations. `sarif`, version 2.1.0, for code scanning. `junit`, one suite per file, failing only on errors |
 | Integrations | `action.yml`, a composite GitHub Action, and `.pre-commit-hooks.yaml`. Both run the published package through `npx` at the version they ship with. Neither has been run by its host tool yet |
 | Fixing | `--fix` writes the fixes marked safe, then reports what is left. Never with standard input or `--mcp` |
-| Files | `exclude` in `jevlint-le.json` leaves files out, relative to that file. `--no-error-on-unmatched-pattern` passes a run with nothing to lint |
+| Files | `exclude` in `decisionlint-le.json` leaves files out, relative to that file. `--no-error-on-unmatched-pattern` passes a run with nothing to lint |
 | Exit status | 0 passed. 1 an error was found, or more warnings than `--max-warnings`. 2 the run could not be done as asked |
-| Settings | The `jevlint-le.json` nearest each file. `--config` names one to use for every file instead. `--rule CODE=level`, repeatable, overrides either |
+| Settings | The `decisionlint-le.json` nearest each file. `--config` names one to use for every file instead. `--rule CODE=level`, repeatable, overrides either |
 | Standard input | `--stdin-filename` lints piped text under a file name, which picks the reader |
 
 It refuses where passing would mislead. An unknown option is an error and
@@ -801,7 +801,7 @@ Not built: the same pages on letools.dev.
 ### The project's own copy in the editor
 
 Built for 0.3.0, as Biome's extension does it. A project that lists
-`jevlint-le` in its dev dependencies is linted in the editor by that copy.
+`decisionlint-le` in its dev dependencies is linted in the editor by that copy.
 
 | The project has | The editor lints with |
 |---|---|
@@ -833,7 +833,7 @@ identical requests for identical text, and a test compares them.
 | | Behaviour |
 |---|---|
 | Key | `TYPESAFE_API_KEY` in the environment, and nowhere else. `--jev` without it exits 2 before a file is read |
-| Consent | The flag. No setting in `jevlint-le.json` turns it on, which stands in for workspace trust |
+| Consent | The flag. No setting in `decisionlint-le.json` turns it on, which stands in for workspace trust |
 | Plan | `--jev-plan` prints what would be sent and sends nothing. Under `--jev` the same count goes to standard error before the first request |
 | Limit | `--jev-max-calls`, default 25, for the whole run and not per file as in the editor. A run that needed more exits 2 |
 | State | Sent only with `--jev-send-state` |
@@ -841,7 +841,7 @@ identical requests for identical text, and a test compares them.
 | Failure | A rejected key, a rejected request, a busy or failing service after three tries, a reply that is not a Jev reply, no answer in 30 seconds, or an interrupt stops the sending. What was found is printed, the reason and the count answered of the count planned go to standard error, and the exit is 2 |
 | Output | Jev findings join each file's findings. `totals.jev` is present only when asked for |
 
-Not built: the model and state settings in `jevlint-le.json`, so a team's
+Not built: the model and state settings in `decisionlint-le.json`, so a team's
 editors and its CI can still ask different models. A price in the plan line,
 because a stale one in a CI log reads as a quote. The probe.
 
@@ -881,7 +881,7 @@ The key is found the way `cli/dotenv.ts` finds it: `TYPESAFE_API_KEY` or
 `OPENAI_API_KEY` in the environment the client started the server with,
 then `.env.local`, then `.env` in its working directory. Never a tool
 argument, so no key lands in an agent's transcript, and never a workspace
-setting or `jevlint-le.json`, for the reason the command line refuses those.
+setting or `decisionlint-le.json`, for the reason the command line refuses those.
 No answer carries the key: the report names where it came from.
 
 The server is listed on the MCP registry from `server.json` at the root,
@@ -892,15 +892,15 @@ The extension also offers the server to the editor it runs in, through
 setup. The command line bundle ships in the VSIX as `dist/cli.js` for this.
 An editor without agent mode is left alone.
 
-From 0.7.0 it is also a package of its own, `jevlint-le-mcp`, as every
+From 0.7.0 it is also a package of its own, `decisionlint-le-mcp`, as every
 sibling's server is: one `bin` that is the server, with no flag. Until then
-the server was reached only as `jevlint-le --mcp`, on the reasoning that two
+the server was reached only as `decisionlint-le --mcp`, on the reasoning that two
 packages would be two versions to keep equal. What changed the decision: a
 client that installs by package name, and an index that reads one, starts
-`jevlint-le` bare and gets a linter that exits, and the family's convention
+`decisionlint-le` bare and gets a linter that exits, and the family's convention
 is what the outside world pattern-matches. The two versions are kept equal
 the way the family keeps them: `build-npm.js` writes both from one source and
-CI fails if they differ. `jevlint-le` keeps `--mcp` for a project that already
+CI fails if they differ. `decisionlint-le` keeps `--mcp` for a project that already
 pins it, and the VSIX starts its own bundled copy that way.
 
 A bad argument, an unknown tool or a tool that throws is a failed call with
@@ -1163,7 +1163,7 @@ the other sixteen.
   things of every tool, such as twelve locales and a Rust crate, that are not
   true of this one. The registry now declares what this tool has: an npm
   package for the command line and one for the MCP server, its Open VSX
-  namespace, its MCP registry listing as `io.github.nolindnaidoo/jevlint-le`,
+  namespace, its MCP registry listing as `io.github.nolindnaidoo/decisionlint-le`,
   and that one command sends on request.
 - **The fleet check names it and does not compare it.** `OUTSIDE_FLEET` in the
   site's `scripts/check-fleet.ts` lists this repo, and a test there holds every
@@ -1185,7 +1185,7 @@ Not planned for now: a Rust port of the command line, which every sibling
 has. The TypeScript one lints thousands of files in seconds, and a port would
 be every reader and rule kept in agreement twice.
 
-The MCP registry listing, `io.github.nolindnaidoo/jevlint-le`, is in
+The MCP registry listing, `io.github.nolindnaidoo/decisionlint-le`, is in
 `server.json` and goes out with the npm job of the Release workflow from
 0.6.0, pointing at the npm package with `--mcp`. It was held back until the
 server gave an agent something to act on: the fixes, `fix_text` and
@@ -1235,10 +1235,10 @@ shape rule reports a Decisions mistake in OpenAI's own field names, and a
 mistyped `predicate` is caught and fixed; a shape mistake in the AI SDK's
 form cannot be told from a foreign client and is left alone.
 
-**Asking Luna.** `--jev-model gpt-6-luna`, or `jevlint-le.jev.model` in the
+**Asking Luna.** `--jev-model gpt-6-luna`, or `decisionlint-le.jev.model` in the
 editor, sends the same checks to OpenAI's Decisions API with the key in
 `OPENAI_API_KEY`, or in the keychain through **Set OpenAI API Key**, or in
-`jevlint-le.jev.openaiApiKey`. `jev/provider.ts` is the one file that knows
+`decisionlint-le.jev.openaiApiKey`. `jev/provider.ts` is the one file that knows
 the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
@@ -1313,8 +1313,8 @@ says them. Adding a platform is a row and a test, and never a change to a
 rule.
 
 **D2. The target of a request is resolved from the file, and resolved is not
-guessed.** In order: the `target` setting in `jevlint-le.json` or
-`jevlint-le.target`, for a project that sends everything to one platform;
+guessed.** In order: the `target` setting in `decisionlint-le.json` or
+`decisionlint-le.target`, for a project that sends everything to one platform;
 a base URL written in the file whose host a target claims; the model id,
 where its spelling names a platform (`@cf/`, `~typesafe/`, a `liquid`
 model) or a family of them (`openai/` is every gateway, so it resolves to
@@ -1337,13 +1337,13 @@ tag or a deployment name is not a Jev id, so neither rule reads it.
 shape, the endpoint and the name of the environment variable that holds the
 key. A vendor with a fixed host, TypeSafe, OpenAI, Liquid, OpenRouter, LLM
 Gateway and Vercel, needs nothing set. A runtime the user hosts, llama.cpp,
-vLLM, Ollaya, LiteLLM, needs an endpoint, from `jevlint-le.jev.endpoint` in
+vLLM, Ollaya, LiteLLM, needs an endpoint, from `decisionlint-le.jev.endpoint` in
 the editor or `--jev-endpoint` on the command line, and the shape to send is
 the target's or, for a host the table does not know, `--jev-shape`. A model
 id that resolves to no fixed host, such as `openai/gpt-6-luna-decisions`
 with no endpoint set, is refused before anything is sent: routed by the
 old rule it would carry the OpenAI key to `api.openai.com` on a request that
-fails there. The endpoint is never read from `jevlint-le.json`, for the
+fails there. The endpoint is never read from `decisionlint-le.json`, for the
 reason the key is not: a cloned repository could point the key at any host.
 The reply is read against the request, in the shape that was sent, as today.
 
@@ -1486,7 +1486,7 @@ Each is fixed, and each test was seen to fail before its fix.
   written per model version, so wording rules will need a version dimension.
 - **R2. Vendor ships validation.** TypeSafe could add question validation to
   the API or SDK. The SDK already throws on a Choice given an array.
-- **R3. Name.** Decided 2026-10-04: `jevlint-le`, in the LE family. "Jev" is
+- **R3. Name.** Decided 2026-10-04: `decisionlint-le`, in the LE family. "Jev" is
   TypeSafe's product name and its trademark policy has not been checked.
   `jevlint` alone is taken on GitHub and PyPI by tools that are not this one.
 - **R4. Small audience.** API access is gated, so the number of people writing

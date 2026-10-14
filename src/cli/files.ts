@@ -104,7 +104,10 @@ export function findFiles(paths: ReadonlyArray<string>, files: Files): Found {
 		if (entry.kind === 'other')
 			return { ok: false, error: `Not a regular file: ${path}` };
 		if (!syntaxForPath(path))
-			return { ok: false, error: `Not a file type jevlint-le reads: ${path}` };
+			return {
+				ok: false,
+				error: `Not a file type decisionlint-le reads: ${path}`,
+			};
 		found.push(path);
 	}
 	return { ok: true, paths: [...new Set(found)], unread };

@@ -10,7 +10,7 @@ import { getConfiguration } from '../config/config';
  * closes, which can be never, and awaiting it would hold the command open.
  */
 
-const NAME = 'JevLint-LE';
+const NAME = 'DecisionLint-LE';
 
 function show(
 	send: (message: string) => Thenable<unknown>,

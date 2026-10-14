@@ -1,11 +1,11 @@
+import type { Fetch } from '../ask/client';
+import { asSubject } from '../ask/provider';
 import {
 	createConfigLoader,
 	folderOf,
 	isExcluded,
 	parseConfig,
 } from '../config/projectConfig';
-import type { Fetch } from '../jev/client';
-import { asSubject } from '../jev/provider';
 import { fixText } from '../lint/fixAll';
 import {
 	BOM,
@@ -16,6 +16,7 @@ import {
 } from '../lint/lint';
 import type { LintOptions, Severity } from '../types';
 import { type CliOptions, helpText, parseArgs } from './args';
+import { failureMessage, planJev, providerFromFlags, runJev } from './ask';
 import { type Files, findFiles } from './files';
 import {
 	type FileReport,
@@ -25,7 +26,6 @@ import {
 	plural,
 	type Totals,
 } from './format';
-import { failureMessage, planJev, providerFromFlags, runJev } from './jev';
 import type { Line } from './lines';
 import { serve } from './mcp';
 
@@ -86,7 +86,7 @@ export type Overrides = Readonly<{
 
 /**
  * The settings that apply to one file: the file named with `--config`, or
- * else the `jevlint-le.json` nearest to it, looking no higher than the
+ * else the `decisionlint-le.json` nearest to it, looking no higher than the
  * directory the run started in. A sentence in place of settings says why a
  * settings file could not be used.
  */
@@ -228,7 +228,8 @@ async function gather(options: CliOptions, io: Io): Promise<Gathered> {
 		);
 	if (options.paths.length)
 		return '--stdin-filename cannot be combined with paths.';
-	if (!syntaxForPath(name)) return `Not a file type jevlint-le reads: ${name}`;
+	if (!syntaxForPath(name))
+		return `Not a file type decisionlint-le reads: ${name}`;
 	const text = await io.stdin();
 	// The limit a file is held to, so piped text cannot be the way around it.
 	if (Buffer.byteLength(text, 'utf8') > MAX_FILE_SIZE_BYTES)
@@ -364,7 +365,7 @@ export async function run(
 	io: Io,
 ): Promise<number> {
 	const unusable = (message: string) => {
-		io.err(`jevlint-le: ${message}\n`);
+		io.err(`decisionlint-le: ${message}\n`);
 		return EXIT.unusable;
 	};
 	const parsed = parseArgs(argv);
@@ -494,7 +495,7 @@ async function runWithJev(
 	optionsFor: (file: string) => LintOptions | string,
 	fixed: Pick<Totals, 'fixed'>,
 ): Promise<number> {
-	const say = (message: string) => io.err(`jevlint-le: ${message}\n`);
+	const say = (message: string) => io.err(`decisionlint-le: ${message}\n`);
 	// Already resolved once by `refuseJev`, which stops the run on a refusal.
 	const provider = providerFromFlags(options, io.env);
 	if (typeof provider === 'string') {

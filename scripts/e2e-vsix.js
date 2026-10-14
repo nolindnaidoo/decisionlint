@@ -70,7 +70,7 @@ const path = require('path');
 const codes = (uri) =>
 	vscode.languages
 		.getDiagnostics(uri)
-		.filter((d) => d.source === 'jevlint-le')
+		.filter((d) => d.source === 'decisionlint-le')
 		.sort((a, b) => a.range.start.compareTo(b.range.start))
 		.map((d) => String(d.code.value));
 
@@ -124,7 +124,7 @@ exports.run = async function run() {
 	const bare = vscode.Uri.joinPath(folder, 'missing-state.jev.json');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(bare));
 	await until(
-		() => vscode.languages.getDiagnostics(bare).some((d) => d.source !== 'jevlint-le' && /state/.test(d.message)),
+		() => vscode.languages.getDiagnostics(bare).some((d) => d.source !== 'decisionlint-le' && /state/.test(d.message)),
 		() => 'the request schema did not flag the missing state; got ' +
 			JSON.stringify(vscode.languages.getDiagnostics(bare).map((d) => d.message)),
 	);
@@ -139,7 +139,7 @@ exports.run = async function run() {
 	assert.ok(fs.existsSync(server), 'dist/cli.js is missing from the installed VSIX. Check .vscodeignore');
 	assert.deepStrictEqual(
 		(contributes.mcpServerDefinitionProviders || []).map((p) => p.id),
-		['jevlint-le'],
+		['decisionlint-le'],
 	);
 	const asked = [
 		{ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } },

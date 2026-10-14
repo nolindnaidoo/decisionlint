@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Fetch } from '../jev/client';
+import type { Fetch } from '../ask/client';
 import { EXIT, type Io, run } from './run';
 
 // No real text is known to make a reader throw, so one is made to here. The
@@ -63,7 +63,7 @@ describe('a file the reader fails on', () => {
 		const result = await cli(['.'], { 'b.json': 'POISON' });
 		expect(result.status).toBe(EXIT.unusable);
 		expect(result.err).toBe(
-			'jevlint-le: No files could be linted. Not readable: b.json.\n',
+			'decisionlint-le: No files could be linted. Not readable: b.json.\n',
 		);
 		expect(result.out).toBe('');
 	});

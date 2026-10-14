@@ -8,7 +8,9 @@ import type { LintOptions, RuleCode, Severity } from '../types';
  * the command line apply the same rules. Without it a rule switched off in
  * one would still fail in the other.
  */
-export const CONFIG_FILE = 'jevlint-le.json';
+export const CONFIG_FILE = 'decisionlint-le.json';
+/** The file's name before the rename. Read where the new name is absent, for ever: a repository's file is not this tool's to update. */
+export const OLD_CONFIG_FILE = 'jevlint-le.json';
 export const CONFIG_KEYS: ReadonlyArray<string> = [
 	'rules',
 	'fallbackOptions',
@@ -88,7 +90,7 @@ export function parseConfig(text: string | undefined): LintOptions | string {
 
 /**
  * The lint settings in `config`, checked as the file is checked, or the
- * reason they cannot be used. The editor's own `jevlint-le.*` settings are
+ * reason they cannot be used. The editor's own `decisionlint-le.*` settings are
  * read through here too, so a typo'd rule code is refused in both places and
  * never dropped quietly, leaving the rule on.
  */
@@ -209,12 +211,12 @@ export function under(dir: string, ...names: ReadonlyArray<string>): string {
 // The settings file in a directory, written with the separator the directory
 // already uses. `path.join` would rewrite every separator to the platform's,
 // and a path handed in with forward slashes on Windows would come back changed.
-function beside(dir: string): string {
-	if (dir === '.') return CONFIG_FILE;
+function beside(dir: string, name: string): string {
+	if (dir === '.') return name;
 	const separator = dir.includes('\\') && !dir.includes('/') ? '\\' : '/';
 	return dir.endsWith(separator)
-		? `${dir}${CONFIG_FILE}`
-		: `${dir}${separator}${CONFIG_FILE}`;
+		? `${dir}${name}`
+		: `${dir}${separator}${name}`;
 }
 
 // A settings file can vanish or lose its permissions between being found and
@@ -244,8 +246,12 @@ export function createConfigLoader(fs: ConfigFs): ConfigLoader {
 	): ProjectConfig | undefined => {
 		let dir = parent(file);
 		while (true) {
-			const candidate = beside(dir);
-			if (fs.isFile(candidate)) return load(candidate);
+			// The new name first. The old one still counts, so a project renamed
+			// nothing and lost nothing.
+			const candidate = [CONFIG_FILE, OLD_CONFIG_FILE]
+				.map((name) => beside(dir, name))
+				.find((path) => fs.isFile(path));
+			if (candidate) return load(candidate);
 			const above = parent(dir);
 			// The top of the search: the boundary given, or where the path runs out.
 			if (dir === stop || above === dir) return undefined;

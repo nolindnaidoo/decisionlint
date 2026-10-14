@@ -1,5 +1,5 @@
 {
-  "name": "jevlint-le-samples",
+  "name": "decisionlint-le-samples",
   "private": true,
   "type": "module",
   "dependencies": {

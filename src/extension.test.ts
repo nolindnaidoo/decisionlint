@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { _reset, _secrets, _state } from './__mocks__/vscode';
 import { run as runCli } from './cli/run';
 import { COMMANDS } from './commands';
-import { JEV_COMMANDS } from './commands/jev';
+import { JEV_COMMANDS } from './commands/ask';
 import { PROBE_COMMAND } from './commands/probe';
 import { CONFIG_DEFAULTS, getConfiguration } from './config/config';
 import { activate } from './extension';
@@ -82,11 +82,11 @@ describe('configuration', () => {
 	it('declares the same defaults as package.json', () => {
 		const declared = manifest.contributes.configuration.properties;
 		for (const [key, value] of Object.entries(CONFIG_DEFAULTS)) {
-			expect(declared[`jevlint-le.${key}`]?.default, key).toEqual(value);
+			expect(declared[`decisionlint-le.${key}`]?.default, key).toEqual(value);
 		}
 		expect(Object.keys(declared).sort()).toEqual(
 			Object.keys(CONFIG_DEFAULTS)
-				.map((key) => `jevlint-le.${key}`)
+				.map((key) => `decisionlint-le.${key}`)
 				.sort(),
 		);
 	});
@@ -108,25 +108,25 @@ describe('configuration', () => {
 	it("reads the lint settings with the settings file's reader, and refuses what it refuses", () => {
 		_state.config = { rules: { JEV004: 'off', JEV999: 'off' } };
 		expect(getConfiguration().lint).toBe(
-			"jevlint-le settings: rules: 'JEV999' is not a rule code or a rule name.",
+			"decisionlint-le settings: rules: 'JEV999' is not a rule code or a rule name.",
 		);
 		_state.config = { rules: { JEV001: 'loud' } };
 		expect(getConfiguration().lint).toBe(
-			"jevlint-le settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
+			"decisionlint-le settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
 		);
 		_state.config = { ignore: 'JEV004:team' };
 		expect(getConfiguration().lint).toBe(
-			"jevlint-le settings: 'ignore' must be a list of strings.",
+			"decisionlint-le settings: 'ignore' must be a list of strings.",
 		);
 		// A lint setting of the wrong shape is refused, not defaulted: a default
 		// would show findings the author believes are off.
 		_state.config = { rules: 'nope' };
 		expect(getConfiguration().lint).toBe(
-			"jevlint-le settings: 'rules' must be an object of rule code to level.",
+			"decisionlint-le settings: 'rules' must be an object of rule code to level.",
 		);
 		_state.config = { fallbackOptions: 3 };
 		expect(getConfiguration().lint).toBe(
-			"jevlint-le settings: 'fallbackOptions' must be a list of strings.",
+			"decisionlint-le settings: 'fallbackOptions' must be a list of strings.",
 		);
 		// A rule by its name and a level by its alias, as the file takes them.
 		_state.config = { rules: { 'no-fallback-option': 'warn' } };
@@ -172,7 +172,7 @@ describe('diagnostics', () => {
 		start(doc(BARE_CHOICE));
 		expect(diagnostics()).toHaveLength(1);
 		expect(diagnostics()[0]).toMatchObject({
-			source: 'jevlint-le',
+			source: 'decisionlint-le',
 			severity: vscode.DiagnosticSeverity.Information,
 		});
 		expect(diagnostics()[0]?.code).toMatchObject({ value: 'JEV004' });
@@ -227,7 +227,7 @@ describe('diagnostics', () => {
 		start(doc(BARE_CHOICE));
 		_state.config = { rules: { JEV004: 'off' } };
 		_state.listeners.config?.({
-			affectsConfiguration: (section: string) => section === 'jevlint-le',
+			affectsConfiguration: (section: string) => section === 'decisionlint-le',
 		});
 		expect(diagnostics()).toHaveLength(0);
 	});
@@ -240,11 +240,11 @@ describe('diagnostics', () => {
 		expect(_state.statusBar).toMatchObject({
 			text: '$(warning) Jev not linted',
 			tooltip:
-				"jevlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
+				"decisionlint-le settings: rules: 'JEV04' is not a rule code or a rule name.",
 		});
 		_state.config = {};
 		_state.listeners.config?.({
-			affectsConfiguration: (section: string) => section === 'jevlint-le',
+			affectsConfiguration: (section: string) => section === 'decisionlint-le',
 		});
 		expect(diagnostics()).toHaveLength(1);
 	});
@@ -333,7 +333,7 @@ describe('quick fix', () => {
 		start(document);
 		const out = applied(document, 'Disable JEV004 for this line');
 		expect(out).toContain(
-			'\n\t\t// jevlint-le-disable-next-line JEV004\n\t\tteam: {',
+			'\n\t\t// decisionlint-le-disable-next-line JEV004\n\t\tteam: {',
 		);
 		expect(lintText(out).findings).toEqual([]);
 	});
@@ -344,7 +344,7 @@ describe('quick fix', () => {
 		const out = applied(document, 'Disable JEV004 for this file');
 		expect(out.split('\n').slice(0, 2)).toEqual([
 			'#!/usr/bin/env node',
-			'// jevlint-le-disable JEV004',
+			'// decisionlint-le-disable JEV004',
 		]);
 		expect(lintText(out).findings).toEqual([]);
 	});
@@ -357,7 +357,7 @@ describe('quick fix', () => {
 		);
 		start(python);
 		expect(applied(python, 'Disable JEV004 for this line')).toMatch(
-			/^# jevlint-le-disable-next-line JEV004\n/,
+			/^# decisionlint-le-disable-next-line JEV004\n/,
 		);
 	});
 
@@ -402,7 +402,7 @@ describe('commands', () => {
 		start(doc(BARE_CHOICE));
 		await run(COMMANDS.lintFile);
 		expect(_state.messages).toEqual([
-			'JevLint-LE: 1 finding in 1 Jev question.',
+			'DecisionLint-LE: 1 finding in 1 Jev question.',
 		]);
 	});
 
@@ -413,7 +413,7 @@ describe('commands', () => {
 			document: doc(BARE_CHOICE, 'file:///a.rb', 'ruby'),
 		};
 		await run(COMMANDS.lintFile);
-		expect(_state.messages[0]).toBe('JevLint-LE: No file is open.');
+		expect(_state.messages[0]).toBe('DecisionLint-LE: No file is open.');
 		expect(_state.messages[1]).toContain('none of those');
 	});
 
@@ -435,7 +435,7 @@ describe('commands', () => {
 		];
 		await run(COMMANDS.lintWorkspace);
 		expect(_state.messages).toEqual([
-			'JevLint-LE: 2 findings in 2 Jev questions across 2 files, 1 questions not fully read, 1 files skipped as too large, 1 files could not be opened.',
+			'DecisionLint-LE: 2 findings in 2 Jev questions across 2 files, 1 questions not fully read, 1 files skipped as too large, 1 files could not be opened.',
 		]);
 		expect(diagnostics('file:///good.ts')).toHaveLength(1);
 	});
@@ -495,7 +495,7 @@ describe('commands', () => {
 		const first = run(COMMANDS.lintWorkspace);
 		await run(COMMANDS.lintWorkspace);
 		expect(_state.messages).toEqual([
-			'JevLint-LE: A workspace run is already going.',
+			'DecisionLint-LE: A workspace run is already going.',
 		]);
 		await first;
 		// The first run's findings were not wiped by the second.
@@ -561,13 +561,13 @@ describe('commands', () => {
 		start();
 		await run(COMMANDS.openSettings);
 		expect(_state.executed).toEqual([
-			['workbench.action.openSettings', '@ext:nolindnaidoo.jevlint-le'],
+			['workbench.action.openSettings', '@ext:nolindnaidoo.decisionlint-le'],
 		]);
 	});
 });
 
 describe('check with Jev', () => {
-	const FROM_JEV = 'file:///a.ts#jevlint-le-jev';
+	const FROM_JEV = 'file:///a.ts#decisionlint-le-jev';
 	const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 	const jevSays = (answers: Record<string, { noul: number }>, status = 200) =>
 		vi.fn(async (_url: string, init: Init) => ({
@@ -619,7 +619,7 @@ describe('check with Jev', () => {
 		const fetch = jevSays({ JEV301: { noul: 0.02 }, JEV302: { noul: 0.91 } });
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		const found = diagnostics(FROM_JEV).filter(
@@ -628,7 +628,7 @@ describe('check with Jev', () => {
 		expect(found).toHaveLength(1);
 		expect(found[0]?.message).toContain('Jev put this at 0.91');
 		expect(_state.messages.at(-1)).toBe(
-			'JevLint-LE: Jev answered 1 request and flagged 1, 310 input tokens on jev-1.13.0.',
+			'DecisionLint-LE: Jev answered 1 request and flagged 1, 310 input tokens on jev-1.13.0.',
 		);
 	});
 
@@ -647,14 +647,14 @@ describe('check with Jev', () => {
 		_state.config = { 'jev.model': 'gpt-6-luna' };
 		start(doc(VAGUE));
 		// A TypeSafe key is not an OpenAI key.
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(luna).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('No OpenAI API key');
 
 		_state.input = 'sk-test';
 		await run(JEV_COMMANDS.setOpenAIApiKey);
-		expect(_state.secrets.get('jevlint-le.openaiApiKey')).toBe('sk-test');
+		expect(_state.secrets.get('decisionlint-le.openaiApiKey')).toBe('sk-test');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(luna).toHaveBeenCalledTimes(1);
 		const [url, init] = luna.mock.calls[0] as unknown as [
@@ -668,7 +668,7 @@ describe('check with Jev', () => {
 			'(Luna put this at 0.91.) The cutoff was set on jev-1.13.0, not on Luna.',
 		);
 		expect(_state.messages.at(-1)).toBe(
-			'JevLint-LE: Luna answered 1 request and flagged 1, 200 input tokens on gpt-6-luna.',
+			'DecisionLint-LE: Luna answered 1 request and flagged 1, 200 input tokens on gpt-6-luna.',
 		);
 		await run(JEV_COMMANDS.clearApiKey);
 		expect(_state.secrets.size).toBe(0);
@@ -679,7 +679,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', luna);
 		_state.config = { 'jev.model': 'gpt-6-luna' };
 		start(doc(VAGUE));
-		await run('jevlint-le.probeQuestion');
+		await run('decisionlint-le.probeQuestion');
 		expect(luna).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('The probe asks Jev only.');
 	});
@@ -696,7 +696,7 @@ describe('check with Jev', () => {
 			}),
 		);
 		start(doc(overlapping));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		const found = diagnostics(FROM_JEV)[0];
 		expect(found?.message).toContain("Jev points at 'pet' and 'dog'.");
@@ -708,7 +708,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		_state.config = { 'jev.confirm': true };
 		start(doc(VAGUE));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		_state.answer = undefined;
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).not.toHaveBeenCalled();
@@ -728,7 +728,7 @@ describe('check with Jev', () => {
 				'json',
 			),
 		);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(_state.modals[0]).toContain('Your state is sent too.');
 	});
@@ -741,7 +741,7 @@ describe('check with Jev', () => {
 				`const r = { questions: { a: { type: 'noul', instructions: 'Is the order large?' }, b: { type: 'noul', instructions: build() } } };`,
 			),
 		);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(_state.modals[0]?.split('\n')[2]).toBe(
 			'Skipped: 1 built at runtime.',
@@ -753,7 +753,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		_state.config = { 'jev.confirm': true, 'jev.model': 'jev-1.13.0' };
 		start(doc(VAGUE));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		// The user switches the model while the confirmation is on screen. The
 		// run was planned, priced and keyed for Jev, so that is what it asks.
 		_state.onModal = () => {
@@ -775,7 +775,7 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		_state.answer = undefined;
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(_state.modals).toEqual([]);
@@ -786,7 +786,7 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		_state.config = { 'jev.apiKey': '  typed-key  ' };
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'stored-key');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'stored-key');
 		start(doc(VAGUE));
 		await run(JEV_COMMANDS.checkWithJev);
 		const init = (
@@ -802,7 +802,9 @@ describe('check with Jev', () => {
 
 	it('lets the key be set only in user settings, and keeps it out of sync', () => {
 		const setting =
-			manifest.contributes.configuration.properties['jevlint-le.jev.apiKey'];
+			manifest.contributes.configuration.properties[
+				'decisionlint-le.jev.apiKey'
+			];
 		// A workspace setting lives in the repository, where a key would be committed.
 		expect(setting.scope).toBe('application');
 		expect(setting.ignoreSync).toBe(true);
@@ -810,20 +812,22 @@ describe('check with Jev', () => {
 
 	it('lets the endpoint be set only in user settings, so a repository cannot point the key at a host', () => {
 		const { properties } = manifest.contributes.configuration;
-		expect(properties['jevlint-le.jev.endpoint'].scope).toBe('application');
-		expect(properties['jevlint-le.jev.shape'].scope).toBe('application');
+		expect(properties['decisionlint-le.jev.endpoint'].scope).toBe(
+			'application',
+		);
+		expect(properties['decisionlint-le.jev.shape'].scope).toBe('application');
 	});
 
 	it('refuses a gateway spelling that names no host, and says which setting names one', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		_state.config = { 'jev.model': 'openai/gpt-6-luna-decisions' };
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		start(doc(VAGUE));
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toBe(
-			"JevLint-LE: 'openai/gpt-6-luna-decisions' names no platform this tool knows the host of. Set the endpoint it is sent to. Set jevlint-le.jev.endpoint, and jevlint-le.jev.shape where its path does not say.",
+			"DecisionLint-LE: 'openai/gpt-6-luna-decisions' names no platform this tool knows the host of. Set the endpoint it is sent to. Set decisionlint-le.jev.endpoint, and decisionlint-le.jev.shape where its path does not say.",
 		);
 	});
 
@@ -872,7 +876,7 @@ describe('check with Jev', () => {
 				`const r = { questions: { a: { type: 'noul', instructions: build() } } };`,
 			),
 		);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain('1 built at runtime and not sent');
@@ -884,7 +888,7 @@ describe('check with Jev', () => {
 		_state.config = { 'jev.maxCalls': 2 };
 		const many = `const r = { questions: { a: { type: 'noul', instructions: 'Is there one?' }, b: { type: 'noul', instructions: 'Are there two?' }, c: { type: 'noul', instructions: 'Are there three?' } } };`;
 		start(doc(many));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).toHaveBeenCalledTimes(2);
 		// The third question, and the one request about the three as a set.
@@ -898,7 +902,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		const two = `const r = { questions: { a: { type: 'noul', instructions: 'Is there one?' }, b: { type: 'noul', instructions: 'Are there two?' } } };`;
 		start(doc(two));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'wrong');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'wrong');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		expect(_state.messages.at(-1)).toContain('rejected the API key');
@@ -919,7 +923,7 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO, 'file:///a.ts', 'json'));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(JSON.stringify(bodies(fetch))).not.toContain('Wheel wobbles');
 		expect(bodies(fetch)[0].state.other_questions).toEqual(['b']);
@@ -929,7 +933,7 @@ describe('check with Jev', () => {
 		const fromEditor = jevSays({});
 		vi.stubGlobal('fetch', fromEditor);
 		start(doc(TWO, 'file:///a.json', 'json'));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 
 		const fromCli = jevSays({});
@@ -961,7 +965,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		_state.config = { 'jev.sendState': true };
 		start(doc(TWO, 'file:///a.ts', 'json'));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(bodies(fetch)[0].state.state).toEqual({ note: 'Wheel wobbles.' });
 		expect(jevCode('JEV312')?.range.start.character).toBe(
@@ -972,7 +976,7 @@ describe('check with Jev', () => {
 	it('reports two questions that ask the same thing, on the second', async () => {
 		vi.stubGlobal('fetch', jevSays({ 'JEV310.0.1': { noul: 0.8 } }));
 		start(doc(TWO, 'file:///a.ts', 'json'));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(jevCode('JEV310')?.message).toContain("this question and 'a'");
 		expect(jevCode('JEV310')?.range.start.character).toBe(TWO.indexOf('"b"'));
@@ -1005,7 +1009,7 @@ describe('check with Jev', () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		_state.trusted = false;
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).not.toHaveBeenCalled();
@@ -1018,7 +1022,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', jevSays({ JEV302: { noul: 0.91 } }));
 		const document = doc(VAGUE);
 		start(document);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(diagnostics(FROM_JEV)).toHaveLength(1);
 		_state.listeners.change?.({ document });
@@ -1077,7 +1081,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(PROBE_COMMAND);
 		expect(fetch).toHaveBeenCalledTimes(5);
 		// Running the command is the decision to send, so nothing is asked by default.
@@ -1094,12 +1098,12 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(PROBE_COMMAND);
 		const preview = _state.executed.find(
 			([name]) => name === 'markdown.showPreview',
 		);
-		expect(String(preview?.[1])).toBe('jevlint-le-probe:Probe of what.md');
+		expect(String(preview?.[1])).toBe('decisionlint-le-probe:Probe of what.md');
 	});
 
 	it('sends the real state, which is what a probe is for', async () => {
@@ -1108,7 +1112,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(PROBE_COMMAND);
 		const body = JSON.parse(
 			(fetch.mock.calls[0] as unknown as [string, { body: string }])[1].body,
@@ -1142,7 +1146,7 @@ describe('probe a question', () => {
 		const document = doc(text);
 		start(document);
 		cursorIn(document, at);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(PROBE_COMMAND);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain(reason);
@@ -1155,7 +1159,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		_state.onModal = () => {
 			_state.config = { 'jev.confirm': true, 'jev.model': 'gpt-6-luna' };
 		};
@@ -1194,7 +1198,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		const first = run(PROBE_COMMAND);
 		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 		await run(PROBE_COMMAND);
@@ -1227,7 +1231,7 @@ describe('probe a question', () => {
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
 		cursorIn(document, 'What went wrong');
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		_state.answer = undefined;
 		await run(PROBE_COMMAND);
 		expect(fetch).not.toHaveBeenCalled();
@@ -1251,14 +1255,14 @@ describe('a command whose body throws', () => {
 			document,
 			selection: { active: new vscode.Position(0, 0) },
 		};
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		// After activation, so the first lint of the open file is not what throws.
 		(document as { getText: () => string }).getText = () => {
 			throw new Error('the document is gone');
 		};
 		await run(command);
 		expect(_state.messages.at(-1)).toBe(
-			`JevLint-LE: ${what} could not finish: the document is gone`,
+			`DecisionLint-LE: ${what} could not finish: the document is gone`,
 		);
 	});
 });
@@ -1283,7 +1287,7 @@ describe('how much it says', () => {
 		vi.stubGlobal('fetch', reply(cancel));
 		_state.config = { notificationsLevel: level };
 		start(doc(VAGUE));
-		if (key) _state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		if (key) _state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		return _state.messages;
 	};
@@ -1332,7 +1336,7 @@ describe('how much it says', () => {
 	it('sends every notification through the notifier, so the setting governs them all', () => {
 		const direct = [
 			'commands/index.ts',
-			'commands/jev.ts',
+			'commands/ask.ts',
 			'commands/probe.ts',
 			'extension.ts',
 			'services/linter.ts',
@@ -1350,7 +1354,7 @@ describe('how much it says', () => {
 		_state.suite = {};
 		vi.stubGlobal('fetch', reply());
 		start(doc(VAGUE));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(_state.messages).toEqual([]);
 		_state.config = { notificationsLevel: 'quiet' };
@@ -1402,7 +1406,7 @@ describe('when the editor fails', () => {
 				active: new vscode.Position(0, REQUEST.indexOf('What went wrong')),
 			},
 		};
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 	};
 
 	afterEach(() => vi.unstubAllGlobals());
@@ -1415,11 +1419,11 @@ describe('when the editor fails', () => {
 			),
 		);
 		start(doc(TWO));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
-		expect(diagnostics('file:///a.ts#jevlint-le-jev')).not.toEqual([]);
+		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).not.toEqual([]);
 		_state.listeners.config?.({ affectsConfiguration: () => true });
-		expect(diagnostics('file:///a.ts#jevlint-le-jev')).toEqual([]);
+		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).toEqual([]);
 	});
 
 	it('shows nothing from Jev about text that was edited during the run', async () => {
@@ -1432,9 +1436,9 @@ describe('when the editor fails', () => {
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(document);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
-		expect(diagnostics('file:///a.ts#jevlint-le-jev')).toEqual([]);
+		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).toEqual([]);
 		// The edit also stops the run, so nothing more is paid for.
 		expect(fetch).toHaveBeenCalledTimes(1);
 		expect(_state.messages.at(-1)).toContain(
@@ -1452,9 +1456,9 @@ describe('when the editor fails', () => {
 			}),
 		);
 		start(document);
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
-		expect(diagnostics('file:///a.ts#jevlint-le-jev')).toEqual([]);
+		expect(diagnostics('file:///a.ts#decisionlint-le-jev')).toEqual([]);
 	});
 
 	it('does not start a second Jev check of a file while one is running', async () => {
@@ -1467,7 +1471,7 @@ describe('when the editor fails', () => {
 		);
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		const first = run(JEV_COMMANDS.checkWithJev);
 		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 		await run(JEV_COMMANDS.checkWithJev);
@@ -1492,7 +1496,7 @@ describe('when the editor fails', () => {
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		expect(_state.messages.at(-1)).toContain('Cancelled after 1 of 3 requests');
@@ -1508,7 +1512,7 @@ describe('when the editor fails', () => {
 		);
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(_state.messages.at(-1)).toContain('Cancelled');
 		expect(_state.messages.at(-1)).not.toContain('Could not reach');
@@ -1644,7 +1648,7 @@ describe('a project settings file in the editor', () => {
 
 	it('replaces editor settings that cannot be used, so the file still lints', () => {
 		_state.config = { rules: { JEV04: 'off' } };
-		within({ '/work/app/jevlint-le.json': '{}' }, file());
+		within({ '/work/app/decisionlint-le.json': '{}' }, file());
 		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
 		expect(_state.statusBar.text).not.toContain('not linted');
 	});
@@ -1652,14 +1656,14 @@ describe('a project settings file in the editor', () => {
 	it('replaces the editor settings, so the editor reports what the command line would', () => {
 		_state.config = { rules: { JEV004: 'error' } };
 		within(
-			{ '/work/app/jevlint-le.json': '{ "rules": { "JEV004": "off" } }' },
+			{ '/work/app/decisionlint-le.json': '{ "rules": { "JEV004": "off" } }' },
 			file(),
 		);
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
 	});
 
 	describe('a copy of the tool installed in the project', () => {
-		const LIBRARY = '/work/app/node_modules/jevlint-le/lib.js';
+		const LIBRARY = '/work/app/node_modules/decisionlint-le/lib.js';
 		// A project copy one minor above this extension, whatever this one is, so
 		// the version bump of a release cannot make the copy stop being the newer.
 		const NEWER = manifest.version.replace(
@@ -1668,7 +1672,7 @@ describe('a project settings file in the editor', () => {
 				`${major}.${Number(minor) + 1}.`,
 		);
 		const installed = (version: string, main = true) => ({
-			'/work/app/node_modules/jevlint-le/package.json': JSON.stringify(
+			'/work/app/node_modules/decisionlint-le/package.json': JSON.stringify(
 				main ? { version, main: 'lib.js' } : { version },
 			),
 		});
@@ -1721,7 +1725,7 @@ describe('a project settings file in the editor', () => {
 				`$(checklist) Jev 1 · project ${NEWER}`,
 			);
 			expect(_state.statusBar.tooltip).toContain(
-				`Linting with this project's own jevlint-le ${NEWER}`,
+				`Linting with this project's own decisionlint-le ${NEWER}`,
 			);
 		});
 
@@ -1847,7 +1851,10 @@ describe('a project settings file in the editor', () => {
 		});
 
 		it('names a copy whose manifest cannot be read, and lints with its own', () => {
-			within({ '/work/app/node_modules/jevlint-le/package.json': '{' }, file());
+			within(
+				{ '/work/app/node_modules/decisionlint-le/package.json': '{' },
+				file(),
+			);
 			expect(messages().join(' ')).toContain(BUNDLED);
 			// A copy that is there and cannot be named is not "none installed", so it is said.
 			expect(_state.statusBar.text).toBe(
@@ -1881,7 +1888,7 @@ describe('a project settings file in the editor', () => {
 
 	it('does not lint a file the settings file leaves out, as the command line does not', () => {
 		within(
-			{ '/work/app/jevlint-le.json': '{ "exclude": ["src/q.ts"] }' },
+			{ '/work/app/decisionlint-le.json': '{ "exclude": ["src/q.ts"] }' },
 			file(),
 		);
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
@@ -1898,7 +1905,7 @@ describe('a project settings file in the editor', () => {
 	it('reports the same findings as the command line for the same file and settings', async () => {
 		const settings =
 			'{ "rules": { "JEV004": "warning" }, "fallbackOptions": ["technical"] }';
-		within({ '/work/app/jevlint-le.json': settings }, file());
+		within({ '/work/app/decisionlint-le.json': settings }, file());
 		const editor = diagnostics('file:///work/app/src/q.ts').map(
 			(d) => `${(d.code as { value: string }).value} ${d.severity}`,
 		);
@@ -1906,15 +1913,17 @@ describe('a project settings file in the editor', () => {
 		await runCli(['--format', 'json', 'src/q.ts'], {
 			files: {
 				stat: (path) =>
-					({ 'src/q.ts': NO_FALLBACK, 'jevlint-le.json': settings })[path] ===
-					undefined
+					({ 'src/q.ts': NO_FALLBACK, 'decisionlint-le.json': settings })[
+						path
+					] === undefined
 						? undefined
 						: { kind: 'file', size: 1 },
 				list: () => [],
 				write: () => {},
 				read: (path) =>
-					({ 'src/q.ts': NO_FALLBACK, 'jevlint-le.json': settings })[path] ??
-					'',
+					({ 'src/q.ts': NO_FALLBACK, 'decisionlint-le.json': settings })[
+						path
+					] ?? '',
 			},
 			stdin: async () => '',
 			lines: async function* () {},
@@ -1945,7 +1954,7 @@ describe('a project settings file in the editor', () => {
 	it('looks no higher than the workspace folder', () => {
 		_state.workspaceFolder = '/work/app';
 		within(
-			{ '/work/jevlint-le.json': '{ "rules": { "JEV004": "off" } }' },
+			{ '/work/decisionlint-le.json': '{ "rules": { "JEV004": "off" } }' },
 			file(),
 		);
 		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
@@ -1953,19 +1962,19 @@ describe('a project settings file in the editor', () => {
 
 	it('is not looked for when the file is not on disk', () => {
 		within(
-			{ '/jevlint-le.json': '{ "rules": { "JEV004": "off" } }' },
+			{ '/decisionlint-le.json': '{ "rules": { "JEV004": "off" } }' },
 			doc(NO_FALLBACK, 'untitled:/q.ts'),
 		);
 		expect(diagnostics('untitled:/q.ts')).toHaveLength(1);
 	});
 
 	it('stops linting and says why when it cannot be used', async () => {
-		within({ '/work/app/jevlint-le.json': '{ "rule": {} }' }, file());
+		within({ '/work/app/decisionlint-le.json': '{ "rule": {} }' }, file());
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
 		expect(_state.statusBar).toMatchObject({
 			text: '$(warning) Jev not linted',
 			tooltip: expect.stringContaining(
-				"jevlint-le.json: 'rule' is not a setting",
+				"decisionlint-le.json: 'rule' is not a setting",
 			),
 			visible: true,
 		});
@@ -1976,8 +1985,8 @@ describe('a project settings file in the editor', () => {
 	it('will not ask Jev about a file whose settings cannot be used', async () => {
 		const fetch = vi.fn();
 		vi.stubGlobal('fetch', fetch);
-		within({ '/work/app/jevlint-le.json': '{ "rule": {} }' }, file());
-		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		within({ '/work/app/decisionlint-le.json': '{ "rule": {} }' }, file());
+		_state.secrets.set('decisionlint-le.typesafeApiKey', 'k');
 		await run(JEV_COMMANDS.checkWithJev);
 		expect(fetch).not.toHaveBeenCalled();
 		expect(_state.messages.at(-1)).toContain("'rule' is not a setting");
@@ -1988,7 +1997,7 @@ describe('a project settings file in the editor', () => {
 		const tree: Record<string, string> = {};
 		within(tree, file());
 		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
-		tree['/work/app/jevlint-le.json'] = '{ "rules": { "JEV004": "off" } }';
+		tree['/work/app/decisionlint-le.json'] = '{ "rules": { "JEV004": "off" } }';
 		for (const changed of _state.watchers) changed();
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
 	});

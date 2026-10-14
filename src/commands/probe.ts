@@ -1,17 +1,16 @@
 import * as vscode from 'vscode';
-import { ask, type Failure, type Fetch, isFailure } from '../jev/client';
-import { type QuestionLiteral, toLiteral, toPlain } from '../jev/literal';
+import { ask, type Failure, type Fetch, isFailure } from '../ask/client';
+import { type QuestionLiteral, toLiteral, toPlain } from '../ask/literal';
 import {
 	buildProbe,
 	type ProbeResult,
 	readProbe,
 	summarize,
-} from '../jev/probe';
-import { type Provider, providerFor } from '../jev/provider';
-import { DEFAULT_MODEL } from '../jev/review';
+} from '../ask/probe';
+import { type Provider, providerFor } from '../ask/provider';
+import { DEFAULT_MODEL } from '../ask/review';
 import { readQuestions, syntaxFor } from '../lint/lint';
 import { blocked, caution } from '../ui/notifier';
-import { guarded } from './guard';
 import {
 	failureMessage,
 	findKey,
@@ -19,7 +18,8 @@ import {
 	refuseUntrusted,
 	reportNoKey,
 	SEND,
-} from './jev';
+} from './ask';
+import { guarded } from './guard';
 
 type Deps = KeySource &
 	Readonly<{
@@ -27,7 +27,7 @@ type Deps = KeySource &
 		wait: (ms: number) => Promise<void>;
 	}>;
 
-export const PROBE_COMMAND = 'jevlint-le.probeQuestion';
+export const PROBE_COMMAND = 'decisionlint-le.probeQuestion';
 
 type Target = Readonly<{
 	id: string;
@@ -118,14 +118,14 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	});
 	if (typeof provider === 'string') {
 		blocked(
-			`${provider} Set jevlint-le.jev.endpoint, and jevlint-le.jev.shape where its path does not say.`,
+			`${provider} Set decisionlint-le.jev.endpoint, and decisionlint-le.jev.shape where its path does not say.`,
 		);
 		return;
 	}
 	// The variants are built and read in System One's shape. Luna's reply for a Choice or a Score is not read yet.
 	if (provider.shape !== 'typesafe') {
 		blocked(
-			`The probe asks Jev only. Set jevlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
+			`The probe asks Jev only. Set decisionlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
 		);
 		return;
 	}
@@ -168,7 +168,7 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	const probed = await vscode.window.withProgress(
 		{
 			location: vscode.ProgressLocation.Notification,
-			title: `JevLint-LE: probing '${target.id}'`,
+			title: `DecisionLint-LE: probing '${target.id}'`,
 			cancellable: true,
 		},
 		(_progress, token) => {
@@ -204,7 +204,7 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		blocked(`${report.verdict} The full report could not be opened.`);
 }
 
-const REPORT_SCHEME = 'jevlint-le-probe';
+const REPORT_SCHEME = 'decisionlint-le-probe';
 const KEPT_REPORTS = 20;
 
 /** The report pages, served from memory, and the event that tells an open one to reload. */

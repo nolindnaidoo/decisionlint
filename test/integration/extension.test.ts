@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
-const EXTENSION_ID = 'nolindnaidoo.jevlint-le';
+const EXTENSION_ID = 'nolindnaidoo.decisionlint-le';
 
 // What each sample is written to trigger, in document order. The samples are
 // the fixture: change one and this table together.
@@ -98,7 +98,7 @@ async function quickFixes(
 function ours(uri: vscode.Uri): vscode.Diagnostic[] {
 	return vscode.languages
 		.getDiagnostics(uri)
-		.filter((diagnostic) => diagnostic.source === 'jevlint-le')
+		.filter((diagnostic) => diagnostic.source === 'decisionlint-le')
 		.sort((a, b) => a.range.start.compareTo(b.range.start));
 }
 
@@ -146,7 +146,7 @@ async function closeAll(): Promise<void> {
 	await vscode.commands.executeCommand('workbench.action.closeAllEditors');
 }
 
-describe('JevLint-LE in a real editor', function () {
+describe('DecisionLint-LE in a real editor', function () {
 	this.timeout(60_000);
 
 	before(async () => {
@@ -170,7 +170,7 @@ describe('JevLint-LE in a real editor', function () {
 	});
 
 	it('lints the whole workspace without opening a file, and skips node_modules', async () => {
-		await vscode.commands.executeCommand('jevlint-le.lintWorkspace');
+		await vscode.commands.executeCommand('decisionlint-le.lintWorkspace');
 		for (const [name, expected] of Object.entries(EXPECTED))
 			await untilCodes(sample(name), expected);
 		const stray = vscode.languages
@@ -178,7 +178,7 @@ describe('JevLint-LE in a real editor', function () {
 			.filter(([uri, list]) =>
 				list.some(
 					(diagnostic) =>
-						diagnostic.source === 'jevlint-le' &&
+						diagnostic.source === 'decisionlint-le' &&
 						uri.path.includes('node_modules'),
 				),
 			);
@@ -311,7 +311,7 @@ describe('JevLint-LE in a real editor', function () {
 	});
 
 	it('honours a rule switched off in settings', async () => {
-		const settings = vscode.workspace.getConfiguration('jevlint-le');
+		const settings = vscode.workspace.getConfiguration('decisionlint-le');
 		await open('triage.ts');
 		await untilCodes(sample('triage.ts'), EXPECTED['triage.ts'] ?? []);
 		await settings.update(
@@ -340,7 +340,7 @@ describe('JevLint-LE in a real editor', function () {
 	});
 
 	it('runs a wording rule that is off by default once it is switched on', async () => {
-		const settings = vscode.workspace.getConfiguration('jevlint-le');
+		const settings = vscode.workspace.getConfiguration('decisionlint-le');
 		const uri = sample('wording.jev.json');
 		await open('wording.jev.json');
 		await untilCodes(uri, EXPECTED['wording.jev.json'] ?? []);
@@ -362,7 +362,7 @@ describe('JevLint-LE in a real editor', function () {
 
 	it("lints with the copy of the tool the project installs, in place of the extension's own", async () => {
 		const folder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
-		const dir = path.join(folder, 'node_modules', 'jevlint-le');
+		const dir = path.join(folder, 'node_modules', 'decisionlint-le');
 		const manifest = path.join(dir, 'package.json');
 		const library = path.join(dir, 'lib.js');
 		// A copy that reports one finding no real version has, so its work cannot
@@ -379,7 +379,7 @@ describe('JevLint-LE in a real editor', function () {
 			fix: (text) => ({ text, fixed: 0 }),
 		};`;
 		fs.mkdirSync(dir, { recursive: true });
-		fs.writeFileSync(manifest, '{ "name": "jevlint-le", "version": "9.9.9", "main": "lib.js" }');
+		fs.writeFileSync(manifest, '{ "name": "decisionlint-le", "version": "9.9.9", "main": "lib.js" }');
 		fs.writeFileSync(library, copy);
 		try {
 			const editor = await open('clean.ts');

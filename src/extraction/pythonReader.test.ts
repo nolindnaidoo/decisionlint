@@ -263,7 +263,7 @@ describe('rules on Python', () => {
 
 	it('honours a suppression written as a Python comment', () => {
 		const text = `${SDK}q = {"questions": {
-    # jevlint-le-disable-next-line JEV004
+    # decisionlint-le-disable-next-line JEV004
     "team": Choice(instructions="Which team takes it?", criteria={"billing": "Charges", "technical": "Faults"}),
 }}`;
 		expect(codes(text)).toEqual([]);

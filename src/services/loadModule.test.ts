@@ -7,7 +7,7 @@ import { loadModule } from './loadModule';
 describe('loading a project copy', () => {
 	it('loads what is on disk now, not what was loaded before', () => {
 		const file = join(
-			mkdtempSync(join(tmpdir(), 'jevlint-le-load-')),
+			mkdtempSync(join(tmpdir(), 'decisionlint-le-load-')),
 			'lib.js',
 		);
 		writeFileSync(file, 'module.exports = { api: 1, version: "one" };');
@@ -19,7 +19,7 @@ describe('loading a project copy', () => {
 
 	it('throws on a file that is not there, for the caller to fall back', () => {
 		expect(() =>
-			loadModule(join(tmpdir(), 'jevlint-le-no-such-lib.js')),
+			loadModule(join(tmpdir(), 'decisionlint-le-no-such-lib.js')),
 		).toThrow();
 	});
 });

@@ -1,15 +1,15 @@
-import { readRules } from '../config/projectConfig';
-import { rulePage } from '../docs/rulePages';
-import { ask, isFailure } from '../jev/client';
-import { toLiteral, toPlain } from '../jev/literal';
+import { ask, isFailure } from '../ask/client';
+import { toLiteral, toPlain } from '../ask/literal';
 import {
 	buildProbe,
 	type ProbeResult,
 	readProbe,
 	summarize,
-} from '../jev/probe';
-import { type Provider, providerFor } from '../jev/provider';
-import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
+} from '../ask/probe';
+import { type Provider, providerFor } from '../ask/provider';
+import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../ask/review';
+import { readRules } from '../config/projectConfig';
+import { rulePage } from '../docs/rulePages';
 import { fixText } from '../lint/fixAll';
 import {
 	MAX_FILE_SIZE_BYTES,
@@ -18,9 +18,9 @@ import {
 } from '../lint/lint';
 import { pageFor, RULE_CODES, RULES } from '../lint/rules';
 import type { RuleCode, Syntax } from '../types';
+import { failureMessage, planJev, ROUTE_ENV, routeFrom, runJev } from './ask';
 import { keyFrom, keyPlaces } from './dotenv';
 import { type FileReport, type JevTotals, plural, toReport } from './format';
-import { failureMessage, planJev, ROUTE_ENV, routeFrom, runJev } from './jev';
 import { MAX_LINE_BYTES } from './lines';
 import {
 	createSettings,
@@ -34,7 +34,7 @@ import {
 	withoutExcluded,
 } from './run';
 
-const NAME = 'jevlint-le';
+const NAME = 'decisionlint-le';
 // Newest first. A client is answered in the version it asked for when it is one of these.
 const PROTOCOLS: ReadonlyArray<string> = [
 	'2025-06-18',
@@ -436,7 +436,7 @@ function named(input: Json): Named | string {
 		return `'text' is over the size limit of ${MAX_FILE_SIZE_BYTES} bytes.`;
 	if (typeof filename !== 'string') return "'filename' must be a string.";
 	const syntax = syntaxForPath(filename);
-	if (!syntax) return `Not a file type jevlint-le reads: ${filename}`;
+	if (!syntax) return `Not a file type decisionlint-le reads: ${filename}`;
 	return { text, filename, syntax };
 }
 
@@ -901,7 +901,7 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 		name: 'check_with_jev',
 		title: 'Check with the model',
 		description:
-			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_jev first when the cost matters. The key is read from the platform's own variable, TYPESAFE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, LLM_GATEWAY_API_KEY or LIQUID_API_KEY, in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Where the requests go is the platform the model id's spelling names, or JEVLINT_LE_JEV_ENDPOINT in that environment for a host the user runs, never an argument either. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
+			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_jev first when the cost matters. The key is read from the platform's own variable, TYPESAFE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, LLM_GATEWAY_API_KEY or LIQUID_API_KEY, in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Where the requests go is the platform the model id's spelling names, or DECISIONLINT_LE_ASK_ENDPOINT in that environment for a host the user runs, never an argument either. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -953,7 +953,7 @@ function initialize(params: Json, version: string): Json {
 	return {
 		protocolVersion: PROTOCOLS.includes(asked) ? asked : PROTOCOLS[0],
 		capabilities: { tools: {} },
-		serverInfo: { name: NAME, title: 'JevLint-LE', version },
+		serverInfo: { name: NAME, title: 'DecisionLint-LE', version },
 		instructions: INSTRUCTIONS,
 	};
 }

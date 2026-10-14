@@ -1,7 +1,7 @@
 {
-  "name": "jevlint-le",
+  "name": "decisionlint-le",
   "version": "0.9.0",
-  "description": "Lint the questions you send to TypeSafe's Jev model and OpenAI's Decisions API (gpt-6-luna): a command line for CI and a library for the editor, with the MCP server behind --mcp. Agent hosts install jevlint-le-mcp instead. No API key and no network calls.",
+  "description": "Lint the questions you send to TypeSafe's Jev model and OpenAI's Decisions API (gpt-6-luna): a command line for CI and a library for the editor, with the MCP server behind --mcp. Agent hosts install decisionlint-le-mcp instead. No API key and no network calls.",
   "keywords": [
     "jev",
     "typesafe",
@@ -20,7 +20,7 @@
     "model-context-protocol",
     "mcp-server",
     "ai-agent",
-    "jevlint-le",
+    "decisionlint-le",
     "nolindnaidoo",
     "letools"
   ],
@@ -29,14 +29,14 @@
     "name": "Nolin Naidoo",
     "url": "https://nolindnaidoo.com"
   },
-  "homepage": "https://letools.dev/tools/jevlint-le",
+  "homepage": "https://letools.dev/tools/decisionlint-le",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nolindnaidoo/jevlint-le.git",
+    "url": "https://github.com/nolindnaidoo/decisionlint-le.git",
     "directory": "npm"
   },
   "bugs": {
-    "url": "https://github.com/nolindnaidoo/jevlint-le/issues"
+    "url": "https://github.com/nolindnaidoo/decisionlint-le/issues"
   },
   "type": "commonjs",
   "main": "lib.js",
@@ -45,7 +45,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "jevlint-le": "cli.js"
+    "decisionlint-le": "cli.js"
   },
   "files": [
     "cli.js",

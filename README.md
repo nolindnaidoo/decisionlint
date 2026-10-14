@@ -307,7 +307,7 @@ Jev, and it never uses the network, unless you pass `--jev`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/jevlint-le@v0.8.0
+- uses: nolindnaidoo/jevlint-le@v0.8.1
   with:
     paths: src
 ```
@@ -329,7 +329,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/jevlint-le
-  rev: v0.8.0
+  rev: v0.8.1
   hooks:
     - id: jevlint-le
 ```

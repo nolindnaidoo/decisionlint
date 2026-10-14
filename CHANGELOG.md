@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.8.1 — 2026-10-14
+
+A pass over every surface, the extension, the command line, the library and
+the MCP server, read in full. Nineteen defects fixed, each with the test that
+would have caught it. Nothing new to configure.
+
+- **A key named `constructor` is no longer renamed to
+  `function Object() { [native code] }`.** Every table the linter looks
+  document text up in, Noul criteria keys, question types, bare identifiers,
+  Python class names, Rust and Go field aliases, is a Map, so a name that
+  `Object.prototype` happens to have reads as any other name. A question typed
+  `valueOf` used to make its file unlintable; it is `JEV007` like any unknown
+  type.
+- **A file named `a.constructor` is refused as a type the tool does not
+  read**, instead of being read, failing inside the linter and passing the
+  run. The same name handed to the library as a syntax throws the sentence
+  naming the four, not a TypeError.
+- **Long instructions lint in one pass.** Three wording patterns were the
+  square of an instruction's length: a 25 KB instruction took eight seconds
+  on every keystroke and a 100 KB one two and a half minutes, with every other
+  server request waiting behind it. Each pattern now reads the text once.
+- **The command line exits 2 when every file failed in the reader**, instead
+  of printing "0 findings in 0 files" and passing. A named pipe, socket or
+  device under a `.json` name is refused by name and never opened; a pipe
+  with nobody writing to it used to hold the process for ever.
+- **A finding on the first line of a file with a byte order mark is on the
+  right column**, on the command line, in `lint_paths` and in the editor's
+  workspace run, and `--fix` keeps the mark.
+- **A `--jev` run against OpenAI that falls short says Luna**, not Jev.
+- **The MCP server keeps to the protocol.** An unknown tool, a call with no
+  name, arguments that are not an object, a required argument left out or one
+  of the wrong type are refused with `-32602` before any tool runs; a tool
+  that ran and could not do what it was asked still answers `isError`. A
+  frame without `jsonrpc: "2.0"` is refused with `-32600`. A method named
+  `constructor` is unknown like any other. A request line is bounded at
+  16 MiB and refused by its length past that, so one frame with no newline
+  cannot grow until the process dies. Text handed to a tool is held to the
+  same one-million-byte limit as a file. The interrupt is listened for once,
+  not once per paid call.
+- **The editor's paid commands read your settings once**, before the first
+  wait. Switching `jev.model` while the confirmation was on screen could send
+  the TypeSafe key to OpenAI, or the other way round. A second probe while
+  one is running is refused instead of paying twice. A command whose body
+  throws says so instead of doing nothing. A project copy whose
+  `package.json` cannot be read is named in the status bar as `project copy
+  unreadable` rather than passed over as none installed. The project-copy
+  lookup remembers at most 512 folders, and the probe report page is disposed
+  with the extension.
+- **The documents are held to the code.** The settings tables, the tool
+  tables and counts, the README's example pins and every test file a document
+  names are read by a test, and nine stale sentences were corrected.
+
 ## 0.8.0 — 2026-10-12
 
 The linter says when it is behind the Jev you are using.

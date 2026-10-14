@@ -17,13 +17,13 @@
 		"url": "https://github.com/nolindnaidoo/jevlint-le",
 		"source": "github"
 	},
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"packages": [
 		{
 			"registryType": "npm",
 			"registryBaseUrl": "https://registry.npmjs.org",
 			"identifier": "jevlint-le-mcp",
-			"version": "0.8.0",
+			"version": "0.8.1",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"

@@ -1,5 +1,5 @@
 import type { Failure } from '../jev/client';
-import type { Provider } from '../jev/provider';
+import { type Provider, providerFor, type Route } from '../jev/provider';
 import {
 	DEFAULT_MAX_CALLS,
 	DEFAULT_MODEL,
@@ -37,16 +37,54 @@ export function failureMessage(
 	kind: Failure['kind'],
 	provider: Provider,
 ): string {
-	const { vendor, model } = provider;
+	const { vendor } = provider;
 	const messages: Readonly<Record<Failure['kind'], string>> = {
 		key: `${vendor} rejected the API key`,
 		rejected: `${vendor} rejected the request`,
 		busy: `${vendor} is busy or the rate limit was reached`,
 		server: `${vendor} had an error of its own`,
 		network: `Could not reach ${vendor}`,
-		garbled: `${vendor} did not answer with a ${model} reply`,
+		garbled: `${vendor} did not answer with a decision reply`,
 	};
 	return messages[kind];
+}
+
+/** The environment variables that stand in for `--jev-endpoint` and `--jev-shape`, for a server started without flags. */
+export const ROUTE_ENV = Object.freeze({
+	endpoint: 'JEVLINT_LE_JEV_ENDPOINT',
+	shape: 'JEVLINT_LE_JEV_SHAPE',
+});
+
+type Env = Readonly<Record<string, string | undefined>>;
+
+/**
+ * Where a run's requests go: the flags, else the environment the process was
+ * started with. Never a project's `.env` file, which `cli/dotenv.ts` reads
+ * only for a key: a cloned repository could otherwise point that key at a
+ * host of its choosing.
+ */
+export function routeFrom(
+	options: Pick<CliOptions, 'jevEndpoint' | 'jevShape'>,
+	env: Env,
+): Route | string {
+	const endpoint = options.jevEndpoint ?? env[ROUTE_ENV.endpoint]?.trim();
+	const shape = options.jevShape ?? env[ROUTE_ENV.shape]?.trim();
+	if (shape && shape !== 'typesafe' && shape !== 'openai')
+		return `${ROUTE_ENV.shape} is '${shape}', which is not a shape. Use typesafe or openai.`;
+	return { endpoint, shape: shape as Route['shape'] };
+}
+
+/** Where the model named by the flags is sent, or why it cannot be, with how to say where on the command line. */
+export function providerFromFlags(
+	options: Pick<CliOptions, 'jevModel' | 'jevEndpoint' | 'jevShape'>,
+	env: Env,
+): Provider | string {
+	const route = routeFrom(options, env);
+	if (typeof route === 'string') return route;
+	const provider = providerFor(options.jevModel ?? DEFAULT_MODEL, route);
+	return typeof provider === 'string'
+		? `${provider} Use --jev-endpoint, and --jev-shape where its path does not say.`
+		: provider;
 }
 
 /**
@@ -58,7 +96,8 @@ export function failureMessage(
 export type JevAsk = Pick<
 	CliOptions,
 	'jevModel' | 'jevMaxCalls' | 'jevSendState'
->;
+> &
+	Readonly<{ provider: Provider }>;
 
 export function planJev(
 	reports: ReadonlyArray<FileReport>,
@@ -76,6 +115,8 @@ export function planJev(
 		estimatedInputTokens: 0,
 		inputTokens: 0,
 		model,
+		vendor: options.provider.vendor,
+		answerer: options.provider.model,
 		state: false,
 	};
 	const shares: Share[] = [];
@@ -85,6 +126,7 @@ export function planJev(
 		const settings: ReviewSettings = {
 			lint,
 			model,
+			provider: options.provider,
 			sendState: options.jevSendState,
 			maxCalls: left,
 		};

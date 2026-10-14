@@ -41,9 +41,11 @@ past `--max-warnings`.
 | `--stdin-filename <path>` | Lint standard input as if it were that file |
 | `--fix` | Write the fixes that only mend what the API would refuse |
 | `--quiet` | Print errors only |
-| `--jev` | Also ask the model about each question. Sends them to TypeSafe with `TYPESAFE_API_KEY`, or with `--jev-model gpt-6-luna` to OpenAI with `OPENAI_API_KEY` |
+| `--jev` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--jev-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--jev-endpoint` says |
 | `--jev-plan` | Say what `--jev` would send, and send nothing |
-| `--jev-model <id>` | The model `--jev` asks: a Jev version, or `gpt-6-luna` for OpenAI's Decisions API. Default `jev-1.13.0` |
+| `--jev-model <id>` | The model `--jev` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
+| `--jev-endpoint <url>` | The full URL `--jev` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `JEVLINT_LE_JEV_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
+| `--jev-shape <shape>` | The shape sent to `--jev-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `JEVLINT_LE_JEV_SHAPE` |
 | `--jev-max-calls <n>` | The most requests `--jev` may send in the run. Default 25 |
 | `--jev-send-state` | With `--jev`, also send state written out in a file |
 | `--color`, `--no-color` | Colour the default format, or do not. Without either it is coloured in a terminal, unless `NO_COLOR` is set |

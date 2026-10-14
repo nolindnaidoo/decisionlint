@@ -5,8 +5,7 @@ import {
 	parseConfig,
 } from '../config/projectConfig';
 import type { Fetch } from '../jev/client';
-import { providerFor } from '../jev/provider';
-import { DEFAULT_MODEL } from '../jev/review';
+import { asSubject } from '../jev/provider';
 import { fixText } from '../lint/fixAll';
 import {
 	BOM,
@@ -26,7 +25,7 @@ import {
 	plural,
 	type Totals,
 } from './format';
-import { failureMessage, planJev, runJev } from './jev';
+import { failureMessage, planJev, providerFromFlags, runJev } from './jev';
 import type { Line } from './lines';
 import { serve } from './mcp';
 
@@ -426,6 +425,8 @@ export async function run(
 
 const JEV_ONLY: ReadonlyArray<readonly [keyof CliOptions, string]> = [
 	['jevModel', '--jev-model'],
+	['jevEndpoint', '--jev-endpoint'],
+	['jevShape', '--jev-shape'],
 	['jevMaxCalls', '--jev-max-calls'],
 	['jevSendState', '--jev-send-state'],
 ];
@@ -437,8 +438,18 @@ function refuseJev(options: CliOptions, io: Io): string | undefined {
 	if (!asks && stray) return `${stray[1]} needs --jev or --jev-plan.`;
 	if (asks && options.mcp)
 		return '--jev cannot be combined with --mcp. The server has check_with_jev for that.';
-	const { envKey } = providerFor(options.jevModel ?? DEFAULT_MODEL);
-	if (options.jev && !options.jevPlan && !io.env[envKey]?.trim())
+	if (!asks) return undefined;
+	// Where the requests go is settled before anything is read, so a model id
+	// that names no host is refused with nothing sent.
+	const provider = providerFromFlags(options, io.env);
+	if (typeof provider === 'string') return provider;
+	const { envKey, keyOptional } = provider;
+	if (
+		options.jev &&
+		!options.jevPlan &&
+		!keyOptional &&
+		!io.env[envKey]?.trim()
+	)
 		return `--jev needs an API key in ${envKey}. Nothing was sent.`;
 	return undefined;
 }
@@ -454,7 +465,7 @@ function refuseFix(options: CliOptions): string | undefined {
 
 const sending = (jev: JevTotals): string =>
 	[
-		`Sending ${plural(jev.planned, 'request')} to ${providerFor(jev.model).vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.`,
+		`Sending ${plural(jev.planned, 'request')} to ${jev.vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.`,
 		jev.state ? 'State is sent.' : 'State is not sent.',
 		...[heldBack(jev) ?? []].flat(),
 	].join(' ');
@@ -484,7 +495,13 @@ async function runWithJev(
 	fixed: Pick<Totals, 'fixed'>,
 ): Promise<number> {
 	const say = (message: string) => io.err(`jevlint-le: ${message}\n`);
-	const plan = planJev(linted, optionsFor, options);
+	// Already resolved once by `refuseJev`, which stops the run on a refusal.
+	const provider = providerFromFlags(options, io.env);
+	if (typeof provider === 'string') {
+		say(provider);
+		return EXIT.unusable;
+	}
+	const plan = planJev(linted, optionsFor, { ...options, provider });
 	if (typeof plan === 'string') {
 		say(plan);
 		return EXIT.unusable;
@@ -495,7 +512,6 @@ async function runWithJev(
 		return fails(totals, options.maxWarnings) ? EXIT.failed : EXIT.passed;
 	}
 	if (plan.totals.planned) say(sending(plan.totals));
-	const provider = providerFor(plan.totals.model);
 	const ran = await runJev(
 		plan,
 		{
@@ -511,7 +527,12 @@ async function runWithJev(
 	const failure =
 		ran.failure &&
 		`${failureMessage(ran.failure.kind, provider)} (${ran.failure.detail})`;
-	const short = shortfall(ran.totals, provider.model, failure, ran.stopped);
+	const short = shortfall(
+		ran.totals,
+		asSubject(provider.model),
+		failure,
+		ran.stopped,
+	);
 	if (short) {
 		say(short);
 		return EXIT.unusable;

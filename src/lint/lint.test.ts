@@ -237,7 +237,7 @@ describe('the target of a request', () => {
 			`"q": { "type": "score", "instructions": "Rate the damage", "criteria": [${Array.from({ length: 11 }, (_, i) => `"Level ${i} of eleven"`).join(', ')}] }`,
 		);
 		expect(finding(text, 'JEV003').message).toBe(
-			"This Score has 11 levels. TypeSafe's API accepts at most 10.",
+			'This Score has 11 levels. TypeSafe accepts at most 10.',
 		);
 	});
 

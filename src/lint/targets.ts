@@ -27,12 +27,20 @@ export type TargetLimits = Readonly<{
 
 export type Target = Readonly<{
 	id: string;
-	/** As a message names it: "LiteLLM accepts at most 128 questions". */
+	/** As a message names it: "LiteLLM accepts at most 128 questions", "Sending 2 requests to TypeSafe". */
 	name: string;
 	kind: TargetKind;
 	shapes: ReadonlyArray<Shape>;
-	/** The hosts it is reached at, for a base URL written in a file. Empty for a runtime the user hosts. */
+	/** The hosts it is reached at, for an endpoint the user names. Empty for a runtime the user hosts. */
 	hosts: ReadonlyArray<string>;
+	/** The full URL a request in each shape is posted to, where the platform publishes one. */
+	endpoints: Readonly<Partial<Record<Shape, string>>>;
+	/** The environment variable the platform's own examples read the key from. */
+	envKey: string | undefined;
+	/** Dollars per million input tokens on the platform's price page, and when that was read. */
+	price:
+		| Readonly<{ perMillionInputTokens: number; readOn: string }>
+		| undefined;
 	limits: TargetLimits;
 	/** The page the row was read from. */
 	docs: string;
@@ -41,10 +49,14 @@ export type Target = Readonly<{
 
 const TYPESAFE: Target = Object.freeze<Target>({
 	id: 'typesafe',
-	name: "TypeSafe's API",
+	name: 'TypeSafe',
 	kind: 'vendor',
 	shapes: ['typesafe'],
 	hosts: ['api.typesafe.ai'],
+	endpoints: { typesafe: 'https://api.typesafe.ai/v1/systemone' },
+	envKey: 'TYPESAFE_API_KEY',
+	// TypeSafe's published price on the day the checks were calibrated.
+	price: { perMillionInputTokens: 0.042, readOn: '2026-10-04' },
 	// The numbers in `limits.ts`, which carry their own page and date.
 	limits: {
 		choiceMaxOptions: LIMITS.choiceMaxOptions,
@@ -56,10 +68,14 @@ const TYPESAFE: Target = Object.freeze<Target>({
 
 const OPENAI: Target = Object.freeze<Target>({
 	id: 'openai',
-	name: "OpenAI's Decisions API",
+	name: 'OpenAI',
 	kind: 'vendor',
 	shapes: ['openai'],
 	hosts: ['api.openai.com'],
+	endpoints: { openai: 'https://api.openai.com/v1/decisions' },
+	envKey: 'OPENAI_API_KEY',
+	// OpenAI's published price for the Decisions API beta.
+	price: { perMillionInputTokens: 0.1, readOn: '2026-10-08' },
 	// The guide states no limit on choices, levels or questions, so none is checked.
 	limits: {},
 	docs: 'https://developers.openai.com/api/docs/guides/decisions',
@@ -72,6 +88,11 @@ const VERCEL: Target = Object.freeze<Target>({
 	kind: 'gateway',
 	shapes: ['typesafe', 'openai'],
 	hosts: ['ai-gateway.vercel.sh'],
+	// Its TypeSafe-compatible base, `/typesafe`, is documented without the
+	// path a request is posted to, so only the OpenAI-shaped endpoint is here.
+	endpoints: { openai: 'https://ai-gateway.vercel.sh/v1/decisions' },
+	envKey: 'AI_GATEWAY_API_KEY',
+	price: undefined,
 	// On its OpenAI-compatible path: "between 1 and 255 `choices`" and
 	// "between 2 and 10 `levels`". Its TypeSafe-compatible path states none.
 	limits: { choiceMaxOptions: 255, scoreMaxLevels: 10 },
@@ -84,7 +105,11 @@ const LITELLM: Target = Object.freeze<Target>({
 	name: 'LiteLLM',
 	kind: 'gateway',
 	shapes: ['typesafe', 'openai'],
+	// A proxy the user runs, at a host of their own.
 	hosts: [],
+	endpoints: {},
+	envKey: undefined,
+	price: undefined,
 	// "more than 128 questions, a single-option question or a body that is
 	// not JSON returns 400", before anything is sent upstream.
 	limits: { maxQuestions: 128 },
@@ -98,6 +123,12 @@ const OPENROUTER: Target = Object.freeze<Target>({
 	kind: 'gateway',
 	shapes: ['typesafe', 'openai'],
 	hosts: ['openrouter.ai'],
+	// Its OpenAI-shaped route is `/api/alpha/decisions`, alpha, so only the
+	// System One one is here. The key variable is the one its curl example
+	// reads: https://openrouter.ai/docs/guides/community/typesafe-sdk.md.
+	endpoints: { typesafe: 'https://openrouter.ai/api/v1/systemone' },
+	envKey: 'OPENROUTER_API_KEY',
+	price: undefined,
 	// The guide states the context length and no limit on options, levels or questions.
 	limits: {},
 	docs: 'https://openrouter.ai/docs/guides/community/jev',
@@ -110,6 +141,10 @@ const LLM_GATEWAY: Target = Object.freeze<Target>({
 	kind: 'gateway',
 	shapes: ['openai', 'typesafe'],
 	hosts: ['api.llmgateway.io'],
+	// Its `/v1/systemone` is marked "deprecated soon", so only the OpenAI-shaped one is here.
+	endpoints: { openai: 'https://api.llmgateway.io/v1/decisions' },
+	envKey: 'LLM_GATEWAY_API_KEY',
+	price: undefined,
 	limits: {},
 	docs: 'https://docs.llmgateway.io/features/decisions',
 	verifiedOn: '2026-10-14',
@@ -122,6 +157,9 @@ const EDEN_AI: Target = Object.freeze<Target>({
 	shapes: ['typesafe'],
 	// Reached at its own path, `/v3/alpha/decisions`, which the page gives without a host.
 	hosts: [],
+	endpoints: {},
+	envKey: undefined,
+	price: undefined,
 	// "Up to 255 options."
 	limits: { choiceMaxOptions: 255 },
 	docs: 'https://www.edenai.co/docs/v3/llms/decisions',
@@ -134,6 +172,9 @@ const LIQUID: Target = Object.freeze<Target>({
 	kind: 'vendor',
 	shapes: ['typesafe'],
 	hosts: ['api.liquid.ai'],
+	endpoints: { typesafe: 'https://api.liquid.ai/decisions/v1/systemone' },
+	envKey: 'LIQUID_API_KEY',
+	price: undefined,
 	// The page limits images and body size, and states no limit on options, levels or questions.
 	limits: {},
 	docs: 'https://docs.liquid.ai/lfm/models/d1',
@@ -145,7 +186,11 @@ const LLAMA_CPP: Target = Object.freeze<Target>({
 	name: 'llama.cpp',
 	kind: 'runtime',
 	shapes: ['typesafe'],
+	// A server the user runs. Its examples send no key.
 	hosts: [],
+	endpoints: {},
+	envKey: undefined,
+	price: undefined,
 	// A Score takes "2 to 10 levels, lowest first".
 	limits: { scoreMaxLevels: 10 },
 	docs: 'https://huggingface.co/blog/ggml-org/decision-models-in-llamacpp',
@@ -176,6 +221,11 @@ const BY_ID: ReadonlyMap<string, Target> = new Map(
 /** The target with this id, or undefined for an id the table does not have. */
 export function targetById(id: string): Target | undefined {
 	return BY_ID.get(id);
+}
+
+/** The platform reached at this host, or undefined for a host the table does not list: one the user runs. */
+export function targetByHost(host: string): Target | undefined {
+	return TARGETS.find((target) => target.hosts.includes(host));
 }
 
 /**

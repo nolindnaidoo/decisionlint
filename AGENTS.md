@@ -385,10 +385,29 @@ family's files, copied unchanged from `regex-le`.
   under `--jev`, and `cli/mcp.ts` under `check_with_jev` and
   `probe_question`. `lintText` and everything under it stay offline.
   `extension.test.ts` fails if linting calls `fetch`, and `cli.test.ts`
-  fails if a run without `--jev` does, or if any other MCP tool does. Two
-  hosts, and only two:
-  `api.typesafe.ai` for a Jev model and `api.openai.com` for `gpt-6-luna`,
-  chosen by `jev/provider.ts` from the model id, each with its own key.
+  fails if a run without `--jev` does, or if any other MCP tool does.
+- **The host is never guessed.** `jev/provider.ts` sends a model id to the
+  platform its spelling names in `lint/targets.ts`, when that platform
+  publishes an endpoint, with the key in that platform's own variable:
+  `jev-1.13.0` to TypeSafe, `gpt-6-luna` to OpenAI, `~typesafe/jev-latest`
+  to OpenRouter, `typesafe-ai/jev` to Vercel, `gpt-6-luna-decisions` to LLM
+  Gateway, `d1` to Liquid AI. A spelling that names no host, such as
+  `openai/gpt-6-luna-decisions`, which every gateway writes, is refused
+  with nothing sent: routed to OpenAI it would spend the key on a request
+  that fails there. The user names any other host with `jev.endpoint` in
+  the editor, `--jev-endpoint` on the command line, or
+  `JEVLINT_LE_JEV_ENDPOINT` for the server, and the shape with `jev.shape`,
+  `--jev-shape` or `JEVLINT_LE_JEV_SHAPE` where the path does not end in
+  `/systemone` or `/decisions`. The endpoint is read from the same places as
+  the key and never from `jevlint-le.json`, a project's `.env` or a tool
+  argument: a repository or an agent could otherwise point the key at a host
+  of its choosing. A host the table does not list is one the user runs: it
+  gets the key of the shape's SDK, `TYPESAFE_API_KEY` or `OPENAI_API_KEY`,
+  or no Authorization header when neither is set, and `provider.test.ts`
+  holds each of these.
+- **A reply is read in the shape that was sent**, and the model that answers
+  is named from the id's family: Jev, Luna, or "the model" for anything else,
+  which `asSubject` capitalises at the start of a sentence.
 - **A question carries its dialect.** `extraction/requests.ts` reads
   TypeSafe's, OpenAI's and the AI SDK's shapes into the same `criteria`, so a
   rule never looks at `choices` or `options`. Only the shape rule and the
@@ -400,11 +419,13 @@ family's files, copied unchanged from `regex-le`.
 - **Only a flag turns `--jev` on.** Never a key in `jevlint-le.json`, or a
   cloned repository could spend the key of whoever lints it. This is the
   command line's workspace trust.
-- **The command line's key is `TYPESAFE_API_KEY` and nothing else.** No flag
-  takes it, so it cannot reach shell history or a CI log. The MCP server
-  reads the same names, and also from the project's `.env.local` and `.env`,
-  because an agent host starts the server in the project and rarely carries
-  a shell environment of its own.
+- **The command line's key is the variable the platform names, and nothing
+  else.** `TYPESAFE_API_KEY` by default, `OPENAI_API_KEY` for Luna, and the
+  `envKey` of the target row for the rest. No flag takes it, so it cannot
+  reach shell history or a CI log. The MCP server reads the same names, and
+  also from the project's `.env.local` and `.env`, because an agent host
+  starts the server in the project and rarely carries a shell environment of
+  its own.
 - **The call limit on the command line is for the run, not the file.** Each
   file is planned with what the files before it left. A run that needed more
   exits 2, as does one that failed or was stopped.
@@ -423,7 +444,10 @@ family's files, copied unchanged from `regex-le`.
   working directory, and the first found wins. An argument would put the key
   in the agent's transcript and the host's log. No answer carries the key:
   `keySource` names where it came from, and a test checks the key string is
-  in no reply. With none found the call fails before anything is sent.
+  in no reply. With none found the call fails before anything is sent, unless
+  the endpoint is a host the user runs, where `keySource` says no key was
+  sent. The endpoint itself comes from `io.env` only, never from the `.env`
+  files, which a cloned repository writes.
 - **Every MCP tool declares an `outputSchema` and answers with
   `structuredContent` equal to its text.** A client reads either. A tool
   that answers prose, `explain_rule`, puts the page in both.

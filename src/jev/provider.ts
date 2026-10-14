@@ -1,32 +1,67 @@
 import { MEASURED_ON } from '../lint/limits';
+import { parseModelId } from '../lint/models';
+import {
+	type Shape,
+	type Target,
+	targetByHost,
+	targetOfModel,
+} from '../lint/targets';
 import type { Failure, Reply } from './client';
 import type { ReviewRequest } from './reviews';
 
 /**
- * The two APIs a check can be put to. Both take typed questions over evidence
- * and answer with probabilities, so one review runs on either; the shape on
- * the wire and the key differ, and this is the only file that knows how.
+ * Where a check is sent and in what shape. Every platform takes typed
+ * questions over evidence and answers with probabilities, so one review runs
+ * on any of them; what differs is the shape on the wire, the host and the
+ * key, and this is the only file that puts the three together.
  *
- * The cutoffs in `reviews.ts` were set on `MEASURED_ON`. A finding from any
- * other model says so, until that model is calibrated the same way.
+ * The host is never guessed. It comes from the target table when a model
+ * id's spelling names a platform with a published endpoint, or from an
+ * endpoint the user set, and from nowhere else: a gateway's spelling such as
+ * `openai/gpt-6-luna-decisions` names no host, and sending it to OpenAI
+ * would spend the key on a request that fails there.
+ *
+ * The cutoffs in `reviews.ts` were set on `MEASURED_ON` at TypeSafe. A
+ * finding from any other model, or the same model through another host,
+ * says so, until that one is calibrated the same way.
  */
 export type Provider = Readonly<{
-	id: 'typesafe' | 'openai';
-	/** Who is sent the request. */
+	shape: Shape;
+	/** Who is sent the request: the platform's name, or the host of an endpoint the user named. */
 	vendor: string;
-	/** What answers it, as the messages name it. */
+	/** What answers it, as the messages name it: Jev, Luna, or "the model" where the id says neither. */
 	model: string;
 	endpoint: string;
 	/** The environment variable the command line and the editor read the key from. */
 	envKey: string;
-	/** Dollars per million input tokens on the vendor's price page, and when that was read. */
-	pricePerMillionTokens: number;
-	pricedOn: string;
-	/** The request as the vendor's API wants it. */
+	/** The keychain slot and typed setting in the editor. Only TypeSafe's and OpenAI's keys have one. */
+	keychain: 'typesafe' | 'openai' | undefined;
+	/** True for a host the user runs, whose examples send no key. */
+	keyOptional: boolean;
+	/** Dollars per million input tokens on the platform's price page, and when that was read. */
+	pricePerMillionTokens: number | undefined;
+	pricedOn: string | undefined;
+	/** The request as the platform wants it. */
 	toBody: (request: ReviewRequest) => unknown;
 	/** The answers as `runReview` reads them, or why the body is not an answer to `request`. */
 	fromBody: (body: unknown, request: ReviewRequest) => Reply | Failure;
 }>;
+
+/** How a user says where a check goes, beyond the model id. */
+export type Route = Readonly<{
+	/** The full URL to post to. Set for a host the user runs, or a gateway spelling that names no host. */
+	endpoint?: string | undefined;
+	/** The shape to send, where the endpoint's path does not say. */
+	shape?: Shape | '' | undefined;
+}>;
+
+/** The two vendors whose keys the editor keeps in its keychain, with the variable each reads. */
+export const VENDOR_KEYS: Readonly<
+	Record<'typesafe' | 'openai', Readonly<{ vendor: string; envKey: string }>>
+> = Object.freeze({
+	typesafe: { vendor: 'TypeSafe', envKey: 'TYPESAFE_API_KEY' },
+	openai: { vendor: 'OpenAI', envKey: 'OPENAI_API_KEY' },
+});
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -42,7 +77,7 @@ const ANSWER_FIELD: ReadonlyMap<string, 'noul' | 'choice' | 'score'> = new Map([
 ]);
 
 /**
- * Why `answers` is not Jev's answer to `request`, or undefined when it is.
+ * Why `answers` is not an answer to `request`, or undefined when it is.
  * TypeSafe's API reference returns one answer per question, under the same
  * ids, each carrying its type's value. A 200 whose body answers fewer, or
  * answers without the value, is a proxy, a sign-in page or a bug, and read as
@@ -86,19 +121,13 @@ function toPredicate(name: string, question: Noul) {
 	return { type: 'predicate', name: toWireName(name), instructions };
 }
 
-const TYPESAFE: Provider = Object.freeze({
-	id: 'typesafe',
-	vendor: 'TypeSafe',
-	model: 'Jev',
-	endpoint: 'https://api.typesafe.ai/v1/systemone',
-	envKey: 'TYPESAFE_API_KEY',
-	// TypeSafe's published price on the day the checks were calibrated.
-	pricePerMillionTokens: 0.042,
-	pricedOn: '2026-10-04',
+type Wire = Pick<Provider, 'toBody' | 'fromBody'>;
+
+const SYSTEM_ONE: Wire = Object.freeze({
 	toBody: (request) => request,
 	fromBody: (body, request) => {
 		if (!isRecord(body) || !isRecord(body.answers))
-			return garbled('the answer was not a Jev reply');
+			return garbled('the answer was not a System One reply');
 		const missing = unanswered(body.answers, request);
 		if (missing) return garbled(missing);
 		const usage = isRecord(body.usage) ? body.usage.input_tokens : undefined;
@@ -110,15 +139,7 @@ const TYPESAFE: Provider = Object.freeze({
 	},
 });
 
-const OPENAI: Provider = Object.freeze({
-	id: 'openai',
-	vendor: 'OpenAI',
-	model: 'Luna',
-	endpoint: 'https://api.openai.com/v1/decisions',
-	envKey: 'OPENAI_API_KEY',
-	// OpenAI's published price for the Decisions API beta.
-	pricePerMillionTokens: 0.1,
-	pricedOn: '2026-10-08',
+const DECISIONS: Wire = Object.freeze({
 	toBody: (request) => ({
 		model: request.model,
 		// The API takes text, not an object. Written out as JSON it reads the same.
@@ -129,9 +150,9 @@ const OPENAI: Provider = Object.freeze({
 	}),
 	// OpenAI's contract for a missing answer is not published, and a refusal is a
 	// legitimate non-answer there, so only the shape is checked.
-	fromBody: (body) => {
+	fromBody: (body, request) => {
 		if (!isRecord(body) || !Array.isArray(body.answers))
-			return garbled('the answer was not a Luna reply');
+			return garbled('the answer was not a Decisions reply');
 		const answers: Record<string, { noul?: number }> = {};
 		for (const answer of body.answers) {
 			if (!isRecord(answer) || typeof answer.name !== 'string') continue;
@@ -141,21 +162,126 @@ const OPENAI: Provider = Object.freeze({
 		}
 		const usage = isRecord(body.usage) ? body.usage.input_tokens : undefined;
 		return {
-			model: typeof body.model === 'string' ? body.model : 'gpt-6-luna',
+			model: typeof body.model === 'string' ? body.model : request.model,
 			answers,
 			inputTokens: typeof usage === 'number' ? usage : 0,
 		};
 	},
 });
 
-export const PROVIDERS: ReadonlyArray<Provider> = Object.freeze([
-	TYPESAFE,
-	OPENAI,
+const WIRES: Readonly<Record<Shape, Wire>> = Object.freeze({
+	typesafe: SYSTEM_ONE,
+	openai: DECISIONS,
+});
+
+/** The only two platforms that answer with a model the messages can name. */
+const ANSWERERS: ReadonlyMap<string, string> = new Map([
+	['jev', 'Jev'],
+	['luna', 'Luna'],
 ]);
 
-/** Who answers a model id: `gpt-6-luna` and its dated versions are OpenAI's, everything else is Jev. */
-export function providerFor(model: string): Provider {
-	return /^gpt-6-luna/.test(model) ? OPENAI : TYPESAFE;
+/** What answers a model id, as a message names it. */
+function answererOf(model: string): string {
+	const family = parseModelId(model)?.family;
+	return (family && ANSWERERS.get(family)) ?? 'the model';
+}
+
+/** The shape an endpoint's path says it takes, where it says. */
+function shapeOfPath(pathname: string): Shape | undefined {
+	if (/\/systemone\/?$/.test(pathname)) return 'typesafe';
+	if (/\/decisions\/?$/.test(pathname)) return 'openai';
+	return undefined;
+}
+
+const keychainOf = (target: Target): Provider['keychain'] =>
+	target.id === 'typesafe' || target.id === 'openai' ? target.id : undefined;
+
+function fromTarget(
+	target: Target,
+	shape: Shape,
+	endpoint: string,
+	model: string,
+): Provider {
+	return Object.freeze({
+		shape,
+		vendor: target.name,
+		model: answererOf(model),
+		endpoint,
+		// A platform without a variable of its own is reached through the SDK
+		// of the shape it takes, which reads that vendor's variable.
+		envKey: target.envKey ?? VENDOR_KEYS[shape].envKey,
+		keychain: keychainOf(target),
+		keyOptional: false,
+		pricePerMillionTokens: target.price?.perMillionInputTokens,
+		pricedOn: target.price?.readOn,
+		...WIRES[shape],
+	});
+}
+
+/** A provider for an endpoint the user named, or the sentence that says why there is none. */
+function fromEndpoint(
+	model: string,
+	endpoint: string,
+	asked: Shape | undefined,
+): Provider | string {
+	let url: URL;
+	try {
+		url = new URL(endpoint);
+	} catch {
+		return `'${endpoint}' is not a URL.`;
+	}
+	if (url.protocol !== 'https:' && url.protocol !== 'http:')
+		return `'${endpoint}' is not an http or https URL.`;
+	const target = targetByHost(url.hostname);
+	const shape =
+		asked ??
+		(target?.shapes.length === 1 ? target.shapes[0] : undefined) ??
+		shapeOfPath(url.pathname);
+	if (!shape)
+		return `'${endpoint}' does not say which shape it takes. Set the shape to typesafe or openai.`;
+	if (target && !target.shapes.includes(shape))
+		return `${target.name} does not take the ${shape} shape.`;
+	if (target) return fromTarget(target, shape, endpoint, model);
+	// A host the table does not list is one the user runs. The key is the one
+	// the shape's SDK would send there, and a runtime may want none.
+	return Object.freeze({
+		shape,
+		vendor: url.host,
+		model: answererOf(model),
+		endpoint,
+		envKey: VENDOR_KEYS[shape].envKey,
+		keychain: undefined,
+		keyOptional: true,
+		pricePerMillionTokens: undefined,
+		pricedOn: undefined,
+		...WIRES[shape],
+	});
+}
+
+/**
+ * Where a check of `model` goes, or the sentence that says why nothing can
+ * be sent. With an endpoint set, that; otherwise the platform the model id's
+ * spelling names, when it publishes an endpoint for a shape it takes. The
+ * caller adds how an endpoint is set on its own surface.
+ */
+export function providerFor(
+	model: string,
+	route: Route = {},
+): Provider | string {
+	const endpoint = route.endpoint?.trim();
+	const asked = route.shape || undefined;
+	if (endpoint) return fromEndpoint(model, endpoint, asked);
+	const target = targetOfModel(model);
+	if (!target)
+		return `'${model}' names no platform this tool knows the host of. Set the endpoint it is sent to.`;
+	const shape = asked ?? target.shapes.find((each) => target.endpoints[each]);
+	const endpointFor = shape && target.endpoints[shape];
+	if (!shape || !endpointFor) {
+		return asked
+			? `${target.name} publishes no endpoint for the ${asked} shape. Set the endpoint it is sent to.`
+			: `${target.name} runs at a host of your own. Set the endpoint it is sent to.`;
+	}
+	return fromTarget(target, shape, endpointFor, model);
 }
 
 /** True for the one version the cutoffs were set on. A finding from any other model, another Jev included, carries a caveat. */
@@ -163,9 +289,14 @@ export function isCalibrated(model: string): boolean {
 	return model === MEASURED_ON;
 }
 
+/** The model's name where it starts a sentence: "The model answered", "Jev answered". */
+export const asSubject = (model: string): string =>
+	model.replace(/^the /, 'The ');
+
 /** A message written for Jev, reworded for the model that answered. */
 export function forProvider(message: string, provider: Provider): string {
-	return provider.id === 'typesafe'
-		? message
-		: message.replace(/\bJev\b/g, provider.model);
+	if (provider.model === 'Jev') return message;
+	return message
+		.replace(/\bJev\b/g, provider.model)
+		.replace(/(^|[.!?]\s+)the model\b/g, '$1The model');
 }

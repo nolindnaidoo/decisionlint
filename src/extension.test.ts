@@ -808,6 +808,47 @@ describe('check with Jev', () => {
 		expect(setting.ignoreSync).toBe(true);
 	});
 
+	it('lets the endpoint be set only in user settings, so a repository cannot point the key at a host', () => {
+		const { properties } = manifest.contributes.configuration;
+		expect(properties['jevlint-le.jev.endpoint'].scope).toBe('application');
+		expect(properties['jevlint-le.jev.shape'].scope).toBe('application');
+	});
+
+	it('refuses a gateway spelling that names no host, and says which setting names one', async () => {
+		const fetch = jevSays({});
+		vi.stubGlobal('fetch', fetch);
+		_state.config = { 'jev.model': 'openai/gpt-6-luna-decisions' };
+		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
+		start(doc(VAGUE));
+		await run(JEV_COMMANDS.checkWithJev);
+		expect(fetch).not.toHaveBeenCalled();
+		expect(_state.messages.at(-1)).toBe(
+			"JevLint-LE: 'openai/gpt-6-luna-decisions' names no platform this tool knows the host of. Set the endpoint it is sent to. Set jevlint-le.jev.endpoint, and jevlint-le.jev.shape where its path does not say.",
+		);
+	});
+
+	it('sends to a host the user runs with no key, and calls what answers the model', async () => {
+		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		vi.stubGlobal('fetch', fetch);
+		_state.config = {
+			'jev.model': 'ggml-org/OpenJev-GGUF',
+			'jev.endpoint': 'http://localhost:8080/v1/systemone',
+		};
+		start(doc(VAGUE));
+		await run(JEV_COMMANDS.checkWithJev);
+		expect(fetch).toHaveBeenCalledTimes(1);
+		const [url, init] = fetch.mock.calls[0] as unknown as [
+			string,
+			{ headers: Record<string, string> },
+		];
+		expect(url).toBe('http://localhost:8080/v1/systemone');
+		expect(init.headers).not.toHaveProperty('Authorization');
+		expect(_state.messages.at(-1)).toContain('The model answered 1 request');
+		expect(diagnostics(FROM_JEV)[0]?.message).toContain(
+			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on the model.',
+		);
+	});
+
 	it('takes the key from the environment when the keychain has none', async () => {
 		const fetch = jevSays({});
 		vi.stubGlobal('fetch', fetch);

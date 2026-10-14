@@ -989,8 +989,47 @@ describe('the MCP server', () => {
 		method: 'tools/call',
 		params: { name, arguments: args },
 	});
+	const LOCAL = 'http://localhost:8080/v1/systemone';
 	const body = (reply: { result: { content: { text: string }[] } }) =>
 		JSON.parse(reply.result.content[0]?.text ?? 'null');
+
+	it('lets the server send to an endpoint from its environment and never from an argument', async () => {
+		const fetch = jevSays();
+		const [reply] = await talk(
+			[
+				call(1, 'check_with_jev', {
+					text: VAGUE,
+					filename: 'q.ts',
+					model: 'ggml-org/OpenJev-GGUF',
+				}),
+			],
+			{},
+			world(fetch, { JEVLINT_LE_JEV_ENDPOINT: LOCAL }),
+		);
+		expect(reply.result.isError).toBe(false);
+		const [url] = fetch.mock.calls[0] as unknown as [string];
+		expect(url).toBe(LOCAL);
+		expect(calls(fetch)[0]?.headers).not.toHaveProperty('Authorization');
+		expect(reply.result.structuredContent.keySource).toBe(
+			'none: the host takes no key',
+		);
+		const [refused] = await talk(
+			[
+				call(1, 'check_with_jev', {
+					text: VAGUE,
+					filename: 'q.ts',
+					model: 'openai/gpt-6-luna-decisions',
+					endpoint: LOCAL,
+				}),
+			],
+			{},
+			world(jevSays(), {}),
+		);
+		expect(refused.result.isError).toBe(true);
+		expect(refused.result.content[0].text).toContain(
+			'Set JEVLINT_LE_JEV_ENDPOINT, and JEVLINT_LE_JEV_SHAPE where its path does not say, in the environment the server was started with.',
+		);
+	});
 
 	it('answers in the protocol version it was asked for, or its newest', async () => {
 		const [known, unknown] = await talk([
@@ -1791,7 +1830,7 @@ describe('checking with Jev', () => {
 		});
 		const text = await cli(['--jev-plan', '.'], { 'a.ts': VAGUE });
 		expect(text.out).toMatch(
-			/--jev would send 1 request to jev-1\.13\.0, about \d+ input tokens\./,
+			/--jev would send 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\./,
 		);
 	});
 
@@ -2238,4 +2277,185 @@ describe('text handed to the server', () => {
 			);
 		},
 	);
+});
+
+describe('where --jev sends', () => {
+	const LOCAL = 'http://localhost:8080/v1/systemone';
+
+	it('refuses a gateway spelling that names no host, with nothing sent', async () => {
+		const fetch = jevSays();
+		const result = await cli(
+			['--jev', '--jev-model', 'openai/gpt-6-luna-decisions', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch),
+		);
+		expect(fetch).not.toHaveBeenCalled();
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain(
+			"'openai/gpt-6-luna-decisions' names no platform this tool knows the host of. Set the endpoint it is sent to. Use --jev-endpoint, and --jev-shape where its path does not say.",
+		);
+	});
+
+	it('sends to --jev-endpoint with no key when none is set, and names the host', async () => {
+		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		const result = await cli(
+			[
+				'--jev',
+				'--jev-model',
+				'ggml-org/OpenJev-GGUF',
+				'--jev-endpoint',
+				LOCAL,
+				'--format',
+				'compact',
+				'q.ts',
+			],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch, {}),
+		);
+		expect(result.status).toBe(EXIT.passed);
+		const [url] = fetch.mock.calls[0] as unknown as [string];
+		expect(url).toBe(LOCAL);
+		expect(calls(fetch)[0]?.headers).not.toHaveProperty('Authorization');
+		expect(result.err).toMatch(
+			/Sending 1 request to localhost:8080 on ggml-org\/OpenJev-GGUF/,
+		);
+		expect(result.out).toContain(
+			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on the model.',
+		);
+		expect(result.out).toContain('The model answered 1 of 1 request on');
+	});
+
+	it('sends the key of the shape to a host it does not know, when one is set', async () => {
+		const fetch = jevSays();
+		await cli(
+			['--jev', '--jev-endpoint', LOCAL, 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch, { TYPESAFE_API_KEY: 'local-key' }),
+		);
+		expect(calls(fetch)[0]?.headers.Authorization).toBe('Bearer local-key');
+	});
+
+	it('reads the endpoint and the shape from the environment when the flags are absent', async () => {
+		const fetch = jevSays();
+		const result = await cli(
+			['--jev', '--jev-model', 'laya', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch, {
+				JEVLINT_LE_JEV_ENDPOINT: 'http://localhost:11435/api/decide',
+				JEVLINT_LE_JEV_SHAPE: 'typesafe',
+			}),
+		);
+		expect(result.status).toBe(EXIT.passed);
+		const [url] = fetch.mock.calls[0] as unknown as [string];
+		expect(url).toBe('http://localhost:11435/api/decide');
+		expect(calls(fetch)[0]?.body).toHaveProperty('questions');
+	});
+
+	it('refuses an endpoint whose path does not say the shape, until --jev-shape does', async () => {
+		const fetch = jevSays();
+		const refused = await cli(
+			['--jev', '--jev-endpoint', 'http://localhost:11435/api/decide', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch, {}),
+		);
+		expect(fetch).not.toHaveBeenCalled();
+		expect(refused.status).toBe(EXIT.unusable);
+		expect(refused.err).toContain(
+			"'http://localhost:11435/api/decide' does not say which shape it takes. Set the shape to typesafe or openai. Use --jev-endpoint, and --jev-shape where its path does not say.",
+		);
+		const sent = jevSays();
+		await cli(
+			[
+				'--jev',
+				'--jev-endpoint',
+				'http://localhost:11435/api/decide',
+				'--jev-shape',
+				'openai',
+				'q.ts',
+			],
+			{ 'q.ts': VAGUE },
+			'',
+			world(sent, {}),
+		);
+		// Sent in the shape the flag named: a Decisions body, with its `input`.
+		expect(sent).toHaveBeenCalledTimes(1);
+		expect(calls(sent)[0]?.body).toHaveProperty('input');
+	});
+
+	it.each([
+		[
+			['--jev', '--jev-shape', 'nope', 'q.ts'],
+			"'nope' is not a shape. Use typesafe or openai.",
+		],
+		[
+			['--jev-endpoint', LOCAL, 'q.ts'],
+			'--jev-endpoint needs --jev or --jev-plan.',
+		],
+		[
+			['--jev-shape', 'openai', 'q.ts'],
+			'--jev-shape needs --jev or --jev-plan.',
+		],
+	])('refuses %j', async (args, reason) => {
+		const fetch = jevSays();
+		const result = await cli(args, { 'q.ts': VAGUE }, '', world(fetch));
+		expect(fetch).not.toHaveBeenCalled();
+		expect(result.status).toBe(EXIT.unusable);
+		expect(result.err).toContain(reason);
+	});
+
+	it('refuses a shape in the environment that is not one', async () => {
+		const fetch = jevSays();
+		const result = await cli(
+			['--jev', '--jev-endpoint', LOCAL, 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch, { JEVLINT_LE_JEV_SHAPE: 'xml' }),
+		);
+		expect(fetch).not.toHaveBeenCalled();
+		expect(result.err).toContain(
+			"JEVLINT_LE_JEV_SHAPE is 'xml', which is not a shape. Use typesafe or openai.",
+		);
+	});
+
+	it("sends a platform's spelling to that platform with the key in its own variable", async () => {
+		const fetch = jevSays();
+		const result = await cli(
+			['--jev', '--jev-model', '~typesafe/jev-latest', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(fetch, { OPENROUTER_API_KEY: 'or-key' }),
+		);
+		expect(result.status).not.toBe(EXIT.unusable);
+		const [url] = fetch.mock.calls[0] as unknown as [string];
+		expect(url).toBe('https://openrouter.ai/api/v1/systemone');
+		expect(calls(fetch)[0]?.headers.Authorization).toBe('Bearer or-key');
+		expect(result.err).toMatch(
+			/Sending 1 request to OpenRouter on ~typesafe\/jev-latest/,
+		);
+		const noKey = await cli(
+			['--jev', '--jev-model', '~typesafe/jev-latest', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays(), KEY),
+		);
+		expect(noKey.err).toContain('--jev needs an API key in OPENROUTER_API_KEY');
+	});
+
+	it('says who is sent the requests in the JSON totals', async () => {
+		const result = await cli(
+			['--jev-plan', '--format', 'json', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays(), {}),
+		);
+		expect(JSON.parse(result.out).totals.jev).toMatchObject({
+			vendor: 'TypeSafe',
+			answerer: 'Jev',
+		});
+	});
 });

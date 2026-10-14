@@ -7,7 +7,7 @@ import {
 	readProbe,
 	summarize,
 } from '../jev/probe';
-import { providerFor } from '../jev/provider';
+import { type Provider, providerFor } from '../jev/provider';
 import { DEFAULT_MODEL } from '../jev/review';
 import { readQuestions, syntaxFor } from '../lint/lint';
 import { blocked, caution } from '../ui/notifier';
@@ -74,6 +74,7 @@ async function runProbe(
 	deps: Deps,
 	target: Target,
 	key: string,
+	provider: Provider,
 	signal: AbortSignal,
 	model: string,
 ): Promise<Probed> {
@@ -87,7 +88,7 @@ async function runProbe(
 	for (const variant of variants) {
 		if (signal.aborted) return cancelled();
 		const reply = await ask(
-			{ fetch: deps.fetch, key, wait: deps.wait, signal },
+			{ fetch: deps.fetch, key, provider, wait: deps.wait, signal },
 			variant.request,
 		);
 		// A request the user cut off fails too, and that is not a failure to report.
@@ -108,18 +109,29 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		blocked('No file is open.');
 		return;
 	}
-	if (!vscode.workspace.isTrusted) {
-		refuseUntrusted('A probe sends a question and its state to TypeSafe');
-		return;
-	}
 	// Read once, before the first await, so the key, the count the user agrees
 	// to and the requests all name the same model.
 	const config = deps.getConfiguration();
-	// The variants are built and read in Jev's shape. Luna's reply for a Choice or a Score is not read yet.
-	const provider = providerFor(config.jev.model);
-	if (provider.id !== 'typesafe') {
+	const provider = providerFor(config.jev.model, {
+		endpoint: config.jev.endpoint,
+		shape: config.jev.shape,
+	});
+	if (typeof provider === 'string') {
+		blocked(
+			`${provider} Set jevlint-le.jev.endpoint, and jevlint-le.jev.shape where its path does not say.`,
+		);
+		return;
+	}
+	// The variants are built and read in System One's shape. Luna's reply for a Choice or a Score is not read yet.
+	if (provider.shape !== 'typesafe') {
 		blocked(
 			`The probe asks Jev only. Set jevlint-le.jev.model to a Jev version, such as ${DEFAULT_MODEL}, to probe this question.`,
+		);
+		return;
+	}
+	if (!vscode.workspace.isTrusted) {
+		refuseUntrusted(
+			`A probe sends a question and its state to ${provider.vendor}`,
 		);
 		return;
 	}
@@ -144,8 +156,11 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 	).length;
 	if (config.jev.confirm) {
 		const answer = await vscode.window.showInformationMessage(
-			`Probe '${target.id}' with ${count} requests to TypeSafe?`,
-			{ modal: true, detail: 'Under 1¢. The question and its state are sent.' },
+			`Probe '${target.id}' with ${count} requests to ${provider.vendor}?`,
+			{
+				modal: true,
+				detail: `${provider.pricePerMillionTokens === undefined ? `${provider.vendor} publishes no price this tool has read.` : 'Under 1¢.'} The question and its state are sent.`,
+			},
 			SEND,
 		);
 		if (answer !== SEND) return;
@@ -159,7 +174,14 @@ async function probeQuestion(deps: Deps, show: ShowReport): Promise<void> {
 		(_progress, token) => {
 			const abort = new AbortController();
 			token.onCancellationRequested(() => abort.abort());
-			return runProbe(deps, target, key, abort.signal, config.jev.model);
+			return runProbe(
+				deps,
+				target,
+				key,
+				provider,
+				abort.signal,
+				config.jev.model,
+			);
 		},
 	);
 	if (probed.kind === 'failed') {

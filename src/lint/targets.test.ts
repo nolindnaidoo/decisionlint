@@ -74,7 +74,7 @@ describe('limitsFor', () => {
 
 	it("falls back to TypeSafe's limits for a question in TypeSafe's shape", () => {
 		expect(limitsFor('typesafe', undefined)).toEqual({
-			owner: "TypeSafe's API",
+			owner: 'TypeSafe',
 			limits: targetById('typesafe')?.limits,
 		});
 	});

@@ -1,4 +1,4 @@
-import { providerFor } from '../jev/provider';
+import { asSubject } from '../jev/provider';
 import { pageFor, RULES } from '../lint/rules';
 import type { ReportedFinding, Severity, Span } from '../types';
 import type { Format } from './args';
@@ -44,9 +44,13 @@ export type JevTotals = Readonly<{
 	overLimit: number;
 	/** An estimate made before sending. */
 	estimatedInputTokens: number;
-	/** What TypeSafe counted. */
+	/** What the vendor counted. */
 	inputTokens: number;
 	model: string;
+	/** Who was sent the requests, or would be. */
+	vendor: string;
+	/** What answers, as the messages name it: Jev, Luna or the model. */
+	answerer: string;
 	/** True when state written in a file was sent, or would be. */
 	state: boolean;
 }>;
@@ -137,8 +141,8 @@ function describeJev(jev: JevTotals): ReadonlyArray<string> {
 	const requests = plural(jev.planned, 'request');
 	const state = jev.state ? ' State is sent.' : '';
 	const said = jev.sent
-		? `${providerFor(jev.model).model} answered ${jev.answered} of ${requests} on ${jev.model}, ${jev.inputTokens} input tokens.`
-		: `--jev would send ${requests} to ${jev.model}, about ${jev.estimatedInputTokens} input tokens.${state}`;
+		? `${asSubject(jev.answerer)} answered ${jev.answered} of ${requests} on ${jev.model}, ${jev.inputTokens} input tokens.`
+		: `--jev would send ${requests} to ${jev.vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.${state}`;
 	const held = heldBack(jev);
 	return held ? [said, held] : [said];
 }

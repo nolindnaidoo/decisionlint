@@ -289,9 +289,11 @@ read. Errors always fail a run. Warnings fail it only past `--max-warnings`.
 | `--stdin-filename <path>` | Lint standard input as if it were that file |
 | `--fix` | Write the fixes that only mend what the API would refuse |
 | `--quiet` | Print errors only |
-| `--jev` | Also ask the model about each question. Sends them to TypeSafe with `TYPESAFE_API_KEY`, or with `--jev-model gpt-6-luna` to OpenAI with `OPENAI_API_KEY` |
+| `--jev` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--jev-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--jev-endpoint` says |
 | `--jev-plan` | Say what `--jev` would send, and send nothing |
-| `--jev-model <id>` | The model `--jev` asks: a Jev version, or `gpt-6-luna` for OpenAI's Decisions API. Default `jev-1.13.0` |
+| `--jev-model <id>` | The model `--jev` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
+| `--jev-endpoint <url>` | The full URL `--jev` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `JEVLINT_LE_JEV_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
+| `--jev-shape <shape>` | The shape sent to `--jev-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `JEVLINT_LE_JEV_SHAPE` |
 | `--jev-max-calls <n>` | The most requests `--jev` may send in the run. Default 25 |
 | `--jev-send-state` | With `--jev`, also send state written out in a file |
 | `--color`, `--no-color` | Colour the default format, or do not. Without either it is coloured in a terminal, unless `NO_COLOR` is set |
@@ -523,6 +525,8 @@ will not press by accident.
 | `jevlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `jevlint-le.jev.endpoint` | `""` | The URL the check posts to, for a platform you host. Empty sends a model id where its spelling says |
+| `jevlint-le.jev.shape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
 | `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `jevlint-le.exclude` | `node_modules` and build output | Files the workspace command skips |
 | `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |

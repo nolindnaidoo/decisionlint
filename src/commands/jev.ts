@@ -1,8 +1,12 @@
 import * as vscode from 'vscode';
 import type { Configuration } from '../config/config';
 import type { Failure } from '../jev/client';
-import { type Provider, providerFor } from '../jev/provider';
-import { DEFAULT_MODEL } from '../jev/review';
+import {
+	asSubject,
+	type Provider,
+	providerFor,
+	VENDOR_KEYS,
+} from '../jev/provider';
 import type { Resolved } from '../services/projectConfigs';
 import type {
 	Reviewer,
@@ -34,16 +38,22 @@ export const JEV_COMMANDS = Object.freeze({
 	clearApiKey: 'jevlint-le.clearApiKey',
 });
 
+type Keychain = keyof typeof VENDOR_KEYS;
+
+/** How an endpoint is set in the editor, after the sentence that says one is needed. */
+const HOW_TO_ROUTE =
+	'Set jevlint-le.jev.endpoint, and jevlint-le.jev.shape where its path does not say.';
+
 /** Where each vendor's key sits in the keychain. */
-const SECRETS: Readonly<Record<Provider['id'], string>> = Object.freeze({
+const SECRETS: Readonly<Record<Keychain, string>> = Object.freeze({
 	typesafe: 'jevlint-le.typesafeApiKey',
 	openai: 'jevlint-le.openaiApiKey',
 });
-const SET_COMMANDS: Readonly<Record<Provider['id'], string>> = Object.freeze({
+const SET_COMMANDS: Readonly<Record<Keychain, string>> = Object.freeze({
 	typesafe: JEV_COMMANDS.setApiKey,
 	openai: JEV_COMMANDS.setOpenAIApiKey,
 });
-const KEY_SETTINGS: Readonly<Record<Provider['id'], string>> = Object.freeze({
+const KEY_SETTINGS: Readonly<Record<Keychain, string>> = Object.freeze({
 	typesafe: 'Jev: Api Key',
 	openai: 'Jev: Openai Api Key',
 });
@@ -57,16 +67,18 @@ export function failureMessage(
 	kind: Failure['kind'],
 	provider: Provider,
 ): string {
-	const { vendor, model } = provider;
+	const { vendor, keychain } = provider;
 	const set =
-		provider.id === 'typesafe' ? 'Set TypeSafe API Key' : 'Set OpenAI API Key';
+		keychain === 'typesafe' ? 'Set TypeSafe API Key' : 'Set OpenAI API Key';
 	const messages: Readonly<Record<Failure['kind'], string>> = {
-		key: `${vendor} rejected the API key. Set a new one with "JevLint-LE: ${set}".`,
+		key: keychain
+			? `${vendor} rejected the API key. Set a new one with "JevLint-LE: ${set}".`
+			: `${vendor} rejected the API key in ${provider.envKey}.`,
 		rejected: `${vendor} rejected the request.`,
 		busy: `${vendor} is busy or the rate limit was reached. Try again in a moment.`,
 		server: `${vendor} had an error of its own. Try again in a moment.`,
 		network: `Could not reach ${vendor}.`,
-		garbled: `${vendor} did not answer with a ${model} reply. A proxy or a sign-in page may be in the way.`,
+		garbled: `${vendor} did not answer with a decision reply. A proxy or a sign-in page may be in the way.`,
 	};
 	return messages[kind];
 }
@@ -88,11 +100,13 @@ export function refuseUntrusted(what: string): void {
 
 /** Says why there is no key. When none was ever set, offers to set one. */
 export function reportNoKey(missing: string, provider: Provider): void {
-	if (missing !== noKey(provider)) {
+	// Only the two vendors with a keychain slot have a command to offer.
+	const command = provider.keychain && SET_COMMANDS[provider.keychain];
+	if (missing !== noKey(provider) || !command) {
 		blocked(missing);
 		return;
 	}
-	offer(missing, SET_KEY, SET_COMMANDS[provider.id]);
+	offer(missing, SET_KEY, command);
 }
 
 function plural(count: number, noun: string): string {
@@ -115,8 +129,9 @@ function describe(
 	provider: Provider,
 ): string {
 	const { model } = provider;
+	const subject = asSubject(model);
 	if (outcome.kind === 'stale')
-		return `The file changed while ${model} was answering, so nothing is shown. ${model} had answered ${outcome.asked} of ${plural(plan.requests, 'request')}. Run the check again.`;
+		return `The file changed while ${model} was answering, so nothing is shown. ${subject} had answered ${outcome.asked} of ${plural(plan.requests, 'request')}. Run the check again.`;
 	if (outcome.kind === 'failed') {
 		const sent = outcome.asked
 			? ` after ${plural(outcome.asked, 'request')}`
@@ -125,8 +140,8 @@ function describe(
 	}
 	// A run the user stopped must not read as one that finished.
 	const ran = outcome.cancelled
-		? `Cancelled after ${outcome.asked} of ${plural(plan.requests, 'request')}. ${model} flagged ${outcome.findings} in what it answered`
-		: `${model} answered ${plural(outcome.asked, 'request')} and flagged ${outcome.findings}`;
+		? `Cancelled after ${outcome.asked} of ${plural(plan.requests, 'request')}. ${subject} flagged ${outcome.findings} in what it answered`
+		: `${subject} answered ${plural(outcome.asked, 'request')} and flagged ${outcome.findings}`;
 	const parts = [
 		ran,
 		`${outcome.inputTokens} input tokens on ${outcome.model || 'no model'}`,
@@ -140,9 +155,17 @@ type Prompt = Readonly<{ message: string; detail: string }>;
 // One line to answer and one to read: how much, what it costs, what leaves the machine.
 function ask(plan: ReviewPlan, provider: Provider): Prompt {
 	// The vendor's published price on the day it was read. Shown as "about".
+	const price = provider.pricePerMillionTokens;
 	const cents =
-		(plan.inputTokens / 1_000_000) * provider.pricePerMillionTokens * 100;
-	const cost = cents < 1 ? 'under 1¢' : `about ${Math.ceil(cents)}¢`;
+		price === undefined
+			? undefined
+			: (plan.inputTokens / 1_000_000) * price * 100;
+	const cost =
+		cents === undefined
+			? `${provider.vendor} publishes no price this tool has read`
+			: cents < 1
+				? 'under 1¢'
+				: `about ${Math.ceil(cents)}¢`;
 	const state = plan.sendsState
 		? 'Your state is sent too.'
 		: 'Your state is not sent.';
@@ -162,13 +185,15 @@ function ask(plan: ReviewPlan, provider: Provider): Prompt {
 const locked = (provider: Provider) =>
 	`The keychain could not be read. Unlock it and try again, or set ${provider.envKey} in the environment.`;
 const noKey = (provider: Provider) =>
-	`No ${provider.vendor} API key. Set one with the button, in Settings under "JevLint-LE: ${KEY_SETTINGS[provider.id]}", or as ${provider.envKey} in the environment.`;
+	provider.keychain
+		? `No ${provider.vendor} API key. Set one with the button, in Settings under "JevLint-LE: ${KEY_SETTINGS[provider.keychain]}", or as ${provider.envKey} in the environment.`
+		: `No ${provider.vendor} API key. Set it as ${provider.envKey} in the environment.`;
 
-/** The key a user typed into settings for a vendor. Empty when it is kept elsewhere. */
+/** The key a user typed into settings for a vendor. Empty when it is kept elsewhere, or the vendor has no setting. */
 function typedKey(configuration: Configuration, provider: Provider): string {
-	return provider.id === 'typesafe'
-		? configuration.jev.apiKey
-		: configuration.jev.openaiApiKey;
+	if (provider.keychain === 'typesafe') return configuration.jev.apiKey;
+	if (provider.keychain === 'openai') return configuration.jev.openaiApiKey;
+	return '';
 }
 
 /**
@@ -186,12 +211,18 @@ export async function findKey(
 ): Promise<Readonly<{ key: string } | { missing: string }>> {
 	const typed = typedKey(configuration, provider);
 	if (typed) return { key: typed };
-	const stored = await deps.secrets.get(SECRETS[provider.id]).then(
-		(key) => ({ key }),
-		() => ({ locked: true as const }),
-	);
+	// Only TypeSafe's and OpenAI's keys have a keychain slot. Every other
+	// platform's key, and a host the user runs, is read from the environment.
+	const stored = provider.keychain
+		? await deps.secrets.get(SECRETS[provider.keychain]).then(
+				(key) => ({ key }),
+				() => ({ locked: true as const }),
+			)
+		: { key: undefined };
 	const key = ('key' in stored && stored.key) || deps.env[provider.envKey];
 	if (key) return { key };
+	// A host the user runs may take no key, and then none is sent.
+	if (provider.keyOptional) return { key: '' };
 	return { missing: 'locked' in stored ? locked(provider) : noKey(provider) };
 }
 
@@ -204,7 +235,14 @@ async function checkWithJev(deps: Deps): Promise<void> {
 	// Read once, before the first await. The user can change the model while the
 	// confirmation is on screen, and the key, the plan and the run must agree.
 	const config = deps.getConfiguration();
-	const provider = providerFor(config.jev.model);
+	const provider = providerFor(config.jev.model, {
+		endpoint: config.jev.endpoint,
+		shape: config.jev.shape,
+	});
+	if (typeof provider === 'string') {
+		blocked(`${provider} ${HOW_TO_ROUTE}`);
+		return;
+	}
 	if (!vscode.workspace.isTrusted) {
 		refuseUntrusted(
 			`Checking with ${provider.model} sends the questions in this file to ${provider.vendor}`,
@@ -213,7 +251,7 @@ async function checkWithJev(deps: Deps): Promise<void> {
 	}
 	// A second run would pay for the same answers and race the first to show them.
 	if (deps.reviewer.running(document)) {
-		blocked(`${provider.model} is already checking this file.`);
+		blocked(`${asSubject(provider.model)} is already checking this file.`);
 		return;
 	}
 	const found = await findKey(deps, provider, config);
@@ -230,6 +268,7 @@ async function checkWithJev(deps: Deps): Promise<void> {
 	const settings: ReviewSettings = {
 		lint: resolved.options,
 		model: config.jev.model,
+		provider,
 		sendState: config.jev.sendState,
 		maxCalls: config.jev.maxCalls,
 	};
@@ -276,9 +315,10 @@ async function checkWithJev(deps: Deps): Promise<void> {
 	result(message);
 }
 
-async function setApiKey(deps: Deps, provider: Provider): Promise<void> {
+async function setApiKey(deps: Deps, keychain: Keychain): Promise<void> {
+	const { vendor } = VENDOR_KEYS[keychain];
 	const entered = await vscode.window.showInputBox({
-		title: `${provider.vendor} API key`,
+		title: `${vendor} API key`,
 		prompt:
 			'Stored in your operating system keychain by VS Code, not in a settings file.',
 		password: true,
@@ -286,7 +326,7 @@ async function setApiKey(deps: Deps, provider: Provider): Promise<void> {
 	});
 	const key = entered?.trim();
 	if (!key) return;
-	const stored = await deps.secrets.store(SECRETS[provider.id], key).then(
+	const stored = await deps.secrets.store(SECRETS[keychain], key).then(
 		() => true,
 		() => false,
 	);
@@ -294,7 +334,7 @@ async function setApiKey(deps: Deps, provider: Provider): Promise<void> {
 		blocked('The key was not stored: the keychain could not be used.');
 		return;
 	}
-	result(`${provider.vendor} API key saved to the keychain.`);
+	result(`${vendor} API key saved to the keychain.`);
 }
 
 // Both vendors' keys go, so one command leaves nothing behind.
@@ -324,15 +364,11 @@ export function registerJevCommands(
 		),
 		vscode.commands.registerCommand(
 			JEV_COMMANDS.setApiKey,
-			guarded('Setting the API key', () =>
-				setApiKey(deps, providerFor(DEFAULT_MODEL)),
-			),
+			guarded('Setting the API key', () => setApiKey(deps, 'typesafe')),
 		),
 		vscode.commands.registerCommand(
 			JEV_COMMANDS.setOpenAIApiKey,
-			guarded('Setting the API key', () =>
-				setApiKey(deps, providerFor('gpt-6-luna')),
-			),
+			guarded('Setting the API key', () => setApiKey(deps, 'openai')),
 		),
 		vscode.commands.registerCommand(
 			JEV_COMMANDS.clearApiKey,

@@ -8,7 +8,7 @@ import {
 	readProbe,
 	summarize,
 } from '../jev/probe';
-import { providerFor } from '../jev/provider';
+import { type Provider, providerFor } from '../jev/provider';
 import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
 import { fixText } from '../lint/fixAll';
 import {
@@ -20,7 +20,7 @@ import { pageFor, RULE_CODES, RULES } from '../lint/rules';
 import type { RuleCode, Syntax } from '../types';
 import { keyFrom, keyPlaces } from './dotenv';
 import { type FileReport, type JevTotals, plural, toReport } from './format';
-import { failureMessage, planJev, runJev } from './jev';
+import { failureMessage, planJev, ROUTE_ENV, routeFrom, runJev } from './jev';
 import { MAX_LINE_BYTES } from './lines';
 import {
 	createSettings,
@@ -124,7 +124,7 @@ const PATHS_SCHEMA = Object.freeze({
 const JEV_INPUTS = Object.freeze({
 	model: {
 		type: 'string',
-		description: `The model to ask: a Jev version, or gpt-6-luna for OpenAI's Decisions API. Defaults to ${DEFAULT_MODEL}, which the checks were measured on.`,
+		description: `The model to ask: a Jev version, gpt-6-luna for OpenAI's Decisions API, or a model id in another platform's spelling, such as ~typesafe/jev-latest for OpenRouter. It is sent to the platform the spelling names, or to ${ROUTE_ENV.endpoint} in the environment the server was started with, which is never an argument. Defaults to ${DEFAULT_MODEL}, which the checks were measured on.`,
 	},
 	maxCalls: {
 		type: 'integer',
@@ -218,6 +218,15 @@ const JEV_TOTALS_SCHEMA = Object.freeze({
 		estimatedInputTokens: integer('An estimate made before sending.'),
 		inputTokens: integer('What the vendor counted.'),
 		model: { type: 'string' },
+		vendor: {
+			type: 'string',
+			description: 'Who was sent the requests, or would be.',
+		},
+		answerer: {
+			type: 'string',
+			description:
+				'What answers, as the messages name it: Jev, Luna or the model.',
+		},
 		state: {
 			type: 'boolean',
 			description: 'True when state written in the text was sent, or would be.',
@@ -232,6 +241,8 @@ const JEV_TOTALS_SCHEMA = Object.freeze({
 		'estimatedInputTokens',
 		'inputTokens',
 		'model',
+		'vendor',
+		'answerer',
 		'state',
 	],
 });
@@ -571,9 +582,26 @@ type JevAsked = Readonly<{
 	model: string;
 	maxCalls: number;
 	sendState: boolean;
+	provider: Provider;
 }>;
 
-function jevAsked(input: Json): JevAsked | string {
+/** How an endpoint is set for the server, after the sentence that says one is needed. */
+const HOW_TO_ROUTE = `Set ${ROUTE_ENV.endpoint}, and ${ROUTE_ENV.shape} where its path does not say, in the environment the server was started with.`;
+
+/** Where a model id is sent, read from the server's environment and never from an argument. */
+function providerFromEnv(model: string, io: Io): Provider | string {
+	const route = routeFrom(
+		{ jevEndpoint: undefined, jevShape: undefined },
+		io.env,
+	);
+	if (typeof route === 'string') return route;
+	const provider = providerFor(model, route);
+	return typeof provider === 'string'
+		? `${provider} ${HOW_TO_ROUTE}`
+		: provider;
+}
+
+function jevAsked(input: Json, io: Io): JevAsked | string {
 	const {
 		model = DEFAULT_MODEL,
 		maxCalls = DEFAULT_MAX_CALLS,
@@ -585,7 +613,14 @@ function jevAsked(input: Json): JevAsked | string {
 		return "'maxCalls' must be a whole number above zero.";
 	if (typeof sendState !== 'boolean')
 		return "'sendState' must be true or false.";
-	return { model: model.trim(), maxCalls: maxCalls as number, sendState };
+	const provider = providerFromEnv(model.trim(), io);
+	if (typeof provider === 'string') return provider;
+	return {
+		model: model.trim(),
+		maxCalls: maxCalls as number,
+		sendState,
+		provider,
+	};
 }
 
 type Planned = Readonly<{
@@ -605,13 +640,14 @@ function planned(input: Json, io: Io, asked: JevAsked): Planned | string {
 		jevModel: asked.model,
 		jevMaxCalls: asked.maxCalls,
 		jevSendState: asked.sendState,
+		provider: asked.provider,
 	});
 	if (typeof plan === 'string') return plan;
 	return { linted, plan };
 }
 
 function planJevTool(input: Json, io: Io): Outcome {
-	const asked = jevAsked(input);
+	const asked = jevAsked(input, io);
 	if (typeof asked === 'string') return fail(asked);
 	const ready = planned(input, io, asked);
 	if (typeof ready === 'string') return fail(ready);
@@ -637,15 +673,16 @@ function shortfall(
 }
 
 async function checkWithJevTool(input: Json, io: Io): Promise<Outcome> {
-	const asked = jevAsked(input);
+	const asked = jevAsked(input, io);
 	if (typeof asked === 'string') return fail(asked);
 	const ready = planned(input, io, asked);
 	if (typeof ready === 'string') return fail(ready);
 	if (typeof ready.plan === 'string') return fail(ready.plan);
-	const provider = providerFor(asked.model);
-	// Looked for only once there is something to send, and never echoed.
+	const { provider } = asked;
+	// Looked for only once there is something to send, and never echoed. A
+	// host the user runs may take none, and then none is sent.
 	const found = keyFrom(provider.envKey, io.env, io.files);
-	if (!found)
+	if (!found && !provider.keyOptional)
 		return fail(
 			`check_with_jev needs ${keyPlaces(provider.envKey)}. Nothing was sent.`,
 		);
@@ -654,7 +691,7 @@ async function checkWithJevTool(input: Json, io: Io): Promise<Outcome> {
 		{
 			fetch: io.fetch,
 			wait: io.wait,
-			key: found.key,
+			key: found?.key ?? '',
 			signal: io.stopSignal(),
 		},
 		false,
@@ -672,7 +709,7 @@ async function checkWithJevTool(input: Json, io: Io): Promise<Outcome> {
 	};
 	return ok({
 		...toReport(ran.reports, totals),
-		keySource: found.source,
+		keySource: found?.source ?? 'none: the host takes no key',
 		shortfall: short ?? null,
 	});
 }
@@ -685,9 +722,10 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 		return fail("'questionId' must be a string.");
 	if (typeof model !== 'string' || !model.trim())
 		return fail(`'model' must be a Jev version, such as ${DEFAULT_MODEL}.`);
-	// The variants are built and read in Jev's shape. Luna's reply for a Choice or a Score is not read yet.
-	const provider = providerFor(model.trim());
-	if (provider.id !== 'typesafe')
+	const provider = providerFromEnv(model.trim(), io);
+	if (typeof provider === 'string') return fail(provider);
+	// The variants are built and read in System One's shape. Luna's reply for a Choice or a Score is not read yet.
+	if (provider.shape !== 'typesafe')
 		return fail(
 			`The probe asks Jev only. Use a Jev version, such as ${DEFAULT_MODEL}.`,
 		);
@@ -722,7 +760,7 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 			'A probe sends the question against its state, so it needs a request with the state written out in the text.',
 		);
 	const found = keyFrom(provider.envKey, io.env, io.files);
-	if (!found)
+	if (!found && !provider.keyOptional)
 		return fail(
 			`probe_question needs ${keyPlaces(provider.envKey)}. Nothing was sent.`,
 		);
@@ -731,7 +769,13 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 	const results: ProbeResult[] = [];
 	for (const variant of variants) {
 		const reply = await ask(
-			{ fetch: io.fetch, key: found.key, wait: io.wait, signal },
+			{
+				fetch: io.fetch,
+				key: found?.key ?? '',
+				provider,
+				wait: io.wait,
+				signal,
+			},
 			variant.request,
 		);
 		// A report built from some of the variants would compare against repeats that never ran.
@@ -750,7 +794,7 @@ async function probeQuestionTool(input: Json, io: Io): Promise<Outcome> {
 			requests: results.length,
 			verdict: probed.verdict,
 			moved: probed.moved,
-			keySource: found.source,
+			keySource: found?.source ?? 'none: the host takes no key',
 			markdown: probed.markdown,
 		},
 		probed.markdown,
@@ -857,7 +901,7 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 		name: 'check_with_jev',
 		title: 'Check with the model',
 		description:
-			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_jev first when the cost matters. The key is read from TYPESAFE_API_KEY or OPENAI_API_KEY in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
+			"Ask the model itself, TypeSafe's Jev or OpenAI's Luna, to check the questions in the given text or paths after linting them: overlapping options, a question that needs counting, a label that does not match its description, and the other checks list_rules marks runsHere: false. This sends the questions to the vendor with the user's own API key and costs money, so call it only when the user asks for a check with Jev or Luna, never on every edit, and use plan_jev first when the cost matters. The key is read from the platform's own variable, TYPESAFE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, LLM_GATEWAY_API_KEY or LIQUID_API_KEY, in the environment the server was started with, or from .env.local or .env in its working directory, and is never taken as an argument. Where the requests go is the platform the model id's spelling names, or JEVLINT_LE_JEV_ENDPOINT in that environment for a host the user runs, never an argument either. Returns the lint report with the model's findings added, each with the probability the model gave, what was sent and answered, and why the check fell short when it did. Bounded by maxCalls.",
 		inputSchema: {
 			type: 'object',
 			properties: {

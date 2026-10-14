@@ -148,7 +148,7 @@
         "jevlint-le.jev.model": {
           "type": "string",
           "default": "jev-1.13.0",
-          "markdownDescription": "The model the **Check This File with Jev** command asks: a Jev version, or `gpt-6-luna` for OpenAI's Decisions API, which then uses your OpenAI key. Pinned to the version its checks were calibrated on. An alias such as `jev-latest` will move those cutoffs under you, and a finding from Luna says the cutoff was set on Jev."
+          "markdownDescription": "The model the **Check This File with Jev** command asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling, such as `~typesafe/jev-latest` for OpenRouter or `d1` for Liquid AI, each sent to that platform with the key in its own variable. Pinned to the version its checks were calibrated on. An alias such as `jev-latest` will move those cutoffs under you, and a finding from any other model says where the cutoff was set."
         },
         "jevlint-le.jev.maxCalls": {
           "type": "number",
@@ -179,6 +179,19 @@
           "scope": "application",
           "ignoreSync": true,
           "markdownDescription": "Your OpenAI API key, used by **Check This File with Jev** when `jevlint-le.jev.model` is `gpt-6-luna`. Held the same way as the TypeSafe key: user settings only, left out of Settings Sync, and **Set OpenAI API Key** stores it in the system keychain instead."
+        },
+        "jevlint-le.jev.endpoint": {
+          "type": "string",
+          "default": "",
+          "scope": "application",
+          "markdownDescription": "The full URL **Check This File with Jev** and the probe post to: a platform you host, such as llama.cpp, vLLM, LiteLLM or Ollaya, or a gateway spelling of the model id that names no host, such as `openai/gpt-6-luna-decisions`. Leave empty to send a model id to the platform its spelling names: `jev-1.13.0` to TypeSafe, `gpt-6-luna` to OpenAI, `~typesafe/jev-latest` to OpenRouter, `typesafe-ai/jev` to Vercel AI Gateway, `d1` to Liquid AI, each with the key in that platform's own variable. User settings only, never a workspace's, so a repository cannot point your key at a host of its choosing. A host this tool does not know is sent the key in `TYPESAFE_API_KEY` or `OPENAI_API_KEY`, whichever the shape's SDK reads, or no key when neither is set."
+        },
+        "jevlint-le.jev.shape": {
+          "type": "string",
+          "enum": ["", "typesafe", "openai"],
+          "default": "",
+          "scope": "application",
+          "markdownDescription": "The request shape sent to `jevlint-le.jev.endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` for a System One body, `openai` for a Decisions body. Leave empty otherwise."
         },
         "jevlint-le.notificationsLevel": {
           "type": "string",

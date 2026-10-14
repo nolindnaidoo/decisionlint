@@ -221,6 +221,8 @@ Scores sent with no levels.
 | `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
 | `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `jevlint-le.jev.endpoint` | `""` | The URL the check posts to, for a platform you host. Empty sends a model id where its spelling says |
+| `jevlint-le.jev.shape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
 | `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
 | `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
 | `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |

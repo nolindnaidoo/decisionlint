@@ -5,6 +5,7 @@ import {
 	EXTENSIONS,
 	MAX_FILE_SIZE_BYTES,
 } from '../lint/lint';
+import type { Shape } from '../lint/targets';
 import type { LintOptions } from '../types';
 import { readLintOptions } from './projectConfig';
 
@@ -29,6 +30,10 @@ export type Configuration = Readonly<{
 		apiKey: string;
 		/** The OpenAI key the same way, for `gpt-6-luna`. */
 		openaiApiKey: string;
+		/** The full URL to post to, for a host the user runs. Empty sends a model id where its spelling says. */
+		endpoint: string;
+		/** The shape sent to that endpoint, where its path does not say. */
+		shape: Shape | '';
 	}>;
 }>;
 
@@ -48,7 +53,18 @@ export const CONFIG_DEFAULTS = Object.freeze({
 	'jev.confirm': false,
 	'jev.apiKey': '',
 	'jev.openaiApiKey': '',
+	'jev.endpoint': '',
+	'jev.shape': '' as Shape | '',
 });
+
+const SHAPES: ReadonlyArray<string> = ['typesafe', 'openai'];
+
+// Anything but the two shapes is "not set", which the endpoint's path may still answer.
+function readShape(value: unknown): Shape | '' {
+	return typeof value === 'string' && SHAPES.includes(value)
+		? (value as Shape)
+		: '';
+}
 
 const LEVELS: ReadonlyArray<string> = ['all', 'important', 'silent'];
 
@@ -113,6 +129,8 @@ export function getConfiguration(): Configuration {
 			confirm: settings.get('jev.confirm') === true,
 			apiKey: readKey(settings.get('jev.apiKey')),
 			openaiApiKey: readKey(settings.get('jev.openaiApiKey')),
+			endpoint: readKey(settings.get('jev.endpoint')),
+			shape: readShape(settings.get('jev.shape')),
 		}),
 	});
 }

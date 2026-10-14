@@ -16,10 +16,10 @@ import type {
 import { ask, type Failure, type Fetch, isFailure, type Reply } from './client';
 import { type QuestionLiteral, toLiteral, toPlain } from './literal';
 import {
+	asSubject,
 	forProvider,
 	isCalibrated,
 	type Provider,
-	providerFor,
 } from './provider';
 import {
 	buildRequest,
@@ -40,6 +40,8 @@ export type ReviewSettings = Readonly<{
 	/** The rule levels and what is ignored, for the file under review. */
 	lint: LintOptions;
 	model: string;
+	/** Where the requests go and in what shape, resolved once by the caller, where a refusal can be shown. */
+	provider: Provider;
 	/** Send the state written out in the file to the checks that read it. */
 	sendState: boolean;
 	/** The most requests this text may cost. */
@@ -133,12 +135,15 @@ function entryOf(
 }
 
 // The number behind a finding, and, from a model the cutoffs were not set on, that fact.
-function rated(probability: number, request: ReviewRequest): string {
-	const provider = providerFor(request.model);
-	const number = `(${provider.model} put this at ${probability.toFixed(2)}.)`;
+function rated(
+	probability: number,
+	request: ReviewRequest,
+	provider: Provider,
+): string {
+	const number = `(${asSubject(provider.model)} put this at ${probability.toFixed(2)}.)`;
 	if (isCalibrated(request.model)) return number;
 	// Another Jev is still Jev by name, so only its version tells the two apart.
-	const asked = provider.id === 'typesafe' ? request.model : provider.model;
+	const asked = provider.model === 'Jev' ? request.model : provider.model;
 	return `${number} The cutoff was set on ${DEFAULT_MODEL}, not on ${asked}.`;
 }
 
@@ -158,7 +163,7 @@ function questionJob(
 				report(
 					found.code,
 					forProvider(
-						`${found.message}${named ? ` Jev points at ${named}.` : ''} ${rated(found.probability, request)}`,
+						`${found.message}${named ? ` Jev points at ${named}.` : ''} ${rated(found.probability, request, provider)}`,
 						provider,
 					),
 					places[0]?.span ?? question.anchor,
@@ -192,7 +197,7 @@ function mapJob(
 				report(
 					found.code,
 					forProvider(
-						`${message} ${rated(found.probability, request)}`,
+						`${message} ${rated(found.probability, request, provider)}`,
 						provider,
 					),
 					span,
@@ -215,8 +220,7 @@ function prepare(
 ): Prepared {
 	const extraction: Extraction = readQuestions(text, syntax);
 	const enabled = enabledReviews(settings.lint);
-	const { model } = settings;
-	const provider = providerFor(model);
+	const { model, provider } = settings;
 	const stateOf = (map: QuestionMap | undefined): unknown =>
 		settings.sendState && map?.state ? toPlain(map.state) : undefined;
 	const jobs: Job[] = [];
@@ -309,7 +313,10 @@ export async function runReview(
 	let failure: Failure | undefined;
 	for (const job of prepare(text, settings, syntax).jobs) {
 		if (network.signal.aborted) break;
-		const reply = await ask(network, job.request);
+		const reply = await ask(
+			{ ...network, provider: settings.provider },
+			job.request,
+		);
 		// A request the user cut off fails too, and that is not a failure to report.
 		if (network.signal.aborted && isFailure(reply)) break;
 		// A bad key or a rejected request will fail the same way on every question.

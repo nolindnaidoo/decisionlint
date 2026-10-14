@@ -1,11 +1,11 @@
 import { LEVELS, readRule } from '../config/projectConfig';
 import { ENV_KEY } from '../jev/client';
-import { providerFor } from '../jev/provider';
+import { VENDOR_KEYS } from '../jev/provider';
 import { DEFAULT_MAX_CALLS, DEFAULT_MODEL } from '../jev/review';
-
-const OPENAI_ENV_KEY = providerFor('gpt-6-luna').envKey;
-
+import type { Shape } from '../lint/targets';
 import type { LintOptions } from '../types';
+
+const OPENAI_ENV_KEY = VENDOR_KEYS.openai.envKey;
 
 export type Format =
 	| 'stylish'
@@ -34,6 +34,10 @@ export type CliOptions = Readonly<{
 	/** Say what `jev` would send, and send nothing. */
 	jevPlan: boolean;
 	jevModel: string | undefined;
+	/** The full URL --jev posts to, for a host the user runs or a gateway spelling that names none. */
+	jevEndpoint: string | undefined;
+	/** The shape sent to that endpoint, where its path does not say. */
+	jevShape: Shape | undefined;
 	/** The most requests in the whole run. */
 	jevMaxCalls: number | undefined;
 	jevSendState: boolean;
@@ -126,7 +130,7 @@ const FLAGS: ReadonlyArray<Flag> = Object.freeze([
 	},
 	{
 		name: '--jev',
-		help: `Also ask the model about each question. Sends them to TypeSafe with the key in ${ENV_KEY}, or with --jev-model gpt-6-luna to OpenAI with the key in ${OPENAI_ENV_KEY}.`,
+		help: `Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with the key in ${ENV_KEY} by default, OpenAI with the key in ${OPENAI_ENV_KEY} under --jev-model gpt-6-luna, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever --jev-endpoint says.`,
 		apply: (options) => ({ ...options, jev: true }),
 	},
 	{
@@ -137,11 +141,29 @@ const FLAGS: ReadonlyArray<Flag> = Object.freeze([
 	{
 		name: '--jev-model',
 		value: 'id',
-		help: `The model --jev asks: a Jev version, or gpt-6-luna for OpenAI's Decisions API. Default ${DEFAULT_MODEL}, which the checks were measured on.`,
+		help: `The model --jev asks: a Jev version, gpt-6-luna for OpenAI's Decisions API, or a model id in another platform's spelling. Default ${DEFAULT_MODEL}, which the checks were measured on.`,
 		apply: (options, value) =>
 			value.trim()
 				? { ...options, jevModel: value.trim() }
 				: 'a model id is needed.',
+	},
+	{
+		name: '--jev-endpoint',
+		value: 'url',
+		help: 'The full URL --jev posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from JEVLINT_LE_JEV_ENDPOINT. A host this tool does not know is sent the key of the shape, or none.',
+		apply: (options, value) =>
+			value.trim()
+				? { ...options, jevEndpoint: value.trim() }
+				: 'a URL is needed.',
+	},
+	{
+		name: '--jev-shape',
+		value: 'shape',
+		help: 'The shape sent to --jev-endpoint where its path does not end in /systemone or /decisions: typesafe or openai. Also read from JEVLINT_LE_JEV_SHAPE.',
+		apply: (options, value) =>
+			value === 'typesafe' || value === 'openai'
+				? { ...options, jevShape: value }
+				: `'${value}' is not a shape. Use typesafe or openai.`,
 	},
 	{
 		name: '--jev-max-calls',
@@ -207,6 +229,8 @@ const DEFAULTS: CliOptions = Object.freeze({
 	jev: false,
 	jevPlan: false,
 	jevModel: undefined,
+	jevEndpoint: undefined,
+	jevShape: undefined,
 	jevMaxCalls: undefined,
 	jevSendState: false,
 	allowNoFiles: false,

@@ -109,7 +109,7 @@ exports.run = async function run() {
 	const folder = vscode.workspace.workspaceFolders[0].uri;
 	const json = vscode.Uri.joinPath(folder, 'triage.jev.json');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(json));
-	const expectedJson = ['JEV001', 'JEV004', 'JEV008', 'JEV006', 'JEV006', 'JEV007', 'JEV006', 'JEV005'];
+	const expectedJson = ['DEC001', 'DEC004', 'DEC008', 'DEC006', 'DEC006', 'DEC007', 'DEC006', 'DEC005'];
 	await until(
 		() => JSON.stringify(codes(json)) === JSON.stringify(expectedJson),
 		() => 'triage.jev.json has ' + JSON.stringify(codes(json)),
@@ -158,7 +158,7 @@ exports.run = async function run() {
 
 	const ts = vscode.Uri.joinPath(folder, 'triage.ts');
 	await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(ts));
-	const expectedTs = ['JEV001', 'JEV004', 'JEV008', 'JEV000', 'JEV009', 'JEV007', 'JEV005'];
+	const expectedTs = ['DEC001', 'DEC004', 'DEC008', 'DEC000', 'DEC009', 'DEC007', 'DEC005'];
 	await until(
 		() => JSON.stringify(codes(ts)) === JSON.stringify(expectedTs),
 		() => 'triage.ts has ' + JSON.stringify(codes(ts)),

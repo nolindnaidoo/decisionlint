@@ -26,7 +26,9 @@ are `decisionlint.json` and `decisionlint-disable` (the old spellings
 packages are `decisionlint` and `decisionlint-mcp`, the MCP server is
 `io.github.nolindnaidoo/decisionlint`, and the repository is
 `nolindnaidoo/decisionlint`. The old extension id is a different keychain,
-so a key stored by JevLint-LE is not read; the user sets it once more.
+so a key stored by JevLint-LE is not read; the user sets it once more. The
+rule codes are `DEC` and the model-backed rules are `model-*`; the `JEV`
+codes and `jev-*` names are read for ever and never written.
 
 ## Architecture
 
@@ -146,11 +148,11 @@ family's files, copied unchanged from `regex-le`.
   `Map`. `lint.test.ts` drives each prototype name through each position.
 - **The reader refuses rather than guesses.** A value that is not a literal is
   `unreadable`. An object with a spread, a computed key or a method is
-  `partial`. A rule that needs such a value does not run, and `JEV000` says so.
+  `partial`. A rule that needs such a value does not run, and `DEC000` says so.
   Never make a rule fire on a partial value.
-- **The unread count is taken before suppression.** Switching `JEV000` off
+- **The unread count is taken before suppression.** Switching `DEC000` off
   hides the hints and leaves the count, so an unread file never looks clean.
-- **Duplicate keys must survive the reader.** `JEV005` depends on it, which is
+- **Duplicate keys must survive the reader.** `DEC005` depends on it, which is
   why JSON is read by this reader and not by `JSON.parse`.
 - **No vendor number outside `lint/limits.ts` and `lint/targets.ts`.** Each
   entry carries the page it was read from and the date. A number enters
@@ -168,11 +170,11 @@ family's files, copied unchanged from `regex-le`.
   `lintText` throws on a target id the table does not have, and the settings
   readers refuse it first.
 - **A model id is parsed, never matched.** `lint/models.ts` reads every
-  spelling into its parts. `JEV001` fires on any floating Jev alias and its
+  spelling into its parts. `DEC001` fires on any floating Jev alias and its
   fix pins in the spelling the platform documents, or offers none: a bare
   alias becomes `KNOWN_VERSION`, `~typesafe/jev-latest` becomes
   `typesafe/jev-1.13` as OpenRouter writes it, and `typesafe/jev-latest` gets
-  no fix because no page says what its pinned form is. `JEV013` compares the
+  no fix because no page says what its pinned form is. `DEC013` compares the
   version out of any spelling. A Hugging Face repo id, an Ollama tag or a
   deployment name is no family this reads, so neither rule touches it.
 - **The rule tables in SPEC.md and README.md must equal `lint/rules.ts`.**
@@ -204,9 +206,17 @@ family's files, copied unchanged from `regex-le`.
   editor. Text handed over directly, on standard input or to `lint_text`, is
   never excluded.
 - **A comment is unused only if nothing it could silence was reported.**
-  `JEV010` is worked out after every finding has been asked about, and never
+  `DEC010` is worked out after every finding has been asked about, and never
   for a comment that names only Jev-backed rules. It is not silenced by a
   comment, or a bare one would hide the report of itself.
+- **The old codes and names are read for ever, and never written.** `JEV004`
+  means `DEC004` in a comment, in `rules`, in `ignore` and in `explain_rule`,
+  and `jev-counting` means `model-counting` where a rule is named by name: a
+  comment or a settings file in a repository is not this tool's to update.
+  `currentCode` in `lint/rules.ts` is the one place that knows the old
+  spelling of a code, and every finding, report and page is written with the
+  new. Each old rule page stays as a pointer, generated with the rest, so a
+  finding from 0.8.1 still has a page to open.
 - **Where a `decisionlint.json` applies it replaces the editor's lint settings.**
   It is never merged with them. The point of the file is that the editor and
   the command line report the same findings, and `extension.test.ts` runs
@@ -574,11 +584,11 @@ family's files, copied unchanged from `regex-le`.
   `DEFAULT_MODEL`: the setting's default in `package.json`, both readmes and
   the two lines of `SPEC.md` that state the default.
 - **`KNOWN_VERSION` and `DEFAULT_MODEL` are two facts.** The first, in
-  `lint/limits.ts`, is what `jev-latest` points to and what the JEV001 fix
+  `lint/limits.ts`, is what `jev-latest` points to and what the DEC001 fix
   writes. The second is what the cutoffs were set on. They differ from a Jev
   release until the checks are calibrated again, so no test holds them equal.
 - **A user ahead of the measured version is told, offline and in a check.**
-  `JEV013` fires on a versioned id above `MEASURED_ON`, and a Jev check asked
+  `DEC013` fires on a versioned id above `MEASURED_ON`, and a Jev check asked
   of any model but `MEASURED_ON` ends its findings with where the cutoff was
   set. Both compare with the measured version and not `KNOWN_VERSION`: moving
   `KNOWN_VERSION` alone measures nothing, so it must not quiet either.
@@ -682,7 +692,7 @@ bun run validate -- --dry-run   # what would be sent to Jev, no key needed
   is not read as a question.
 - The reader is a lexer and a literal parser, not a JavaScript parser. A TypeScript
   type literal such as `{ type: 'noul', instructions: string }` reads as a
-  question with unreadable instructions and gets a `JEV000` hint.
+  question with unreadable instructions and gets a `DEC000` hint.
 - A generic call with a comma in its type arguments, such as `f<A, B>(x)`,
   inside an object literal makes that object unreadable as a whole. Objects
   nested inside it are still found.

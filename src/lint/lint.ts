@@ -22,7 +22,7 @@ import type {
 } from '../types';
 import { check } from './checks';
 import { normalizeOption } from './finding';
-import { RULES } from './rules';
+import { currentCode, RULES } from './rules';
 import { suppression, type UnusedDirective } from './suppress';
 import {
 	TARGET_IDS,
@@ -272,9 +272,9 @@ function unusedDisable(unused: UnusedDirective): Finding {
 	const named =
 		'This comment silences nothing. Remove it, so it cannot hide a finding that is added later.';
 	return {
-		code: 'JEV010',
+		code: 'DEC010',
 		message: unused.bare
-			? `${named} If it is there for a check Jev makes, name the rule, such as JEV303.`
+			? `${named} If it is there for a check Jev makes, name the rule, such as DEC303.`
 			: named,
 		span: unused.span,
 		questionId: undefined,
@@ -285,8 +285,15 @@ function unusedDisable(unused: UnusedDirective): Finding {
 function isIgnored(finding: Finding, ignore: ReadonlyArray<string>): boolean {
 	return (
 		finding.questionId !== undefined &&
-		ignore.includes(`${finding.code}:${finding.questionId}`)
+		ignore.map(currentEntry).includes(`${finding.code}:${finding.questionId}`)
 	);
+}
+
+// `JEV004:team`, written before 1.0.0, as `DEC004:team`.
+function currentEntry(entry: string): string {
+	const colon = entry.indexOf(':');
+	if (colon === -1) return entry;
+	return `${currentCode(entry.slice(0, colon))}${entry.slice(colon)}`;
 }
 
 function withSeverity(
@@ -300,7 +307,7 @@ function withSeverity(
 
 /**
  * Lints one file's text. Pure: no editor, no filesystem, no network. The
- * unreadable count is taken before any suppression, so silencing JEV000 can
+ * unreadable count is taken before any suppression, so silencing DEC000 can
  * hide the hints but cannot make an unread file look fully checked.
  */
 export function lintText(
@@ -383,6 +390,6 @@ export function lintText(
 	return Object.freeze({
 		findings,
 		questionCount: extraction.questions.length + extraction.malformed.length,
-		unreadableCount: all.filter((finding) => finding.code === 'JEV000').length,
+		unreadableCount: all.filter((finding) => finding.code === 'DEC000').length,
 	});
 }

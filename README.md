@@ -59,9 +59,9 @@ A request like this one looks fine and has three problems:
 
 | Finding | Why it matters |
 |---|---|
-| `JEV001` on `jev-latest` | The alias moves with each release, so answers can change with no change on your side |
-| `JEV004` on `team` | A message about neither team is still forced into one of them |
-| `JEV102` on `late` | Jev does not count reliably. Ask about each parcel and count in code |
+| `DEC001` on `jev-latest` | The alias moves with each release, so answers can change with no change on your side |
+| `DEC004` on `team` | A message about neither team is still forced into one of them |
+| `DEC102` on `late` | Jev does not count reliably. Ask about each parcel and count in code |
 
 ## What it catches
 
@@ -71,43 +71,43 @@ the mistakes that can be read from the text.
 
 | Code | Name | Default | What it means |
 |---|---|---|---|
-| JEV000 | unreadable | hint | Part of the question is built at runtime, so the rules that need it did not run |
-| JEV001 | unpinned-model | warning | An alias such as `jev-latest` moves with each release, so answers can change with no change on your side |
-| JEV002 | choice-option-limit | error | A Choice has more than 255 options. The API rejects it |
-| JEV003 | score-level-limit | error | A Score has more than 10 levels. The API rejects it |
-| JEV004 | no-fallback-option | info | A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text |
-| JEV005 | duplicate | error | A question id, option or level appears twice. In an object the later one silently replaces the earlier |
-| JEV006 | criteria-shape | error | A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false` |
-| JEV007 | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
-| JEV008 | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
-| JEV009 | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
-| JEV010 | unused-disable | warning | A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later |
-| JEV011 | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
-| JEV012 | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
-| JEV013 | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
-| JEV014 | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
-| JEV101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
-| JEV102 | arithmetic | warning | The question asks Jev to count or compare numbers |
-| JEV103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
-| JEV104 | compound | off | A Noul joins two judgments with 'and' |
-| JEV105 | generation | warning | The question asks for a value or for text to be written |
-| JEV107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
-| JEV108 | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
-| JEV110 | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
-| JEV111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
-| JEV112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
-| JEV301 | jev-counting | warning | Jev reads the question as needing counting or arithmetic |
-| JEV302 | jev-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
-| JEV303 | jev-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
-| JEV304 | jev-overlapping-levels | warning | Jev reads two levels of a Score as the same situation |
-| JEV305 | jev-label-mismatch | warning | Jev reads an option as named for one thing and described as another |
-| JEV306 | jev-criteria-off-topic | info | Jev reads the criteria as deciding something the instructions do not ask |
-| JEV307 | jev-ordered-options | info | Jev reads a Choice's options as steps on one scale, which a Score would place between |
-| JEV308 | jev-unordered-levels | info | Jev reads a Score's levels as unordered categories, which a Choice would pick from |
-| JEV309 | jev-depends-on-sibling | info | Jev reads a question as needing another question's answer from the same request |
-| JEV310 | jev-overlapping-questions | info | Jev reads two questions in one request as asking for the same judgment |
-| JEV311 | jev-answer-not-in-state | info | Jev reads the state written in the file as not holding what the question asks about |
-| JEV312 | jev-orders-in-state | info | Jev reads part of the state written in the file as giving orders to its reader |
+| DEC000 | unreadable | hint | Part of the question is built at runtime, so the rules that need it did not run |
+| DEC001 | unpinned-model | warning | An alias such as `jev-latest` moves with each release, so answers can change with no change on your side |
+| DEC002 | choice-option-limit | error | A Choice has more than 255 options. The API rejects it |
+| DEC003 | score-level-limit | error | A Score has more than 10 levels. The API rejects it |
+| DEC004 | no-fallback-option | info | A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text |
+| DEC005 | duplicate | error | A question id, option or level appears twice. In an object the later one silently replaces the earlier |
+| DEC006 | criteria-shape | error | A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false` |
+| DEC007 | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
+| DEC008 | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
+| DEC009 | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
+| DEC010 | unused-disable | warning | A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later |
+| DEC011 | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
+| DEC012 | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
+| DEC013 | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
+| DEC014 | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
+| DEC101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
+| DEC102 | arithmetic | warning | The question asks Jev to count or compare numbers |
+| DEC103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
+| DEC104 | compound | off | A Noul joins two judgments with 'and' |
+| DEC105 | generation | warning | The question asks for a value or for text to be written |
+| DEC107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
+| DEC108 | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
+| DEC110 | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
+| DEC111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
+| DEC112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
+| DEC301 | model-counting | warning | Jev reads the question as needing counting or arithmetic |
+| DEC302 | model-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
+| DEC303 | model-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
+| DEC304 | model-overlapping-levels | warning | Jev reads two levels of a Score as the same situation |
+| DEC305 | model-label-mismatch | warning | Jev reads an option as named for one thing and described as another |
+| DEC306 | model-criteria-off-topic | info | Jev reads the criteria as deciding something the instructions do not ask |
+| DEC307 | model-ordered-options | info | Jev reads a Choice's options as steps on one scale, which a Score would place between |
+| DEC308 | model-unordered-levels | info | Jev reads a Score's levels as unordered categories, which a Choice would pick from |
+| DEC309 | model-depends-on-sibling | info | Jev reads a question as needing another question's answer from the same request |
+| DEC310 | model-overlapping-questions | info | Jev reads two questions in one request as asking for the same judgment |
+| DEC311 | model-answer-not-in-state | info | Jev reads the state written in the file as not holding what the question asks about |
+| DEC312 | model-orders-in-state | info | Jev reads part of the state written in the file as giving orders to its reader |
 
 Each finding links to [its own page](https://github.com/nolindnaidoo/decisionlint/blob/main/docs/rules/README.md), with an example that is flagged, one that is not, how to fix it and how to silence it. Each page links on to the TypeSafe documentation the rule comes from.
 
@@ -150,10 +150,10 @@ covers, exactly:
   option, a description that only repeats its name, terse instructions,
   degree levels, duplicates, counting, an undefined boundary and the rest.
   Findings name Luna. OpenAI's own guide asks for the same things.
-- **Held back.** `JEV002` and `JEV003` check a platform's published
+- **Held back.** `DEC002` and `DEC003` check a platform's published
   limits, and OpenAI publishes none, so a request bound for OpenAI gets
   neither. One bound for a gateway that does, such as Vercel's, gets both.
-  `JEV001` is about Jev's moving aliases, and OpenAI has one model id.
+  `DEC001` is about Jev's moving aliases, and OpenAI has one model id.
 - **Shape mistakes** are reported in OpenAI's own field names: `choices`
   written as a map or as bare names, a Choice with no `choices`, a Score
   with no `levels`. A mistyped `predicate` is fixed on the lightbulb. The
@@ -214,7 +214,7 @@ serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 
 ## Ask a model about a file
 
-Rules `JEV301` to `JEV312` are not part of linting. They run only when you run
+Rules `DEC301` to `DEC312` are not part of linting. They run only when you run
 one of the **Ask** commands, or pass `--ask` on the command line. Each sends
 every question in the file to a decision model and asks it about problems a
 text pattern cannot see: options that overlap, an option whose name
@@ -291,9 +291,9 @@ both read it, so what you see while writing is what CI reports.
 
 ```json
 {
-  "rules": { "JEV004": "error", "JEV112": "off" },
+  "rules": { "DEC004": "error", "DEC112": "off" },
   "fallbackOptions": ["other", "none", "unsure"],
-  "ignore": ["JEV004:department"],
+  "ignore": ["DEC004:department"],
   "exclude": ["fixtures", "**/*.generated.ts"]
 }
 ```
@@ -308,7 +308,7 @@ and `ignore` settings in the editor. If it cannot be read, nothing is linted
 and the status bar says why. A key it does not know is an error, so a typo
 cannot quietly leave a rule on.
 
-To silence one finding, use the lightbulb: **Disable JEV004 for this line**
+To silence one finding, use the lightbulb: **Disable DEC004 for this line**
 or **for this file** writes the comment for you. Strict JSON has no comments,
 so there a finding is silenced with `ignore`.
 
@@ -418,7 +418,7 @@ With [pre-commit](https://pre-commit.com):
 
 ### Asking a model
 
-`--ask` runs the checks that ask a decision model, `JEV301` to `JEV312`, after
+`--ask` runs the checks that ask a decision model, `DEC301` to `DEC312`, after
 the linting. It is the only option that uses the network, and nothing in a
 settings file can turn it on.
 
@@ -521,12 +521,12 @@ Nothing else in this extension uses the network. On the command line, only
 - **Anything about a value it cannot see.** A question built from variables is
   reported as unreadable and counted in the status bar. A file is never shown
   as clean while part of it went unread.
-- **Everything about wording.** `JEV101` to `JEV112` are heuristics over
+- **Everything about wording.** `DEC101` to `DEC112` are heuristics over
   English text. A rule is on only where a badly written question cost answers
   or confidence against Jev, in our runs or in someone else's, and it stays
   on only while it is right on at least 9 of 10 of its findings on public
   code it was not tuned against. Four that describe failure modes in
-  TypeSafe's docs, `JEV104`, `JEV107`, `JEV108` and `JEV111`, did not fail on
+  TypeSafe's docs, `DEC104`, `DEC107`, `DEC108` and `DEC111`, did not fail on
   `jev-1.13.0` and are off. Switch any of them on in `decisionlint.rules`. Two
   more were removed in 0.4.0 for being wrong every time they fired.
 - **Anything about a question that is not in English.**
@@ -534,7 +534,7 @@ Nothing else in this extension uses the network. On the command line, only
   `questions` map may be a template or half of a builder, so a missing
   `criteria` is only reported inside a request.
 
-`JEV004` is informational because the advice behind it is conditional: add a
+`DEC004` is informational because the advice behind it is conditional: add a
 fallback when the options might not cover every input. It fires on 9 of the 11
 Choice examples in TypeSafe's own docs. If your options are exhaustive, turn it
 off for that question.
@@ -544,15 +544,17 @@ off for that question.
 In code:
 
 ```ts
-// decisionlint-disable-next-line JEV004
+// decisionlint-disable-next-line DEC004
 const side = { type: 'choice', instructions: 'Heads or tails?', criteria: { heads: null, tails: null } };
 ```
 
 `decisionlint-disable-line` covers the same line and `decisionlint-disable` the whole file.
 Leave the code off to silence every rule.
 
-A comment that silences nothing is reported as `JEV010`, so one left behind
+A comment that silences nothing is reported as `DEC010`, so one left behind
 after its finding was fixed cannot hide a new finding later.
+
+What was written for JevLint-LE still works: a `jevlint-le-disable` comment, and the `JEV` codes in a comment, in `rules` or in `ignore`, are read for ever. Every finding is written with the `DEC` code.
 
 ## Fixing
 
@@ -573,7 +575,7 @@ does, so they are never written for you. They stay on the lightbulb.
 JSON has no comments, so use the setting:
 
 ```json
-{ "decisionlint.ignore": ["JEV004:side"] }
+{ "decisionlint.ignore": ["DEC004:side"] }
 ```
 
 ## Keyboard shortcuts
@@ -622,7 +624,7 @@ them you will not press by accident.
 | Setting | Default | Meaning |
 |---|---|---|
 | `decisionlint.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as it would in a `decisionlint.json` |
-| `decisionlint.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
+| `decisionlint.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `DEC004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `decisionlint.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `decisionlint.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
 | `decisionlint.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |

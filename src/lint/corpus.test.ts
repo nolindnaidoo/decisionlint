@@ -17,7 +17,7 @@ const corpus: ReadonlyArray<Entry> = JSON.parse(
 	readFileSync(new URL(`${CORPUS}/questions.json`, import.meta.url), 'utf8'),
 );
 
-const WORDING = RULE_CODES.filter((code) => code > 'JEV100' && code < 'JEV300');
+const WORDING = RULE_CODES.filter((code) => code > 'DEC100' && code < 'DEC300');
 const ALL_ON = {
 	...DEFAULT_OPTIONS,
 	rules: Object.fromEntries(WORDING.map((code) => [code, 'warning' as const])),
@@ -74,8 +74,8 @@ describe('wording rules against the corpus', () => {
 	);
 
 	it('labels every bad question with a wording rule that exists', () => {
-		// JEV3xx labels are for the checks Jev itself makes. `lintText` cannot score those.
-		const known = new Set<string>(RULE_CODES.filter((code) => code > 'JEV100'));
+		// DEC3xx labels are for the checks the model itself makes. `lintText` cannot score those.
+		const known = new Set<string>(RULE_CODES.filter((code) => code > 'DEC100'));
 		const unknown = corpus
 			.flatMap((entry) => entry.defects)
 			.filter((code) => !known.has(code));

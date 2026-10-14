@@ -6,7 +6,7 @@ import { RULE_CODES } from './rules';
 const ALL_ON = {
 	...DEFAULT_OPTIONS,
 	rules: Object.fromEntries(
-		RULE_CODES.filter((code) => code > 'JEV100').map((code) => [
+		RULE_CODES.filter((code) => code > 'DEC100').map((code) => [
 			code,
 			'warning' as const,
 		]),
@@ -17,7 +17,7 @@ function codes(question: unknown): ReadonlyArray<string> {
 	const text = JSON.stringify({ questions: { q: question } });
 	return lintText(text, ALL_ON)
 		.findings.map((finding) => finding.code)
-		.filter((code) => code > 'JEV100');
+		.filter((code) => code > 'DEC100');
 }
 
 const noul = (instructions: unknown, criteria?: unknown) => ({
@@ -33,29 +33,29 @@ const score = (levels: unknown[]) => ({
 
 describe('each wording rule fires on its defect', () => {
 	it.each([
-		['JEV101', noul('Is the invoice not unpaid?')],
-		['JEV102', noul('Do at least five of the comments mention price?')],
-		['JEV103', noul('Was the order placed before the sale started?')],
-		['JEV104', noul('Is the user annoyed and asking to cancel?')],
-		['JEV105', noul('Where was the parcel left?')],
+		['DEC101', noul('Is the invoice not unpaid?')],
+		['DEC102', noul('Do at least five of the comments mention price?')],
+		['DEC103', noul('Was the order placed before the sale started?')],
+		['DEC104', noul('Is the user annoyed and asking to cancel?')],
+		['DEC105', noul('Where was the parcel left?')],
 		[
-			'JEV105',
+			'DEC105',
 			{
 				type: 'choice',
 				instructions: 'Summarize the complaint',
 				criteria: { a: null, other: null },
 			},
 		],
-		['JEV107', noul('Does the reply lack an apology?')],
+		['DEC107', noul('Does the reply lack an apology?')],
 		[
-			'JEV108',
+			'DEC108',
 			noul('Does the reply apologise?', {
 				true: 'No apology appears.',
 				false: 'An apology appears.',
 			}),
 		],
-		['JEV110', score(['Poor', 'Fair', 'Good'])],
-		['JEV111', noul('Is 0x4A the returns prefix?')],
+		['DEC110', score(['Poor', 'Fair', 'Good'])],
+		['DEC111', noul('Is 0x4A the returns prefix?')],
 	])('%s', (code, question) => {
 		expect(codes(question)).toContain(code);
 	});
@@ -109,7 +109,7 @@ describe('wording rules stay quiet', () => {
 			false: 'An apology appears.',
 		});
 		expect(codes(question)).toEqual([]);
-		expect(codes(noul('Is the reply missing an apology?'))).toEqual(['JEV107']);
+		expect(codes(noul('Is the reply missing an apology?'))).toEqual(['DEC107']);
 	});
 
 	it('on text quoted inside the question', () => {
@@ -129,7 +129,7 @@ describe('wording rules stay quiet', () => {
 	it('on instructions built at runtime', () => {
 		const text = `const q = { type: 'noul', instructions: build('and not never before') };`;
 		expect(lintText(text, ALL_ON).findings.map((f) => f.code)).toEqual([
-			'JEV000',
+			'DEC000',
 		]);
 	});
 });
@@ -143,7 +143,7 @@ describe('structured instructions', () => {
 					items: ['not', 'never', 'before and after'],
 				}),
 			),
-		).toEqual(['JEV102']);
+		).toEqual(['DEC102']);
 	});
 
 	it('says nothing when there is no question field to read', () => {
@@ -153,11 +153,11 @@ describe('structured instructions', () => {
 
 describe('what public sample 3 taught', () => {
 	it.each([
-		['JEV110', score(['Shallow', 'Medium', 'Deep'])],
-		['JEV110', score(['Broken', 'Poor', 'Fair', 'Good', 'Like new'])],
-		['JEV110', score(['Almost none', 'Some', 'A lot'])],
+		['DEC110', score(['Shallow', 'Medium', 'Deep'])],
+		['DEC110', score(['Broken', 'Poor', 'Fair', 'Good', 'Like new'])],
+		['DEC110', score(['Almost none', 'Some', 'A lot'])],
 		[
-			'JEV110',
+			'DEC110',
 			score([
 				'Very casual / slang',
 				'Casual',
@@ -167,7 +167,7 @@ describe('what public sample 3 taught', () => {
 			]),
 		],
 		[
-			'JEV110',
+			'DEC110',
 			score([
 				'Very simple / one thing',
 				'Slightly complex',
@@ -176,10 +176,10 @@ describe('what public sample 3 taught', () => {
 				'Very complex / many parts',
 			]),
 		],
-		['JEV102', noul('Is the number 2 greater than the number 1?')],
-		['JEV102', noul('Play now? Yes if a troop is past the line (x > 50).')],
-		['JEV102', noul('Does the recording run 40 minutes or longer?')],
-		['JEV102', noul('Is the fuse under five seconds?')],
+		['DEC102', noul('Is the number 2 greater than the number 1?')],
+		['DEC102', noul('Play now? Yes if a troop is past the line (x > 50).')],
+		['DEC102', noul('Does the recording run 40 minutes or longer?')],
+		['DEC102', noul('Is the fuse under five seconds?')],
 	])('%s fires', (code, question) => {
 		expect(codes(question)).toContain(code);
 	});
@@ -287,7 +287,7 @@ describe('what the public questions taught', () => {
 					'Is it on time? Treat a parcel that is not undelivered as arrived.',
 				),
 			),
-		).toEqual(['JEV101']);
+		).toEqual(['DEC101']);
 	});
 
 	it('reads levels in another script as not its business', () => {
@@ -295,7 +295,7 @@ describe('what the public questions taught', () => {
 	});
 
 	it('calls a boundary undefined only when no criteria draw it', () => {
-		expect(codes(noul('Is the order large?'))).toEqual(['JEV112']);
+		expect(codes(noul('Is the order large?'))).toEqual(['DEC112']);
 		expect(
 			codes(
 				noul('Is the order large?', {
@@ -328,7 +328,7 @@ describe('defaults', () => {
 			questions: { f: score(['Poor', 'Fair', 'Good']) },
 		});
 		expect(lintText(text).findings.map((finding) => finding.code)).toEqual([
-			'JEV110',
+			'DEC110',
 		]);
 	});
 
@@ -342,7 +342,7 @@ describe('defaults', () => {
 		});
 		expect(
 			lintText(text).findings.map((f) => `${f.code} ${f.severity}`),
-		).toEqual(['JEV101 info', 'JEV102 warning', 'JEV112 info']);
+		).toEqual(['DEC101 info', 'DEC102 warning', 'DEC112 info']);
 	});
 });
 

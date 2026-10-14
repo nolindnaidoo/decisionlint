@@ -150,7 +150,7 @@
         "decisionlint.rules": {
           "type": "object",
           "default": {},
-          "markdownDescription": "Severity per rule, by code or name. Values: `off`, `hint`, `info`, `warning`, `error`. A rule not listed keeps its default. An entry that names no rule or no level stops linting and says why, as it would in a `decisionlint.json`. Example: `{ \"JEV004\": \"off\" }`.",
+          "markdownDescription": "Severity per rule, by code or name. Values: `off`, `hint`, `info`, `warning`, `error`. A rule not listed keeps its default. An entry that names no rule or no level stops linting and says why, as it would in a `decisionlint.json`. Example: `{ \"DEC004\": \"off\" }`.",
           "additionalProperties": {
             "type": "string",
             "enum": [
@@ -168,7 +168,7 @@
             "type": "string"
           },
           "default": ["other", "none", "none of the above", "unknown", "unclear", "uncertain", "unsure", "ambiguous", "undetermined", "neither", "not stated", "not applicable", "insufficient evidence", "cannot tell", "n/a", "その他", "其他", "otro", "outro", "autre", "andere"],
-          "markdownDescription": "Words that make a Choice option a fallback for `JEV004`. An option counts when one of these is a word in its name, matched case-insensitively with `_` and `-` read as spaces, so `none_implied` counts under `none`."
+          "markdownDescription": "Words that make a Choice option a fallback for `DEC004`. An option counts when one of these is a word in its name, matched case-insensitively with `_` and `-` read as spaces, so `none_implied` counts under `none`."
         },
         "decisionlint.ignore": {
           "type": "array",
@@ -176,7 +176,7 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Findings to drop, as `CODE:questionId`. Example: `JEV004:department`. This is the way to suppress a finding in JSON, which has no comments."
+          "markdownDescription": "Findings to drop, as `CODE:questionId`. Example: `DEC004:department`. This is the way to suppress a finding in JSON, which has no comments."
         },
         "decisionlint.target": {
           "type": "string",

@@ -7,10 +7,9 @@ are named right here instead of aliased.
 
 ## Decisions
 
-- **D1. The rule codes stay `JEV`**, names included, for this pass. A code
-  is an identifier in users' suppression comments, settings files and SARIF
-  baselines, where nothing ever updates it. The number ranges carry the
-  taxonomy: 0xx shape, 1xx wording, 2xx request, 3xx model-backed.
+- **D1. Superseded by D7.** The rule codes were to stay `JEV` because a
+  code is an identifier in users' suppression comments, settings files and
+  SARIF baselines, where nothing ever updates it.
 - **D2. The verb is `ask`, and the editor has one command per platform.**
   `--jev` and `jev.*` were named after one model and reach nine platforms.
   On the command line and in the server the platform is an argument; in
@@ -35,6 +34,14 @@ are named right here instead of aliased.
   the exact name first, with the installs and the age. The suffix was the
   one thing in the way. The tool stays the author's and is listed on
   letools.dev, outside the family's naming. Decided on 2026-10-14.
+- **D7. The rule codes are `DEC`, and the model-backed rules are `model-*`.**
+  With D6 nothing under the new name is published, so this is the last cheap
+  moment, and the base is 6 installs and 0.8.1 on npm. The numbers stay, so
+  the taxonomy stays: 0xx shape, 1xx wording, 2xx request, 3xx model-backed.
+  What D1 protected is kept another way: the old codes and names are read
+  for ever in comments, `rules`, `ignore` and `explain_rule`, every finding
+  is written with the new code, and each old rule page stays as a pointer.
+  A SARIF baseline is renamed once. Decided on 2026-10-14.
 
 ## The names
 
@@ -48,6 +55,8 @@ are named right here instead of aliased.
 | `io.github.nolindnaidoo/jevlint-le` | `io.github.nolindnaidoo/decisionlint` | the old listing, marked deprecated |
 | `jevlint-le.json` | `decisionlint.json` | read when the new file is absent, with a notice. Permanent |
 | `jevlint-le-disable*` | `decisionlint-disable*` | still silences. Permanent |
+| `JEV000` to `JEV312` | `DEC000` to `DEC312`, the same numbers | read for ever in comments, `rules`, `ignore` and `explain_rule`; each old page points at the new. Permanent |
+| `jev-counting` and the other eleven 3xx names | `model-counting` and so on | read for ever where a rule is named by name. Permanent |
 | `jevlint-le.*` settings and command ids | `decisionlint.*` | nothing. A new extension id has new settings |
 | `jevlint-le.jev.model` | `decisionlint.ask.models` (one id per platform) | nothing, unpublished shape |
 | `jevlint-le.jev.apiKey`, `.openaiApiKey` | `decisionlint.ask.keys` (one per platform) | nothing. The keychain is per extension id, so each key is set once more |
@@ -59,8 +68,7 @@ are named right here instead of aliased.
 | the `jevlint-le` pre-commit hook id | `decisionlint` | a second `jevlint-le` id in `.pre-commit-hooks.yaml`, in every tag from 1.0.0, because pre-commit reads the file at the tag |
 | `src/jev/`, `commands/jev.ts`, `cli/jev.ts` | `src/ask/`, `commands/ask.ts`, `cli/ask.ts` | internal |
 
-The `JEV3xx` rule names, `jev-overlapping-*`, keep their names under D1.
-Every message about what a model said names the model, not Jev, which the
+The `DEC3xx` rules are named `model-*` under D7. Every message about what a model said names the model, not Jev, which the
 0.9.0 work already does.
 
 ## The platforms a command can ask

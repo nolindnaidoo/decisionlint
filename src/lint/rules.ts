@@ -13,38 +13,38 @@ export type Rule = Readonly<{
 
 /** The single list of rules. SPEC.md and README.md are held to it by `rules.test.ts`, the README's meanings too. */
 export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
-	JEV000: {
-		code: 'JEV000',
+	DEC000: {
+		code: 'DEC000',
 		name: 'unreadable',
 		meaning:
 			'Part of the question is built at runtime, so the rules that need it did not run',
 		severity: 'hint',
 		docs: DOCS.api,
 	},
-	JEV001: {
-		code: 'JEV001',
+	DEC001: {
+		code: 'DEC001',
 		name: 'unpinned-model',
 		meaning:
 			'An alias such as `jev-latest` moves with each release, so answers can change with no change on your side',
 		severity: 'warning',
 		docs: DOCS.models,
 	},
-	JEV002: {
-		code: 'JEV002',
+	DEC002: {
+		code: 'DEC002',
 		name: 'choice-option-limit',
 		meaning: 'A Choice has more than 255 options. The API rejects it',
 		severity: 'error',
 		docs: DOCS.api,
 	},
-	JEV003: {
-		code: 'JEV003',
+	DEC003: {
+		code: 'DEC003',
 		name: 'score-level-limit',
 		meaning: 'A Score has more than 10 levels. The API rejects it',
 		severity: 'error',
 		docs: DOCS.api,
 	},
-	JEV004: {
-		code: 'JEV004',
+	DEC004: {
+		code: 'DEC004',
 		name: 'no-fallback-option',
 		meaning:
 			'A Choice has no `other` or `none of the above`, so an input that fits no option is forced into one. The largest cost measured anywhere, and the hardest to tell from text',
@@ -60,48 +60,48 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: DOCS.choice,
 	},
-	JEV005: {
-		code: 'JEV005',
+	DEC005: {
+		code: 'DEC005',
 		name: 'duplicate',
 		meaning:
 			'A question id, option or level appears twice. In an object the later one silently replaces the earlier',
 		severity: 'error',
 		docs: DOCS.api,
 	},
-	JEV006: {
-		code: 'JEV006',
+	DEC006: {
+		code: 'DEC006',
 		name: 'criteria-shape',
 		meaning:
 			'A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false`',
 		severity: 'error',
 		docs: DOCS.api,
 	},
-	JEV007: {
-		code: 'JEV007',
+	DEC007: {
+		code: 'DEC007',
 		name: 'invalid-question',
 		meaning:
 			'The type is missing or unknown, or the instructions are an empty string',
 		severity: 'error',
 		docs: DOCS.api,
 	},
-	JEV008: {
-		code: 'JEV008',
+	DEC008: {
+		code: 'DEC008',
 		name: 'numeric-levels',
 		meaning:
 			'Score levels are bare numbers. Jev matches the state against each description and never sees its position',
 		severity: 'warning',
 		docs: DOCS.scoreLevels,
 	},
-	JEV009: {
-		code: 'JEV009',
+	DEC009: {
+		code: 'DEC009',
 		name: 'too-few-options',
 		meaning:
 			'A Choice with one option or a Score with one level gives every input the same answer',
 		severity: 'info',
 		docs: DOCS.choice,
 	},
-	JEV010: {
-		code: 'JEV010',
+	DEC010: {
+		code: 'DEC010',
 		name: 'unused-disable',
 		meaning:
 			'A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later',
@@ -109,8 +109,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		// The one rule about this tool's own comments, so the one with no vendor page.
 		docs: 'https://github.com/nolindnaidoo/decisionlint#suppressing-a-finding',
 	},
-	JEV011: {
-		code: 'JEV011',
+	DEC011: {
+		code: 'DEC011',
 		name: 'description-repeats-name',
 		meaning:
 			"An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing",
@@ -122,8 +122,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: DOCS.choice,
 	},
-	JEV012: {
-		code: 'JEV012',
+	DEC012: {
+		code: 'DEC012',
 		name: 'terse-instructions',
 		meaning:
 			'The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id',
@@ -134,16 +134,16 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: DOCS.primitives,
 	},
-	JEV013: {
-		code: 'JEV013',
+	DEC013: {
+		code: 'DEC013',
 		name: 'newer-model',
 		meaning:
 			'`model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for',
 		severity: 'info',
 		docs: DOCS.currentModels,
 	},
-	JEV014: {
-		code: 'JEV014',
+	DEC014: {
+		code: 'DEC014',
 		name: 'question-limit',
 		meaning:
 			'A request has more questions than the platform it goes to takes in one call. The platform rejects it',
@@ -151,8 +151,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		// The one platform in `lint/targets.ts` that publishes the number.
 		docs: 'https://docs.litellm.ai/release_notes/v1.104.2/v1-104-2.md',
 	},
-	JEV101: {
-		code: 'JEV101',
+	DEC101: {
+		code: 'DEC101',
 		name: 'double-negative',
 		meaning:
 			'A question negates twice in one clause, or a negation sits directly on another',
@@ -160,8 +160,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: `${DOCS.jaggedness}#indirection`,
 	},
-	JEV102: {
-		code: 'JEV102',
+	DEC102: {
+		code: 'DEC102',
 		name: 'arithmetic',
 		meaning: 'The question asks Jev to count or compare numbers',
 		// Measured: counting 20 to 40 items, 8 of 12 at 0.58 sure. Adding three to five
@@ -169,8 +169,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'warning',
 		docs: `${DOCS.jaggedness}#math-and-numbers`,
 	},
-	JEV103: {
-		code: 'JEV103',
+	DEC103: {
+		code: 'DEC103',
 		name: 'date-comparison',
 		meaning:
 			'The question asks Jev to order two times or measure the gap between them',
@@ -179,22 +179,22 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: `${DOCS.jaggedness}#date-and-time-comparison`,
 	},
-	JEV104: {
-		code: 'JEV104',
+	DEC104: {
+		code: 'DEC104',
 		name: 'compound',
 		meaning: "A Noul joins two judgments with 'and'",
 		severity: 'off',
 		docs: `${DOCS.primitives}#ask-for-one-snap-judgment-per-question`,
 	},
-	JEV105: {
-		code: 'JEV105',
+	DEC105: {
+		code: 'DEC105',
 		name: 'generation',
 		meaning: 'The question asks for a value or for text to be written',
 		severity: 'warning',
 		docs: `${DOCS.jaggedness}#generation`,
 	},
-	JEV107: {
-		code: 'JEV107',
+	DEC107: {
+		code: 'DEC107',
 		name: 'negated-noul',
 		meaning:
 			'A Noul with no criteria is phrased so that yes means something is absent',
@@ -202,16 +202,16 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'off',
 		docs: `${DOCS.jaggedness}#contradictory-instructions-and-criteria`,
 	},
-	JEV108: {
-		code: 'JEV108',
+	DEC108: {
+		code: 'DEC108',
 		name: 'inverted-criteria',
 		meaning: "A Noul's 'true' criterion describes the negative case",
 		// Measured: 14 of 14 right either way. Jev follows the question and ignores the criteria.
 		severity: 'off',
 		docs: `${DOCS.jaggedness}#contradictory-instructions-and-criteria`,
 	},
-	JEV110: {
-		code: 'JEV110',
+	DEC110: {
+		code: 'DEC110',
 		name: 'degree-levels',
 		meaning:
 			'Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against',
@@ -222,16 +222,16 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'warning',
 		docs: DOCS.scoreLevels,
 	},
-	JEV111: {
-		code: 'JEV111',
+	DEC111: {
+		code: 'DEC111',
 		name: 'numeric-encoding',
 		meaning: 'The question refers to a value by hex or RGB encoding',
 		// Measured: 12 of 12 right with hex or with names, equally sure. No cost found.
 		severity: 'off',
 		docs: `${DOCS.jaggedness}#math-and-numbers`,
 	},
-	JEV112: {
-		code: 'JEV112',
+	DEC112: {
+		code: 'DEC112',
 		name: 'undefined-boundary',
 		meaning:
 			'A Noul with no criteria turns on a word such as large, often or enough',
@@ -239,94 +239,94 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		severity: 'info',
 		docs: `${DOCS.jaggedness}#literal-reading`,
 	},
-	JEV301: {
-		code: 'JEV301',
-		name: 'jev-counting',
+	DEC301: {
+		code: 'DEC301',
+		name: 'model-counting',
 		meaning: 'Jev reads the question as needing counting or arithmetic',
 		severity: 'warning',
 		docs: `${DOCS.jaggedness}#math-and-numbers`,
 	},
-	JEV302: {
-		code: 'JEV302',
-		name: 'jev-undefined-boundary',
+	DEC302: {
+		code: 'DEC302',
+		name: 'model-undefined-boundary',
 		meaning:
 			'Jev reads a Noul as turning on a matter of degree with no stated line',
 		severity: 'info',
 		docs: `${DOCS.jaggedness}#literal-reading`,
 	},
-	JEV303: {
-		code: 'JEV303',
-		name: 'jev-overlapping-options',
+	DEC303: {
+		code: 'DEC303',
+		name: 'model-overlapping-options',
 		meaning: 'Jev reads two options of a Choice as covering the same cases',
 		severity: 'info',
 		docs: DOCS.choice,
 	},
-	JEV304: {
-		code: 'JEV304',
-		name: 'jev-overlapping-levels',
+	DEC304: {
+		code: 'DEC304',
+		name: 'model-overlapping-levels',
 		meaning: 'Jev reads two levels of a Score as the same situation',
 		severity: 'warning',
 		docs: DOCS.scoreLevels,
 	},
-	JEV305: {
-		code: 'JEV305',
-		name: 'jev-label-mismatch',
+	DEC305: {
+		code: 'DEC305',
+		name: 'model-label-mismatch',
 		meaning:
 			'Jev reads an option as named for one thing and described as another',
 		severity: 'warning',
 		docs: DOCS.choice,
 	},
-	JEV306: {
-		code: 'JEV306',
-		name: 'jev-criteria-off-topic',
+	DEC306: {
+		code: 'DEC306',
+		name: 'model-criteria-off-topic',
 		meaning:
 			'Jev reads the criteria as deciding something the instructions do not ask',
 		severity: 'info',
 		docs: `${DOCS.jaggedness}#contradictory-instructions-and-criteria`,
 	},
-	JEV307: {
-		code: 'JEV307',
-		name: 'jev-ordered-options',
+	DEC307: {
+		code: 'DEC307',
+		name: 'model-ordered-options',
 		meaning:
 			"Jev reads a Choice's options as steps on one scale, which a Score would place between",
 		severity: 'info',
 		docs: `${DOCS.primitives}#choose-a-question-type`,
 	},
-	JEV308: {
-		code: 'JEV308',
-		name: 'jev-unordered-levels',
+	DEC308: {
+		code: 'DEC308',
+		name: 'model-unordered-levels',
 		meaning:
 			"Jev reads a Score's levels as unordered categories, which a Choice would pick from",
 		severity: 'info',
 		docs: `${DOCS.primitives}#choose-a-question-type`,
 	},
-	JEV309: {
-		code: 'JEV309',
-		name: 'jev-depends-on-sibling',
+	DEC309: {
+		code: 'DEC309',
+		name: 'model-depends-on-sibling',
 		meaning:
 			"Jev reads a question as needing another question's answer from the same request",
 		severity: 'info',
 		docs: `${DOCS.primitives}#when-one-question-depends-on-another`,
 	},
-	JEV310: {
-		code: 'JEV310',
-		name: 'jev-overlapping-questions',
+	DEC310: {
+		code: 'DEC310',
+		name: 'model-overlapping-questions',
 		meaning:
 			'Jev reads two questions in one request as asking for the same judgment',
 		severity: 'info',
 		docs: `${DOCS.primitives}#ask-multiple-questions-together`,
 	},
-	JEV311: {
-		code: 'JEV311',
-		name: 'jev-answer-not-in-state',
+	DEC311: {
+		code: 'DEC311',
+		name: 'model-answer-not-in-state',
 		meaning:
 			'Jev reads the state written in the file as not holding what the question asks about',
 		severity: 'info',
 		docs: 'https://docs.typesafe.ai/concepts/state',
 	},
-	JEV312: {
-		code: 'JEV312',
-		name: 'jev-orders-in-state',
+	DEC312: {
+		code: 'DEC312',
+		name: 'model-orders-in-state',
 		meaning:
 			'Jev reads part of the state written in the file as giving orders to its reader',
 		severity: 'info',
@@ -334,8 +334,18 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 	},
 });
 
-/** Rules in the JEV3xx range run only when the user asks Jev to check a file. `lintText` never runs them. */
+/** Rules in the DEC3xx range run only when the user asks a model to check a file. `lintText` never runs them. */
 export const RULE_CODES = Object.freeze(Object.keys(RULES) as RuleCode[]);
+
+// The codes rules had before 1.0.0, read for ever: a comment or a settings
+// file in a repository is not this tool's to update. Nothing writes one.
+const OLD_CODE = /^JEV(\d{3})$/;
+
+/** `JEV004` as `DEC004`; any other text as written. */
+export function currentCode(code: string): string {
+	const old = OLD_CODE.exec(code);
+	return old ? `DEC${old[1]}` : code;
+}
 
 /**
  * A rule's own page: what it catches, an example, how to fix and silence it.

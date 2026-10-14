@@ -45,7 +45,7 @@ type Job = { id: string; request: ReviewRequest };
 type Reading = { id: string; p: number };
 
 // The wording defect each check is the meaning-reading version of. Others are labeled by their own code.
-const LABEL: Record<string, string> = { JEV301: 'JEV102', JEV302: 'JEV112' };
+const LABEL: Record<string, string> = { DEC301: 'DEC102', DEC302: 'DEC112' };
 const MODEL = DEFAULT_MODEL;
 const MAX_CALLS = 400;
 
@@ -80,14 +80,14 @@ function jobs(): Job[] {
 		const ids = Object.keys(entry.questions);
 		const pairDone = Object.keys(saved.probabilities[entry.id] ?? {}).length > 0;
 		if (!pairDone) {
-			add(entry.id, buildRequestReview(entry.questions, MODEL, new Set(['JEV310', 'JEV312']), entry.state));
+			add(entry.id, buildRequestReview(entry.questions, MODEL, new Set(['DEC310', 'DEC312']), entry.state));
 		}
 		if (entry.state === undefined) continue;
 		for (const id of ids) {
 			const key = `${entry.id}/${id}`;
 			add(
 				key,
-				buildRequest(entry.questions[id] as QuestionLiteral, MODEL, missing(key, ['JEV311']), {
+				buildRequest(entry.questions[id] as QuestionLiteral, MODEL, missing(key, ['DEC311']), {
 					siblings: [],
 					state: entry.state,
 				}),
@@ -137,7 +137,7 @@ function report(): void {
 			const p = at(id, code);
 			return p === undefined ? [] : [{ id, p }];
 		});
-	for (const review of REVIEWS.filter((r) => r.code !== 'JEV311')) {
+	for (const review of REVIEWS.filter((r) => r.code !== 'DEC311')) {
 		const label = LABEL[review.code] ?? review.code;
 		show(
 			review.code,
@@ -148,7 +148,7 @@ function report(): void {
 	const pairs = requests.flatMap((entry) => {
 		const ids = Object.keys(entry.questions);
 		return Object.entries(saved.probabilities[entry.id] ?? {}).flatMap(([code, p]) => {
-			const match = /^JEV310\.(\d+)\.(\d+)$/.exec(code);
+			const match = /^DEC310\.(\d+)\.(\d+)$/.exec(code);
 			if (!match) return [];
 			const a = ids[Number(match[1])] as string;
 			const b = ids[Number(match[2])] as string;
@@ -156,21 +156,21 @@ function report(): void {
 			return [{ id: `${entry.id}:${a}+${b}`, p, bad }];
 		});
 	});
-	show('JEV310', pairs.filter((x) => x.bad), pairs.filter((x) => !x.bad));
+	show('DEC310', pairs.filter((x) => x.bad), pairs.filter((x) => !x.bad));
 	const stated = requests.filter((entry) => entry.state !== undefined);
 	const perQuestion = stated.flatMap((entry) =>
 		Object.keys(entry.questions).flatMap((id) => {
-			const p = at(`${entry.id}/${id}`, 'JEV311');
+			const p = at(`${entry.id}/${id}`, 'DEC311');
 			return p === undefined ? [] : [{ id: `${entry.id}/${id}`, p, bad: (entry.missing ?? []).includes(id) }];
 		}),
 	);
-	show('JEV311', perQuestion.filter((x) => x.bad), perQuestion.filter((x) => !x.bad));
+	show('DEC311', perQuestion.filter((x) => x.bad), perQuestion.filter((x) => !x.bad));
 	const orders = stated.flatMap((entry) => {
-		const p = at(entry.id, 'JEV312');
+		const p = at(entry.id, 'DEC312');
 		return p === undefined ? [] : [{ id: entry.id, p, bad: Boolean(entry.injected) }];
 	});
-	show('JEV312', orders.filter((x) => x.bad), orders.filter((x) => !x.bad));
-	console.log(`\ncutoffs in code: ${[...REVIEWS.map((r) => `${r.code} ${r.cutoff}`), `JEV310 ${REQUEST_REVIEWS.JEV310.cutoff}`, `JEV312 ${REQUEST_REVIEWS.JEV312.cutoff}`].join(', ')}`);
+	show('DEC312', orders.filter((x) => x.bad), orders.filter((x) => !x.bad));
+	console.log(`\ncutoffs in code: ${[...REVIEWS.map((r) => `${r.code} ${r.cutoff}`), `DEC310 ${REQUEST_REVIEWS.DEC310.cutoff}`, `DEC312 ${REQUEST_REVIEWS.DEC312.cutoff}`].join(', ')}`);
 }
 
 async function main(): Promise<void> {

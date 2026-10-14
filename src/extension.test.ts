@@ -107,15 +107,15 @@ describe('configuration', () => {
 	});
 
 	it("reads the lint settings with the settings file's reader, and refuses what it refuses", () => {
-		_state.config = { rules: { JEV004: 'off', JEV999: 'off' } };
+		_state.config = { rules: { DEC004: 'off', DEC999: 'off' } };
 		expect(getConfiguration().lint).toBe(
-			"decisionlint settings: rules: 'JEV999' is not a rule code or a rule name.",
+			"decisionlint settings: rules: 'DEC999' is not a rule code or a rule name.",
 		);
-		_state.config = { rules: { JEV001: 'loud' } };
+		_state.config = { rules: { DEC001: 'loud' } };
 		expect(getConfiguration().lint).toBe(
 			"decisionlint settings: rules: 'loud' is not a level. Use one of off, hint, info, warning, error.",
 		);
-		_state.config = { ignore: 'JEV004:team' };
+		_state.config = { ignore: 'DEC004:team' };
 		expect(getConfiguration().lint).toBe(
 			"decisionlint settings: 'ignore' must be a list of strings.",
 		);
@@ -132,7 +132,7 @@ describe('configuration', () => {
 		// A rule by its name and a level by its alias, as the file takes them.
 		_state.config = { rules: { 'no-fallback-option': 'warn' } };
 		expect(getConfiguration().lint).toMatchObject({
-			rules: { JEV004: 'warning' },
+			rules: { DEC004: 'warning' },
 		});
 	});
 
@@ -178,7 +178,7 @@ describe('diagnostics', () => {
 			source: 'decisionlint',
 			severity: vscode.DiagnosticSeverity.Information,
 		});
-		expect(diagnostics()[0]?.code).toMatchObject({ value: 'JEV004' });
+		expect(diagnostics()[0]?.code).toMatchObject({ value: 'DEC004' });
 		expect(_state.statusBar).toMatchObject({
 			text: '$(checklist) DecisionLint 1',
 			visible: true,
@@ -230,7 +230,7 @@ describe('diagnostics', () => {
 
 	it('re-lints when its settings change', () => {
 		start(doc(BARE_CHOICE));
-		_state.config = { rules: { JEV004: 'off' } };
+		_state.config = { rules: { DEC004: 'off' } };
 		_state.listeners.config?.({
 			affectsConfiguration: (section: string) => section === 'decisionlint',
 		});
@@ -239,13 +239,13 @@ describe('diagnostics', () => {
 
 	it('stops linting and says why when a rule entry in the settings names no rule, as a settings file would', () => {
 		// Dropped quietly, a typo'd code would leave the rule on with no word.
-		_state.config = { rules: { JEV04: 'off' } };
+		_state.config = { rules: { DEC04: 'off' } };
 		start(doc(BARE_CHOICE));
 		expect(diagnostics()).toEqual([]);
 		expect(_state.statusBar).toMatchObject({
 			text: '$(warning) DecisionLint not linted',
 			tooltip:
-				"decisionlint settings: rules: 'JEV04' is not a rule code or a rule name.",
+				"decisionlint settings: rules: 'DEC04' is not a rule code or a rule name.",
 		});
 		_state.config = {};
 		_state.listeners.config?.({
@@ -291,14 +291,14 @@ describe('quick fix', () => {
 		expect(asked(vscode.CodeActionKind.SourceFixAll)).toEqual([]);
 	});
 
-	it('offers the fallback edit for the JEV004 diagnostic', () => {
+	it('offers the fallback edit for the DEC004 diagnostic', () => {
 		const document = doc(BARE_CHOICE);
 		start(document);
 		const actions = actionsFor(document, diagnostics());
 		expect(actions.map((action) => action.title)).toEqual([
 			"Add an 'other' option",
-			'Disable JEV004 for this line',
-			'Disable JEV004 for this file',
+			'Disable DEC004 for this line',
+			'Disable DEC004 for this file',
 		]);
 		expect(actions.map((action) => action.isPreferred)).toEqual([
 			true,
@@ -336,9 +336,9 @@ describe('quick fix', () => {
 	it('silences a finding on its line with a comment at the same indent', () => {
 		const document = doc(SPREAD);
 		start(document);
-		const out = applied(document, 'Disable JEV004 for this line');
+		const out = applied(document, 'Disable DEC004 for this line');
 		expect(out).toContain(
-			'\n\t\t// decisionlint-disable-next-line JEV004\n\t\tteam: {',
+			'\n\t\t// decisionlint-disable-next-line DEC004\n\t\tteam: {',
 		);
 		expect(lintText(out).findings).toEqual([]);
 	});
@@ -346,10 +346,10 @@ describe('quick fix', () => {
 	it('silences a rule for the file with a comment at the top, under a shebang', () => {
 		const document = doc(`#!/usr/bin/env node\n${SPREAD}`);
 		start(document);
-		const out = applied(document, 'Disable JEV004 for this file');
+		const out = applied(document, 'Disable DEC004 for this file');
 		expect(out.split('\n').slice(0, 2)).toEqual([
 			'#!/usr/bin/env node',
-			'// decisionlint-disable JEV004',
+			'// decisionlint-disable DEC004',
 		]);
 		expect(lintText(out).findings).toEqual([]);
 	});
@@ -361,8 +361,8 @@ describe('quick fix', () => {
 			'python',
 		);
 		start(python);
-		expect(applied(python, 'Disable JEV004 for this line')).toMatch(
-			/^# decisionlint-disable-next-line JEV004\n/,
+		expect(applied(python, 'Disable DEC004 for this line')).toMatch(
+			/^# decisionlint-disable-next-line DEC004\n/,
 		);
 	});
 
@@ -621,14 +621,14 @@ describe('check with Jev', () => {
 	});
 
 	it('reports what Jev flags, on the question, with the probability', async () => {
-		const fetch = jevSays({ JEV301: { noul: 0.02 }, JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC301: { noul: 0.02 }, DEC302: { noul: 0.91 } });
 		vi.stubGlobal('fetch', fetch);
 		start(doc(VAGUE));
 		_state.secrets.set('decisionlint.key.typesafe', 'k');
 		await run(ASK_COMMANDS.ask.typesafe);
 		expect(fetch).toHaveBeenCalledTimes(1);
 		const found = diagnostics(FROM_JEV).filter(
-			(d) => (d.code as { value: string }).value === 'JEV302',
+			(d) => (d.code as { value: string }).value === 'DEC302',
 		);
 		expect(found).toHaveLength(1);
 		expect(found[0]?.message).toContain('Jev put this at 0.91');
@@ -643,7 +643,7 @@ describe('check with Jev', () => {
 			status: 200,
 			json: async () => ({
 				model: 'gpt-6-luna',
-				answers: [{ type: 'predicate', name: 'JEV302', probability: 0.91 }],
+				answers: [{ type: 'predicate', name: 'DEC302', probability: 0.91 }],
 				usage: { input_tokens: 200 },
 			}),
 			text: async () => '',
@@ -683,10 +683,10 @@ describe('check with Jev', () => {
 		vi.stubGlobal(
 			'fetch',
 			jevSays({
-				JEV303: { noul: 0.9 },
-				'JEV303.0': { noul: 0.8 },
-				'JEV303.1': { noul: 0.5 },
-				'JEV303.2': { noul: 0.1 },
+				DEC303: { noul: 0.9 },
+				'DEC303.0': { noul: 0.8 },
+				'DEC303.1': { noul: 0.5 },
+				'DEC303.2': { noul: 0.1 },
 			}),
 		);
 		start(doc(overlapping));
@@ -917,7 +917,7 @@ describe('check with Jev', () => {
 	});
 
 	it('sends to a host the user runs with no key, and calls what answers the model', async () => {
-		const fetch = jevSays({ JEV302: { noul: 0.91 } });
+		const fetch = jevSays({ DEC302: { noul: 0.91 } });
 		vi.stubGlobal('fetch', fetch);
 		_state.config = {
 			'ask.endpoint': 'http://localhost:8080/v1/systemone',
@@ -1046,25 +1046,25 @@ describe('check with Jev', () => {
 	});
 
 	it('sends the state, and checks it, once the user switches that on', async () => {
-		const fetch = jevSays({ JEV312: { noul: 0.99 } });
+		const fetch = jevSays({ DEC312: { noul: 0.99 } });
 		vi.stubGlobal('fetch', fetch);
 		_state.config = { 'ask.sendState': true };
 		start(doc(TWO, 'file:///a.ts', 'json'));
 		_state.secrets.set('decisionlint.key.typesafe', 'k');
 		await run(ASK_COMMANDS.ask.typesafe);
 		expect(bodies(fetch)[0].state.state).toEqual({ note: 'Wheel wobbles.' });
-		expect(jevCode('JEV312')?.range.start.character).toBe(
+		expect(jevCode('DEC312')?.range.start.character).toBe(
 			TWO.indexOf('"state"'),
 		);
 	});
 
 	it('reports two questions that ask the same thing, on the second', async () => {
-		vi.stubGlobal('fetch', jevSays({ 'JEV310.0.1': { noul: 0.8 } }));
+		vi.stubGlobal('fetch', jevSays({ 'DEC310.0.1': { noul: 0.8 } }));
 		start(doc(TWO, 'file:///a.ts', 'json'));
 		_state.secrets.set('decisionlint.key.typesafe', 'k');
 		await run(ASK_COMMANDS.ask.typesafe);
-		expect(jevCode('JEV310')?.message).toContain("this question and 'a'");
-		expect(jevCode('JEV310')?.range.start.character).toBe(TWO.indexOf('"b"'));
+		expect(jevCode('DEC310')?.message).toContain("this question and 'a'");
+		expect(jevCode('DEC310')?.range.start.character).toBe(TWO.indexOf('"b"'));
 	});
 
 	it('offers to set the key when there is none, and does it when asked', async () => {
@@ -1104,7 +1104,7 @@ describe('check with Jev', () => {
 	});
 
 	it('drops what Jev said once the text changes', async () => {
-		vi.stubGlobal('fetch', jevSays({ JEV302: { noul: 0.91 } }));
+		vi.stubGlobal('fetch', jevSays({ DEC302: { noul: 0.91 } }));
 		const document = doc(VAGUE);
 		start(document);
 		_state.secrets.set('decisionlint.key.typesafe', 'k');
@@ -1519,7 +1519,7 @@ describe('when the editor fails', () => {
 		vi.stubGlobal(
 			'fetch',
 			vi.fn(async (_url: string, init: Init) =>
-				reply(init, { JEV302: { noul: 0.9 } }),
+				reply(init, { DEC302: { noul: 0.9 } }),
 			),
 		);
 		start(doc(TWO));
@@ -1536,7 +1536,7 @@ describe('when the editor fails', () => {
 			// The user types while the first answer is on its way back.
 			document.text = `// edited\n${TWO}`;
 			_state.listeners.change?.({ document });
-			return reply(init, { JEV302: { noul: 0.9 } });
+			return reply(init, { DEC302: { noul: 0.9 } });
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(document);
@@ -1556,7 +1556,7 @@ describe('when the editor fails', () => {
 			'fetch',
 			vi.fn(async (_url: string, init: Init) => {
 				_state.listeners.close?.(document);
-				return reply(init, { JEV302: { noul: 0.9 } });
+				return reply(init, { DEC302: { noul: 0.9 } });
 			}),
 		);
 		start(document);
@@ -1598,7 +1598,7 @@ describe('when the editor fails', () => {
 		// The user presses cancel while the first answer is on its way back.
 		const fetch = vi.fn(async (_url: string, init: Init) => {
 			_state.cancel?.();
-			return reply(init, { JEV302: { noul: 0.9 } });
+			return reply(init, { DEC302: { noul: 0.9 } });
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
@@ -1753,16 +1753,16 @@ describe('a project settings file in the editor', () => {
 	const file = () => doc(NO_FALLBACK, 'file:///work/app/src/q.ts');
 
 	it('replaces editor settings that cannot be used, so the file still lints', () => {
-		_state.config = { rules: { JEV04: 'off' } };
+		_state.config = { rules: { DEC04: 'off' } };
 		within({ '/work/app/decisionlint.json': '{}' }, file());
 		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
 		expect(_state.statusBar.text).not.toContain('not linted');
 	});
 
 	it('replaces the editor settings, so the editor reports what the command line would', () => {
-		_state.config = { rules: { JEV004: 'error' } };
+		_state.config = { rules: { DEC004: 'error' } };
 		within(
-			{ '/work/app/decisionlint.json': '{ "rules": { "JEV004": "off" } }' },
+			{ '/work/app/decisionlint.json': '{ "rules": { "DEC004": "off" } }' },
 			file(),
 		);
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
@@ -1786,11 +1786,11 @@ describe('a project settings file in the editor', () => {
 		const copy = (over: Record<string, unknown> = {}) => ({
 			api: 1,
 			syntaxes: ['js', 'python'],
-			rules: { JEV999: { docs: 'https://docs.typesafe.ai/new' } },
+			rules: { DEC999: { docs: 'https://docs.typesafe.ai/new' } },
 			lint: () => ({
 				findings: [
 					{
-						code: 'JEV999',
+						code: 'DEC999',
 						message: 'From the project copy.',
 						span: { start: 6, end: 7 },
 						questionId: undefined,
@@ -1842,7 +1842,7 @@ describe('a project settings file in the editor', () => {
 			const code = found?.code as
 				| { value: string; target: unknown }
 				| undefined;
-			expect(code?.value).toBe('JEV999');
+			expect(code?.value).toBe('DEC999');
 			expect(String(code?.target)).toContain('docs.typesafe.ai/new');
 		});
 
@@ -2001,7 +2001,7 @@ describe('a project settings file in the editor', () => {
 	});
 
 	it('leaves the editor settings in charge where there is none', () => {
-		_state.config = { rules: { JEV004: 'error' } };
+		_state.config = { rules: { DEC004: 'error' } };
 		within({}, file());
 		expect(diagnostics('file:///work/app/src/q.ts')[0]?.severity).toBe(
 			vscode.DiagnosticSeverity.Error,
@@ -2010,7 +2010,7 @@ describe('a project settings file in the editor', () => {
 
 	it('reports the same findings as the command line for the same file and settings', async () => {
 		const settings =
-			'{ "rules": { "JEV004": "warning" }, "fallbackOptions": ["technical"] }';
+			'{ "rules": { "DEC004": "warning" }, "fallbackOptions": ["technical"] }';
 		within({ '/work/app/decisionlint.json': settings }, file());
 		const editor = diagnostics('file:///work/app/src/q.ts').map(
 			(d) => `${(d.code as { value: string }).value} ${d.severity}`,
@@ -2058,7 +2058,7 @@ describe('a project settings file in the editor', () => {
 	it('looks no higher than the workspace folder', () => {
 		_state.workspaceFolder = '/work/app';
 		within(
-			{ '/work/decisionlint.json': '{ "rules": { "JEV004": "off" } }' },
+			{ '/work/decisionlint.json': '{ "rules": { "DEC004": "off" } }' },
 			file(),
 		);
 		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
@@ -2066,7 +2066,7 @@ describe('a project settings file in the editor', () => {
 
 	it('is not looked for when the file is not on disk', () => {
 		within(
-			{ '/decisionlint.json': '{ "rules": { "JEV004": "off" } }' },
+			{ '/decisionlint.json': '{ "rules": { "DEC004": "off" } }' },
 			doc(NO_FALLBACK, 'untitled:/q.ts'),
 		);
 		expect(diagnostics('untitled:/q.ts')).toHaveLength(1);
@@ -2101,7 +2101,7 @@ describe('a project settings file in the editor', () => {
 		const tree: Record<string, string> = {};
 		within(tree, file());
 		expect(diagnostics('file:///work/app/src/q.ts')).toHaveLength(1);
-		tree['/work/app/decisionlint.json'] = '{ "rules": { "JEV004": "off" } }';
+		tree['/work/app/decisionlint.json'] = '{ "rules": { "DEC004": "off" } }';
 		for (const changed of _state.watchers) changed();
 		expect(diagnostics('file:///work/app/src/q.ts')).toEqual([]);
 	});

@@ -14,9 +14,14 @@ old name is renamed: the extension is `nolindnaidoo.decisionlint` with
 directive is `decisionlint-disable` and the diagnostic source is
 `decisionlint`. Two spellings a repository may already hold are kept for
 ever: a `jevlint-le.json` is read where no `decisionlint.json` sits beside
-it, and a `jevlint-le-disable` comment still silences. The rule codes stay
-`JEV`: a code is an identifier in comments and settings files that nothing
-ever updates, and the number ranges already say what each rule is about.
+it, and a `jevlint-le-disable` comment still silences. The rule codes are
+`DEC`, `DEC004` where it was `JEV004`, with the same numbers, and the twelve
+model-backed rules are `model-counting` and so on where they were
+`jev-counting`: a rule is named for what it finds, not for the first model
+that found it. The old codes and names are read for ever, in a comment, in
+`rules`, in `ignore` and in `explain_rule`, and every finding is written
+with the new code, so a SARIF baseline is renamed once. Each old rule page
+stays and points at the new one.
 The old extension and the old npm packages each get one final release that
 points here. A new extension id has a new keychain, so a stored TypeSafe or
 OpenAI key is set once more.
@@ -42,6 +47,8 @@ carried `jev`. The probe asks Jev at TypeSafe.
 | `io.github.nolindnaidoo/jevlint-le` on the MCP registry | `io.github.nolindnaidoo/decisionlint` |
 | `jevlint-le.json` | `decisionlint.json`, the old name still read |
 | `jevlint-le-disable` | `decisionlint-disable`, the old name still honoured |
+| `JEV000` to `JEV312` | `DEC000` to `DEC312`, the same numbers, the old codes still read |
+| `jev-counting` and the other eleven `jev-*` names | `model-counting` and so on, the old names still read |
 | `jevlint-le.jev.model`, `.apiKey`, `.openaiApiKey` | `decisionlint.ask.models`, `decisionlint.ask.keys`, one entry per platform |
 | `jevlint-le.jev.maxCalls`, `.sendState`, `.confirm` | `decisionlint.ask.maxCalls`, `.sendState`, `.confirm` |
 | Check This File with Jev; Set TypeSafe API Key, Set OpenAI API Key | one Ask command and one Set API Key command per platform |
@@ -66,13 +73,13 @@ each fact was read from. The research behind it is in `docs/research/`.
   questions per request, and none where a platform publishes none: a
   request bound for OpenAI gets no limit finding, as before. Nothing saying
   where a request goes, a TypeSafe-shaped question keeps TypeSafe's limits.
-  A new `JEV014` reports a request with more questions than its platform
+  A new `DEC014` reports a request with more questions than its platform
   takes in one call. Messages name the platform: "Vercel AI Gateway accepts
   at most 10".
 - **A floating alias is caught in every spelling**, and pinned in the one
   the platform documents: `jev-latest` to `jev-1.13.0`,
   `~typesafe/jev-latest` to `typesafe/jev-1.13`. A spelling no page gives a
-  pinned form for, `typesafe/jev-latest`, is reported with no fix. `JEV013`
+  pinned form for, `typesafe/jev-latest`, is reported with no fix. `DEC013`
   reads the version out of any spelling. A Hugging Face repo id, an Ollama
   tag or a deployment name is left alone.
 - **A check goes to any platform, and the host is never guessed.** A model

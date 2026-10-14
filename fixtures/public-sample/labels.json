@@ -377,7 +377,7 @@
   "hash": "31b4c75b86df9805",
   "defects": [],
   "borderline": [
-   "JEV102"
+   "DEC102"
   ],
   "skipped": false
  },
@@ -418,7 +418,7 @@
   "type": "score",
   "hash": "269fb6ea0a04a8ba",
   "defects": [
-   "JEV102"
+   "DEC102"
   ],
   "borderline": [],
   "skipped": false
@@ -470,7 +470,7 @@
   "type": "score",
   "hash": "fa2fecdef16bf599",
   "defects": [
-   "JEV110"
+   "DEC110"
   ],
   "borderline": [],
   "skipped": false
@@ -552,7 +552,7 @@
   "type": "noul",
   "hash": "190847d2ac6e969b",
   "defects": [
-   "JEV104"
+   "DEC104"
   ],
   "borderline": [],
   "skipped": false
@@ -565,7 +565,7 @@
   "hash": "47c51b9f3d62eb0f",
   "defects": [],
   "borderline": [
-   "JEV102"
+   "DEC102"
   ],
   "skipped": false
  },
@@ -576,7 +576,7 @@
   "type": "score",
   "hash": "5ceb9959902750e6",
   "defects": [
-   "JEV110"
+   "DEC110"
   ],
   "borderline": [],
   "skipped": false
@@ -869,7 +869,7 @@
   "hash": "7dbc0bc11ef974e9",
   "defects": [],
   "borderline": [
-   "JEV102"
+   "DEC102"
   ],
   "skipped": false
  },
@@ -980,7 +980,7 @@
   "type": "noul",
   "hash": "f7c98ff06fed2527",
   "defects": [
-   "JEV108"
+   "DEC108"
   ],
   "borderline": [],
   "skipped": false
@@ -1002,7 +1002,7 @@
   "type": "score",
   "hash": "280b86b12b6ce814",
   "defects": [
-   "JEV110"
+   "DEC110"
   ],
   "borderline": [],
   "skipped": false
@@ -1134,7 +1134,7 @@
   "type": "noul",
   "hash": "a94684a57d819ba5",
   "defects": [
-   "JEV102"
+   "DEC102"
   ],
   "borderline": [],
   "skipped": false
@@ -1316,7 +1316,7 @@
   "type": "score",
   "hash": "1a97972b598a46cc",
   "defects": [
-   "JEV110"
+   "DEC110"
   ],
   "borderline": [],
   "skipped": false
@@ -1418,7 +1418,7 @@
   "type": "score",
   "hash": "ee2ff7939ab66eea",
   "defects": [
-   "JEV102"
+   "DEC102"
   ],
   "borderline": [],
   "skipped": false
@@ -1611,7 +1611,7 @@
   "hash": "da0b8868a8452981",
   "defects": [],
   "borderline": [
-   "JEV104"
+   "DEC104"
   ],
   "skipped": false
  },
@@ -1662,7 +1662,7 @@
   "type": "score",
   "hash": "af87fce70f2198d9",
   "defects": [
-   "JEV102"
+   "DEC102"
   ],
   "borderline": [],
   "skipped": false
@@ -1855,7 +1855,7 @@
   "hash": "e5c9ecfa0305e0a8",
   "defects": [],
   "borderline": [
-   "JEV110"
+   "DEC110"
   ],
   "skipped": false
  },
@@ -1866,7 +1866,7 @@
   "type": "noul",
   "hash": "39bc6bd1193e55a3",
   "defects": [
-   "JEV112"
+   "DEC112"
   ],
   "borderline": [],
   "skipped": false
@@ -1879,7 +1879,7 @@
   "hash": "df1bc0633ff41884",
   "defects": [],
   "borderline": [
-   "JEV104"
+   "DEC104"
   ],
   "skipped": false
  },
@@ -2130,7 +2130,7 @@
   "type": "score",
   "hash": "2d580e1d16790645",
   "defects": [
-   "JEV102"
+   "DEC102"
   ],
   "borderline": [],
   "skipped": false
@@ -2153,7 +2153,7 @@
   "hash": "771c0f37734845d8",
   "defects": [],
   "borderline": [
-   "JEV102"
+   "DEC102"
   ],
   "skipped": false
  },
@@ -2385,7 +2385,7 @@
   "hash": "1d2ec138feabf9a6",
   "defects": [],
   "borderline": [
-   "JEV102"
+   "DEC102"
   ],
   "skipped": false
  },
@@ -2576,7 +2576,7 @@
   "type": "noul",
   "hash": "26e0858b245f3a87",
   "defects": [
-   "JEV112"
+   "DEC112"
   ],
   "borderline": [],
   "skipped": false
@@ -2868,7 +2868,7 @@
   "type": "noul",
   "hash": "c059e387af1b0f15",
   "defects": [
-   "JEV103"
+   "DEC103"
   ],
   "borderline": [],
   "skipped": false
@@ -2991,7 +2991,7 @@
   "hash": "3eda5dd9711d0849",
   "defects": [],
   "borderline": [
-   "JEV102"
+   "DEC102"
   ],
   "skipped": false
  },

@@ -9,11 +9,11 @@ type Question struct {
 
 func request(note string, mechanic string) map[string]any {
 	return map[string]any{
-		// JEV001: an alias moves to each new release.
+		// DEC001: an alias moves to each new release.
 		"model": "jev-latest",
 		"state": map[string]any{"note": note},
 		"questions": map[string]Question{
-			// JEV004: nothing to pick when the job is neither of these.
+			// DEC004: nothing to pick when the job is neither of these.
 			"job_type": {
 				Type:         "choice",
 				Instructions: "What kind of job is this?",
@@ -22,15 +22,15 @@ func request(note string, mechanic string) map[string]any {
 					"brakes": "Pads, cables, levers or discs",
 				},
 			},
-			// JEV008: bare numbers say nothing about what each level means.
+			// DEC008: bare numbers say nothing about what each level means.
 			"hurry": {
 				Type:         "score",
 				Instructions: "How soon does the customer need the bike back?",
 				Criteria:     []string{"1", "2", "3"},
 			},
-			// JEV000: the wording is only known when this runs.
+			// DEC000: the wording is only known when this runs.
 			"for_mechanic": {Type: "noul", Instructions: "Is this a job " + mechanic + " takes?"},
-			// JEV006: a Score takes an ordered list, not a map.
+			// DEC006: a Score takes an ordered list, not a map.
 			"wear": {
 				Type:         "score",
 				Instructions: "How worn is the drivetrain?",
@@ -40,7 +40,7 @@ func request(note string, mechanic string) map[string]any {
 	}
 }
 
-// The same request pasted as text. JEV009: one option leaves no decision to make.
+// The same request pasted as text. DEC009: one option leaves no decision to make.
 const frame = `{
 	"questions": {
 		"frame": {

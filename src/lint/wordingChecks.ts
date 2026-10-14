@@ -140,13 +140,13 @@ function wording(
 }
 
 const checkDoubleNegative = wording(
-	'JEV101',
+	'DEC101',
 	'This question negates twice. Jev answers doubly negated questions less reliably. Ask for the positive case directly.',
 	negatesTwice,
 );
 
 const checkArithmetic = wording(
-	'JEV102',
+	'DEC102',
 	'This question asks Jev to count or compare numbers, which it does not do reliably. Ask one question per item and do the arithmetic in code.',
 	(text) =>
 		COMPARISON_SYMBOL.test(text) ||
@@ -154,20 +154,20 @@ const checkArithmetic = wording(
 );
 
 const checkDateComparison = wording(
-	'JEV103',
+	'DEC103',
 	'This question asks Jev to order or measure dates, which it reads as text and not as quantities. Have it extract the parts of each date and compare them in code.',
 	(text) => DATE_COMPARISON.some((compares) => compares(asked(text))),
 );
 
 const checkCompound = wording(
-	'JEV104',
+	'DEC104',
 	"This question joins two judgments with 'and'. An input that is one and not the other cannot be answered. Ask each as its own question and combine the answers in code.",
 	(text, question) =>
 		question.type === 'noul' && sentences(asked(text)).some(joinsJudgments),
 );
 
 const checkGeneration = wording(
-	'JEV105',
+	'DEC105',
 	'This asks for a value or for text. Jev only picks among answers you give it. Offer the candidates as a Choice, or use a generative model.',
 	(text, question) =>
 		GENERATION_VERB.test(text) ||
@@ -175,7 +175,7 @@ const checkGeneration = wording(
 );
 
 const checkNegatedNoul = wording(
-	'JEV107',
+	'DEC107',
 	'This yes/no question is phrased so that yes means something is absent. Jev reads that less reliably. Ask whether the thing is present and invert the answer in code.',
 	// With criteria the author has said what a yes means, which is the cure.
 	(text, question) =>
@@ -183,7 +183,7 @@ const checkNegatedNoul = wording(
 );
 
 const checkUndefinedBoundary = wording(
-	'JEV112',
+	'DEC112',
 	"This question turns on a word with no stated line, so Jev reads it at face value and may draw the line elsewhere. Say where yes ends and no begins in the instructions or in 'true' and 'false' criteria.",
 	// A slot may be where the line is stated, so a question with one is left alone.
 	(text, question) =>
@@ -194,7 +194,7 @@ const checkUndefinedBoundary = wording(
 );
 
 const checkNumericEncoding = wording(
-	'JEV111',
+	'DEC111',
 	'This question refers to a value by its hex or RGB encoding. Jev judges named values better than encoded ones. Convert it in code and pass the name.',
 	(text) => NUMERIC_ENCODING.test(text),
 );
@@ -217,7 +217,7 @@ const checkInvertedCriteria: Check = (question) => {
 	if (!isNegative(yes) || isNegative(no)) return NONE;
 	return [
 		report(
-			'JEV108',
+			'DEC108',
 			question,
 			"The 'true' criterion describes the negative case and 'false' the positive, against a question asked in the positive. Align the criteria with the question.",
 			question.criteriaKey,
@@ -291,7 +291,7 @@ const checkDegreeLevels: Check = (question): ReadonlyArray<Finding> => {
 		return NONE;
 	return [
 		report(
-			'JEV110',
+			'DEC110',
 			question,
 			'These Score levels name degrees, not situations. Jev matches the state against each description, so describe what each level looks like.',
 			question.criteria.span,

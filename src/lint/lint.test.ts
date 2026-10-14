@@ -61,12 +61,12 @@ describe('lintText', () => {
 	});
 });
 
-describe('JEV000 unreadable', () => {
+describe('DEC000 unreadable', () => {
 	it('fires when instructions are built at runtime, and counts the question', () => {
 		const result = lintText(
 			`const q = { questions: { a: { type: 'noul', instructions: build() } } };`,
 		);
-		expect(result.findings.map((found) => found.code)).toEqual(['JEV000']);
+		expect(result.findings.map((found) => found.code)).toEqual(['DEC000']);
 		expect(result.unreadableCount).toBe(1);
 	});
 
@@ -75,7 +75,7 @@ describe('JEV000 unreadable', () => {
 			codes(
 				`const q = { type: 'choice', instructions: 'Which one fits?', criteria: { ...teams } };`,
 			),
-		).toEqual(['JEV000']);
+		).toEqual(['DEC000']);
 	});
 
 	it('fires when a whole map entry is a runtime value', () => {
@@ -83,11 +83,11 @@ describe('JEV000 unreadable', () => {
 			codes(
 				`const r = { questions: { a: { type: 'noul', instructions: 'Is it so?' }, b: makeQuestion() } };`,
 			),
-		).toEqual(['JEV000']);
+		).toEqual(['DEC000']);
 	});
 
 	it('still counts the unreadable question when the hint is switched off', () => {
-		const options = { ...DEFAULT_OPTIONS, rules: { JEV000: 'off' as const } };
+		const options = { ...DEFAULT_OPTIONS, rules: { DEC000: 'off' as const } };
 		const result = lintText(
 			`const q = { type: 'noul', instructions: build() };`,
 			options,
@@ -97,9 +97,9 @@ describe('JEV000 unreadable', () => {
 	});
 });
 
-describe('JEV001 unpinned-model', () => {
+describe('DEC001 unpinned-model', () => {
 	it.each(['jev-latest', 'jev-preview'])('fires on the alias %s', (alias) => {
-		expect(codes(request(CLEAN_NOUL, alias))).toEqual(['JEV001']);
+		expect(codes(request(CLEAN_NOUL, alias))).toEqual(['DEC001']);
 	});
 
 	it('does not fire on a versioned id', () => {
@@ -117,20 +117,20 @@ describe('JEV001 unpinned-model', () => {
 	it('fires on a client constructed with an alias', () => {
 		expect(
 			codes(`const client = new TypeSafeClient({ model: 'jev-latest' });`),
-		).toEqual(['JEV001']);
+		).toEqual(['DEC001']);
 	});
 });
 
-describe('JEV013 newer-model', () => {
+describe('DEC013 newer-model', () => {
 	it.each(['jev-1.13.1', 'jev-1.14.0', 'jev-2.0.0', 'jev-1.100.0'])(
 		'fires on %s, a version above the measured one',
 		(model) => {
-			expect(codes(request(CLEAN_NOUL, model))).toEqual(['JEV013']);
+			expect(codes(request(CLEAN_NOUL, model))).toEqual(['DEC013']);
 		},
 	);
 
 	it('names both versions and offers no fix', () => {
-		const found = finding(request(CLEAN_NOUL, 'jev-2.0.0'), 'JEV013');
+		const found = finding(request(CLEAN_NOUL, 'jev-2.0.0'), 'DEC013');
 		expect(found.message).toContain(
 			`'jev-2.0.0' is newer than ${MEASURED_ON}, the version these rules were measured on.`,
 		);
@@ -146,7 +146,7 @@ describe('JEV013 newer-model', () => {
 		'jev-2.0.0-preview',
 		'gpt-6-luna',
 	])('does not fire on %s', (model) => {
-		expect(codes(request(CLEAN_NOUL, model))).not.toContain('JEV013');
+		expect(codes(request(CLEAN_NOUL, model))).not.toContain('DEC013');
 	});
 
 	it('does not fire when the model is a runtime value', () => {
@@ -159,15 +159,15 @@ describe('JEV013 newer-model', () => {
 });
 
 describe("a model id in another platform's spelling", () => {
-	it("fires JEV001 on OpenRouter's alias and pins it as OpenRouter writes a pinned id", () => {
+	it("fires DEC001 on OpenRouter's alias and pins it as OpenRouter writes a pinned id", () => {
 		const text = request(CLEAN_NOUL, '~typesafe/jev-latest');
-		const pin = finding(text, 'JEV001');
+		const pin = finding(text, 'DEC001');
 		expect(pin.fix?.title).toContain("Pin to 'typesafe/jev-1.13'");
 		expect(apply(text, pin)).toContain('"model": "typesafe/jev-1.13"');
 	});
 
-	it('fires JEV001 with no fix on an alias whose pinned spelling no platform documents', () => {
-		const pin = finding(request(CLEAN_NOUL, 'typesafe/jev-latest'), 'JEV001');
+	it('fires DEC001 with no fix on an alias whose pinned spelling no platform documents', () => {
+		const pin = finding(request(CLEAN_NOUL, 'typesafe/jev-latest'), 'DEC001');
 		expect(pin.fix).toBeUndefined();
 	});
 
@@ -180,8 +180,8 @@ describe("a model id in another platform's spelling", () => {
 		expect(codes(request(CLEAN_NOUL, model))).toEqual([]);
 	});
 
-	it('fires JEV013 on a version above the measured one in any spelling', () => {
-		expect(codes(request(CLEAN_NOUL, 'typesafe/jev-2.0'))).toEqual(['JEV013']);
+	it('fires DEC013 on a version above the measured one in any spelling', () => {
+		expect(codes(request(CLEAN_NOUL, 'typesafe/jev-2.0'))).toEqual(['DEC013']);
 		expect(
 			codes(request(CLEAN_NOUL, 'openai/gpt-6-luna-decisions-20261006')),
 		).toEqual([]);
@@ -192,9 +192,9 @@ describe("a model named through the AI SDK's factory", () => {
 	const decide = (factory: string, questions: string) =>
 		`import { experimental_decide as decide } from 'ai';\nconst r = await decide({ model: ${factory}, state, questions: { ${questions} } });`;
 
-	it('fires JEV001 on an alias inside decisionModel(), and pins it there', () => {
+	it('fires DEC001 on an alias inside decisionModel(), and pins it there', () => {
 		const text = decide(`typeSafeAi.decisionModel('jev-latest')`, CLEAN_NOUL);
-		const pin = finding(text, 'JEV001');
+		const pin = finding(text, 'DEC001');
 		expect(text.slice(pin.span.start, pin.span.end)).toBe(`'jev-latest'`);
 		expect(apply(text, pin)).toContain(`decisionModel('jev-1.13.0')`);
 	});
@@ -209,7 +209,7 @@ describe("a model named through the AI SDK's factory", () => {
 			`gateway.decisionModel('typesafe-ai/jev')`,
 			`"damage": { "type": "score", "instructions": "Rate the damage", "levels": [${levels}] }`,
 		);
-		expect(finding(text, 'JEV003').message).toBe(
+		expect(finding(text, 'DEC003').message).toBe(
 			'This Score has 11 levels. Vercel AI Gateway accepts at most 10.',
 		);
 	});
@@ -253,7 +253,7 @@ describe('the target of a request', () => {
 	});
 
 	it("holds it to Vercel's limits when the model id is Vercel's spelling", () => {
-		const found = finding(luna('typesafe-ai/jev'), 'JEV003');
+		const found = finding(luna('typesafe-ai/jev'), 'DEC003');
 		expect(found.message).toBe(
 			'This Score has 11 levels. Vercel AI Gateway accepts at most 10.',
 		);
@@ -261,7 +261,7 @@ describe('the target of a request', () => {
 
 	it('holds it to the configured target over the model id', () => {
 		const vercel = { ...DEFAULT_OPTIONS, target: 'vercel' };
-		expect(codes(luna('gpt-6-luna'), vercel)).toEqual(['JEV003']);
+		expect(codes(luna('gpt-6-luna'), vercel)).toEqual(['DEC003']);
 		const openai = { ...DEFAULT_OPTIONS, target: 'openai' };
 		expect(codes(luna('typesafe-ai/jev'), openai)).toEqual([]);
 	});
@@ -270,16 +270,16 @@ describe('the target of a request', () => {
 		const text = request(
 			`"q": { "type": "score", "instructions": "Rate the damage", "criteria": [${Array.from({ length: 11 }, (_, i) => `"Level ${i} of eleven"`).join(', ')}] }`,
 		);
-		expect(finding(text, 'JEV003').message).toBe(
+		expect(finding(text, 'DEC003').message).toBe(
 			'This Score has 11 levels. TypeSafe accepts at most 10.',
 		);
 	});
 
-	it('fires JEV014 on the first question past what the target takes in one request', () => {
+	it('fires DEC014 on the first question past what the target takes in one request', () => {
 		const litellm = { ...DEFAULT_OPTIONS, target: 'litellm' };
 		const text = request(questions(129));
 		const result = lintText(text, litellm);
-		expect(result.findings.map((finding) => finding.code)).toEqual(['JEV014']);
+		expect(result.findings.map((finding) => finding.code)).toEqual(['DEC014']);
 		const found = result.findings[0];
 		expect(found?.message).toBe(
 			'This request has 129 questions. LiteLLM accepts at most 128 in one request.',
@@ -288,7 +288,7 @@ describe('the target of a request', () => {
 		expect(text.slice(found?.span.start, found?.span.end)).toBe('"q128"');
 	});
 
-	it('does not fire JEV014 at the limit, or for a target that publishes none', () => {
+	it('does not fire DEC014 at the limit, or for a target that publishes none', () => {
 		const litellm = { ...DEFAULT_OPTIONS, target: 'litellm' };
 		expect(codes(request(questions(128)), litellm)).toEqual([]);
 		const openai = { ...DEFAULT_OPTIONS, target: 'openai' };
@@ -303,7 +303,7 @@ describe('the target of a request', () => {
 	});
 });
 
-describe('JEV002 choice-option-limit', () => {
+describe('DEC002 choice-option-limit', () => {
 	const options = (count: number) =>
 		Array.from({ length: count }, (_, i) => `"o${i}": null`).join(', ');
 
@@ -314,7 +314,7 @@ describe('JEV002 choice-option-limit', () => {
 					`"q": { "type": "choice", "instructions": "Which one fits?", "criteria": { ${options(255)}, "other": null } }`,
 				),
 			),
-		).toEqual(['JEV002']);
+		).toEqual(['DEC002']);
 	});
 
 	it('does not fire at exactly 255', () => {
@@ -328,7 +328,7 @@ describe('JEV002 choice-option-limit', () => {
 	});
 });
 
-describe('JEV003 score-level-limit', () => {
+describe('DEC003 score-level-limit', () => {
 	const levels = (count: number) =>
 		[
 			'Nothing works',
@@ -354,14 +354,14 @@ describe('JEV003 score-level-limit', () => {
 					`"q": { "type": "score", "instructions": "Rate the damage", "criteria": [${levels(11)}] }`,
 				),
 			),
-		).toEqual(['JEV003']);
+		).toEqual(['DEC003']);
 		expect(
 			codes(
 				request(
 					`"q": { "type": "score", "instructions": "Rate the damage", "criteria": [${levels(1)}] }`,
 				),
 			),
-		).toEqual(['JEV009']);
+		).toEqual(['DEC009']);
 	});
 
 	it('does not fire at 2 or 10', () => {
@@ -386,15 +386,15 @@ describe('JEV003 score-level-limit', () => {
 			codes(
 				`const q = { type: 'score', instructions: 'Rate the damage', criteria: [...LEVELS] };`,
 			),
-		).toEqual(['JEV000']);
+		).toEqual(['DEC000']);
 	});
 });
 
-describe('JEV004 no-fallback-option', () => {
+describe('DEC004 no-fallback-option', () => {
 	const bare = `"bench": { "type": "choice", "instructions": "Which bench takes it?", "criteria": { "wheels": "Wheel work", "brakes": "Brake work" } }`;
 
 	it('fires on a Choice with no fallback', () => {
-		expect(codes(request(bare))).toEqual(['JEV004']);
+		expect(codes(request(bare))).toEqual(['DEC004']);
 	});
 
 	it.each([
@@ -420,7 +420,7 @@ describe('JEV004 no-fallback-option', () => {
 		const text = request(
 			`"q": { "type": "choice", "instructions": "Which one fits?", "criteria": { "a": null, "misc": null } }`,
 		);
-		expect(codes(text)).toEqual(['JEV004']);
+		expect(codes(text)).toEqual(['DEC004']);
 		expect(
 			codes(text, { ...DEFAULT_OPTIONS, fallbackOptions: ['misc'] }),
 		).toEqual([]);
@@ -428,7 +428,7 @@ describe('JEV004 no-fallback-option', () => {
 
 	it('fixes multi-line JSON without breaking it', () => {
 		const text = `{\n  "questions": {\n    "team": {\n      "type": "choice",\n      "instructions": "Which team takes it?",\n      "criteria": {\n        "billing": "Payments",\n        "technical": "Bugs"\n      }\n    }\n  }\n}`;
-		const fixed = apply(text, finding(text, 'JEV004'));
+		const fixed = apply(text, finding(text, 'DEC004'));
 		expect(Object.keys(JSON.parse(fixed).questions.team.criteria)).toEqual([
 			'billing',
 			'technical',
@@ -442,7 +442,7 @@ describe('JEV004 no-fallback-option', () => {
 
 	it('fixes TypeScript with a trailing comma, keeping the comma style', () => {
 		const text = `const q = {\n\ttype: 'choice',\n\tinstructions: 'Which one fits?',\n\tcriteria: {\n\t\ta: 'Apples',\n\t\tb: 'Bread',\n\t},\n};`;
-		const fixed = apply(text, finding(text, 'JEV004'));
+		const fixed = apply(text, finding(text, 'DEC004'));
 		expect(fixed).toContain(
 			"\t\tb: 'Bread',\n\t\tother: 'Fits none of the other options',\n\t},",
 		);
@@ -451,7 +451,7 @@ describe('JEV004 no-fallback-option', () => {
 
 	it('fixes an inline object', () => {
 		const text = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } };`;
-		const fixed = apply(text, finding(text, 'JEV004'));
+		const fixed = apply(text, finding(text, 'DEC004'));
 		expect(fixed).toContain(
 			"{ a: null, b: null, other: 'Fits none of the other options' }",
 		);
@@ -459,13 +459,13 @@ describe('JEV004 no-fallback-option', () => {
 
 	it('offers no fix when a comment follows the last option', () => {
 		const text = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null /* last */ } };`;
-		expect(finding(text, 'JEV004').fix).toBeUndefined();
+		expect(finding(text, 'DEC004').fix).toBeUndefined();
 	});
 });
 
-describe('JEV005 duplicate', () => {
+describe('DEC005 duplicate', () => {
 	it('fires on a repeated question id', () => {
-		expect(codes(request(`${CLEAN_NOUL}, ${CLEAN_NOUL}`))).toEqual(['JEV005']);
+		expect(codes(request(`${CLEAN_NOUL}, ${CLEAN_NOUL}`))).toEqual(['DEC005']);
 	});
 
 	it('fires on a repeated option and a repeated level', () => {
@@ -475,14 +475,14 @@ describe('JEV005 duplicate', () => {
 					`"q": { "type": "choice", "instructions": "Which bench takes it?", "criteria": { "wheels": null, "wheels": null, "other": null } }`,
 				),
 			),
-		).toEqual(['JEV005']);
+		).toEqual(['DEC005']);
 		expect(
 			codes(
 				request(
 					`"q": { "type": "score", "instructions": "How is the tone?", "criteria": ["Calm, just stating facts", "Angry, strong language", "Calm, just stating facts"] }`,
 				),
 			),
-		).toEqual(['JEV005']);
+		).toEqual(['DEC005']);
 	});
 
 	it('does not fire on the same id in two separate requests', () => {
@@ -494,7 +494,7 @@ describe('JEV005 duplicate', () => {
 	});
 });
 
-describe('JEV006 criteria-shape', () => {
+describe('DEC006 criteria-shape', () => {
 	it('fires on a Choice given an array and a Score given a map', () => {
 		expect(
 			codes(
@@ -502,14 +502,14 @@ describe('JEV006 criteria-shape', () => {
 					`"q": { "type": "choice", "instructions": "Which one fits?", "criteria": ["a", "b"] }`,
 				),
 			),
-		).toEqual(['JEV006']);
+		).toEqual(['DEC006']);
 		expect(
 			codes(
 				request(
 					`"q": { "type": "score", "instructions": "Rate the damage", "criteria": { "low": "a", "high": "b" } }`,
 				),
 			),
-		).toEqual(['JEV006']);
+		).toEqual(['DEC006']);
 	});
 
 	it('fires on a Choice or Score with no criteria', () => {
@@ -517,14 +517,14 @@ describe('JEV006 criteria-shape', () => {
 			codes(
 				request(`"q": { "type": "choice", "instructions": "Which one fits?" }`),
 			),
-		).toEqual(['JEV006']);
+		).toEqual(['DEC006']);
 		expect(
 			codes(
 				request(
 					`${CLEAN_NOUL}, "q": { "type": "score", "instructions": "Rate the damage" }`,
 				),
 			),
-		).toEqual(['JEV006']);
+		).toEqual(['DEC006']);
 	});
 
 	it('fires on Noul criteria keys other than true and false', () => {
@@ -534,7 +534,7 @@ describe('JEV006 criteria-shape', () => {
 					`"q": { "type": "noul", "instructions": "Is it so?", "criteria": { "yes": "a", "no": "b" } }`,
 				),
 			),
-		).toEqual(['JEV006', 'JEV006']);
+		).toEqual(['DEC006', 'DEC006']);
 	});
 
 	it('accepts a Noul with documented criteria or none', () => {
@@ -553,11 +553,11 @@ describe('JEV006 criteria-shape', () => {
 			codes(
 				`const q = { type: 'choice', instructions: 'Which one fits?', criteria: TEAMS };`,
 			),
-		).toEqual(['JEV000']);
+		).toEqual(['DEC000']);
 	});
 });
 
-describe('JEV007 invalid-question', () => {
+describe('DEC007 invalid-question', () => {
 	it('fires on an unknown type beside a valid question', () => {
 		expect(
 			codes(
@@ -565,7 +565,7 @@ describe('JEV007 invalid-question', () => {
 					`${CLEAN_NOUL}, "q": { "type": "chioce", "instructions": "Which one fits?" }`,
 				),
 			),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 	});
 
 	it('fires on a missing type and on empty instructions', () => {
@@ -573,10 +573,10 @@ describe('JEV007 invalid-question', () => {
 			codes(
 				request(`${CLEAN_NOUL}, "q": { "instructions": "Which one fits?" }`),
 			),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 		expect(
 			codes(request(`"q": { "type": "noul", "instructions": "  " }`)),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 	});
 
 	it('says nothing about missing instructions, which the SDK allows', () => {
@@ -591,7 +591,7 @@ describe('JEV007 invalid-question', () => {
 
 	it('reads the Vercel AI SDK boolean type as a Noul', () => {
 		const text = `const r = { questions: { refund: { type: 'boolean', instructions: 'Is it not unpaid?' }, team: { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, other: null } } } };`;
-		expect(codes(text)).toEqual(['JEV101']);
+		expect(codes(text)).toEqual(['DEC101']);
 	});
 
 	it('accepts structured instructions', () => {
@@ -622,7 +622,7 @@ describe('code that only looks like a question', () => {
 		const text = `${sdk}const q = { questions: { a: strict ? choice('Which one fits?', { a: null, other: null }) : noul('Is it so?') } };`;
 		expect(lintText(text).questionCount).toBe(2);
 		const direct = `${sdk}const q = strict ? choice('Which one fits?', { a: null }) : undefined;`;
-		expect(codes(direct)).toEqual(['JEV009']);
+		expect(codes(direct)).toEqual(['DEC009']);
 	});
 
 	it('does not call criteria missing when a spread may supply them', () => {
@@ -659,26 +659,26 @@ describe('where findings point', () => {
 		const text = request(
 			`${CLEAN_NOUL}, "q": { "type": "chioce", "instructions": "Which one fits?" }`,
 		);
-		expect(underlined(text, 'JEV007')).toBe('"chioce"');
+		expect(underlined(text, 'DEC007')).toBe('"chioce"');
 	});
 
 	it('underlines the criteria key when the criteria have the wrong shape', () => {
 		const text = request(
 			`"q": { "type": "score", "instructions": "Rate the damage", "criteria": { "low": "a", "high": "b" } }`,
 		);
-		expect(underlined(text, 'JEV006')).toBe('"criteria"');
+		expect(underlined(text, 'DEC006')).toBe('"criteria"');
 	});
 
 	it('underlines the question id when the criteria are missing altogether', () => {
 		const text = request(
 			`"q": { "type": "choice", "instructions": "Which one fits?" }`,
 		);
-		expect(underlined(text, 'JEV006')).toBe('"q"');
+		expect(underlined(text, 'DEC006')).toBe('"q"');
 	});
 
 	it('underlines the helper name when a helper call has the wrong shape', () => {
 		const text = `import { choice } from '@typesafe-ai/sdk';\nconst q = choice('Which?', ['a', 'b']);`;
-		expect(underlined(text, 'JEV006')).toBe('choice');
+		expect(underlined(text, 'DEC006')).toBe('choice');
 	});
 });
 
@@ -690,38 +690,38 @@ describe('mechanical fixes', () => {
 		const text = request(
 			`"q": { "type": "noul", "instructions": "Is it so?", "criteria": { "yes": "a", "No": "b" } }`,
 		);
-		const once = fixed(text, 'JEV006');
+		const once = fixed(text, 'DEC006');
 		expect(once).toContain('"true": "a"');
-		expect(fixed(once, 'JEV006')).toContain('"false": "b"');
-		expect(codes(fixed(once, 'JEV006'))).toEqual([]);
+		expect(fixed(once, 'DEC006')).toContain('"false": "b"');
+		expect(codes(fixed(once, 'DEC006'))).toEqual([]);
 	});
 
 	it('offers no rename for a key it cannot map', () => {
 		const text = request(
 			`"q": { "type": "noul", "instructions": "Is it so?", "criteria": { "maybe": "a" } }`,
 		);
-		expect(finding(text, 'JEV006').fix).toBeUndefined();
+		expect(finding(text, 'DEC006').fix).toBeUndefined();
 	});
 
 	it('corrects a type that is one real type away, keeping the quotes', () => {
 		const json = request(
 			`${CLEAN_NOUL}, "q": { "type": "nuol", "instructions": "Is it so?" }`,
 		);
-		expect(fixed(json, 'JEV007')).toContain('"type": "noul"');
+		expect(fixed(json, 'DEC007')).toContain('"type": "noul"');
 		const ts = `const r = { questions: { a: { type: 'noul', instructions: 'Is it so?' }, b: { type: 'chioce', instructions: 'Which one fits?' } } };`;
-		expect(fixed(ts, 'JEV007')).toContain("type: 'choice'");
+		expect(fixed(ts, 'DEC007')).toContain("type: 'choice'");
 	});
 
 	it('offers no correction for a type that resembles none', () => {
 		const text = request(
 			`${CLEAN_NOUL}, "q": { "type": "ranking", "instructions": "Order them by size" }`,
 		);
-		expect(finding(text, 'JEV007').fix).toBeUndefined();
+		expect(finding(text, 'DEC007').fix).toBeUndefined();
 	});
 
 	it('pins an alias and says when that version was current', () => {
 		const text = request(CLEAN_NOUL, 'jev-latest');
-		const pin = finding(text, 'JEV001');
+		const pin = finding(text, 'DEC001');
 		expect(pin.fix?.title).toMatch(
 			/^Pin to 'jev-\d+\.\d+\.\d+', the version current on \d{4}-\d{2}-\d{2}$/,
 		);
@@ -730,7 +730,7 @@ describe('mechanical fixes', () => {
 
 	it('turns a Score map into an array, keeping every description', () => {
 		const text = `{\n  "questions": {\n    "q": {\n      "type": "score",\n      "instructions": "How worn is it?",\n      "criteria": {\n        "light": "One fault, otherwise looked after",\n        "heavy": "Several faults left a while"\n      }\n    }\n  }\n}`;
-		const out = fixed(text, 'JEV006');
+		const out = fixed(text, 'DEC006');
 		expect(JSON.parse(out).questions.q.criteria).toEqual([
 			'One fault, otherwise looked after',
 			'Several faults left a while',
@@ -743,18 +743,18 @@ describe('mechanical fixes', () => {
 
 	it('turns a Choice array into a map on one line', () => {
 		const text = `const r = { questions: { q: { type: 'choice', instructions: 'Which one fits?', criteria: ['a', 'b', 'other'] } } };`;
-		const out = fixed(text, 'JEV006');
+		const out = fixed(text, 'DEC006');
 		expect(out).toContain("criteria: { 'a': null, 'b': null, 'other': null }");
 		expect(codes(out)).toEqual([]);
 	});
 
 	it('offers no reshape when a value was built at runtime', () => {
 		const text = `const r = { questions: { a: { type: 'noul', instructions: 'Is it so?' }, q: { type: 'score', instructions: 'Rate the damage', criteria: { low: lowText, high: 'High' } } } };`;
-		expect(finding(text, 'JEV006').fix).toBeUndefined();
+		expect(finding(text, 'DEC006').fix).toBeUndefined();
 	});
 });
 
-describe('JEV008 numeric-levels', () => {
+describe('DEC008 numeric-levels', () => {
 	it('fires when every level is a bare number', () => {
 		expect(
 			codes(
@@ -762,12 +762,12 @@ describe('JEV008 numeric-levels', () => {
 					`"q": { "type": "score", "instructions": "Rate 0 to 2", "criteria": ["0", "1", "2"] }`,
 				),
 			),
-		).toEqual(['JEV008']);
+		).toEqual(['DEC008']);
 		expect(
 			codes(
 				`const q = { type: 'score', instructions: 'Rate the damage', criteria: [0, 1, 2] };`,
 			),
-		).toEqual(['JEV008']);
+		).toEqual(['DEC008']);
 	});
 
 	it('does not fire when levels are described', () => {
@@ -789,9 +789,9 @@ describe('levels that differ only by a number', () => {
 				request(
 					`"q": { "type": "score", "instructions": "Rate the damage", "criteria": ["Level 1", "Level 2", "Level 3"] }`,
 				),
-				{ ...DEFAULT_OPTIONS, rules: { JEV110: 'warning' } },
+				{ ...DEFAULT_OPTIONS, rules: { DEC110: 'warning' } },
 			),
-		).toEqual(['JEV110']);
+		).toEqual(['DEC110']);
 	});
 });
 
@@ -808,7 +808,7 @@ describe('what a question lacks, outside a request', () => {
 		).toEqual([]);
 		expect(
 			codes(`const q = { type: 'score', instructions: makeText() };`),
-		).toEqual(['JEV000']);
+		).toEqual(['DEC000']);
 	});
 
 	it('is reported for an entry in a questions map', () => {
@@ -816,7 +816,7 @@ describe('what a question lacks, outside a request', () => {
 			codes(
 				`const r = { questions: { a: { type: 'noul', instructions: 'Is it so?' }, b: { type: 'score', instructions: 'Rate the damage', min: 1, max: 10 } } };`,
 			),
-		).toEqual(['JEV006']);
+		).toEqual(['DEC006']);
 	});
 
 	it('is not concluded from a template slot', () => {
@@ -838,7 +838,7 @@ describe('what a question lacks, outside a request', () => {
 	});
 });
 
-describe('JEV009 too-few-options', () => {
+describe('DEC009 too-few-options', () => {
 	it('fires on one option and on none', () => {
 		expect(
 			codes(
@@ -846,21 +846,21 @@ describe('JEV009 too-few-options', () => {
 					`"q": { "type": "choice", "instructions": "Which one fits?", "criteria": { "a": null } }`,
 				),
 			),
-		).toEqual(['JEV009']);
+		).toEqual(['DEC009']);
 		expect(
 			codes(
 				request(
 					`"q": { "type": "choice", "instructions": "Which one fits?", "criteria": {} }`,
 				),
 			),
-		).toEqual(['JEV009']);
+		).toEqual(['DEC009']);
 	});
 });
 
 describe('sources', () => {
 	it('reads SDK helper calls when the SDK is imported', () => {
 		const text = `import { choice, noul, score } from '@typesafe-ai/sdk';\nconst questions = {\n  team: choice('Which team takes it?', { billing: null, technical: null }),\n  urgent: noul('Is it urgent?'),\n  mood: score('How angry are they?', ['1', '2']),\n};`;
-		expect(codes(text)).toEqual(['JEV004', 'JEV008']);
+		expect(codes(text)).toEqual(['DEC004', 'DEC008']);
 		expect(lintText(text).questionCount).toBe(3);
 	});
 
@@ -872,12 +872,12 @@ describe('sources', () => {
 
 	it('finds a request passed to a call inside a callback', () => {
 		const text = `export const run = async (state) => handler({ go: () => client.systemOne({ state, model: 'jev-latest', questions: { team: { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } } } }) });`;
-		expect(codes(text)).toEqual(['JEV001', 'JEV004']);
+		expect(codes(text)).toEqual(['DEC001', 'DEC004']);
 	});
 
 	it('reads oxlint-plugin-jev rules as Noul questions', () => {
 		const text = `{ "jsPlugins": ["oxlint-plugin-jev"], "rules": { "jev/ask": ["error", { "model": "jev-latest", "rules": [ { "id": "a", "target": "call", "question": "Does this log personal data?", "cutoff": 0.8 }, { "id": "a", "target": "file", "question": "", "cutoff": 0.6 } ] }] } }`;
-		expect(codes(text)).toEqual(['JEV001', 'JEV005', 'JEV007']);
+		expect(codes(text)).toEqual(['DEC001', 'DEC005', 'DEC007']);
 		expect(lintText(text).questionCount).toBe(2);
 	});
 });
@@ -887,23 +887,32 @@ describe('suppression', () => {
 
 	it('silences the next line, the same line and the whole file', () => {
 		expect(
-			codes(`// decisionlint-disable-next-line JEV004\nconst q = ${bare};`),
+			codes(`// decisionlint-disable-next-line DEC004\nconst q = ${bare};`),
 		).toEqual([]);
 		expect(codes(`const q = ${bare}; // decisionlint-disable-line`)).toEqual(
 			[],
 		);
 		expect(
-			codes(`/* decisionlint-disable JEV004 */\n\n\nconst q = ${bare};`),
+			codes(`/* decisionlint-disable DEC004 */\n\n\nconst q = ${bare};`),
+		).toEqual([]);
+	});
+
+	it('reads the code a rule had before 1.0.0, under either directive', () => {
+		expect(
+			codes(`// decisionlint-disable-next-line JEV004\nconst q = ${bare};`),
+		).toEqual([]);
+		expect(
+			codes(`// jevlint-le-disable-next-line JEV004\nconst q = ${bare};`),
 		).toEqual([]);
 	});
 
 	it('leaves other rules and other lines alone, and reports the comment that silenced nothing', () => {
 		expect(
-			codes(`// decisionlint-disable-next-line JEV001\nconst q = ${bare};`),
-		).toEqual(['JEV010', 'JEV004']);
+			codes(`// decisionlint-disable-next-line DEC001\nconst q = ${bare};`),
+		).toEqual(['DEC010', 'DEC004']);
 		expect(
-			codes(`// decisionlint-disable-next-line JEV004\n\nconst q = ${bare};`),
-		).toEqual(['JEV010', 'JEV004']);
+			codes(`// decisionlint-disable-next-line DEC004\n\nconst q = ${bare};`),
+		).toEqual(['DEC010', 'DEC004']);
 	});
 
 	describe('a comment that silences nothing', () => {
@@ -913,33 +922,33 @@ describe('suppression', () => {
 				.findings;
 
 		it('is reported, at the comment', () => {
-			const text = `// decisionlint-disable-next-line JEV004\nconst q = ${clean};`;
+			const text = `// decisionlint-disable-next-line DEC004\nconst q = ${clean};`;
 			const [finding] = found(text);
-			expect(finding?.code).toBe('JEV010');
+			expect(finding?.code).toBe('DEC010');
 			expect(finding?.severity).toBe('warning');
 			expect(text.slice(finding?.span.start, finding?.span.end)).toBe(
-				'decisionlint-disable-next-line JEV004',
+				'decisionlint-disable-next-line DEC004',
 			);
 		});
 
 		it('is not reported when it silences a finding', () => {
 			expect(
-				codes(`// decisionlint-disable-next-line JEV004\nconst q = ${bare};`),
+				codes(`// decisionlint-disable-next-line DEC004\nconst q = ${bare};`),
 			).toEqual([]);
 			expect(codes(`// decisionlint-disable\nconst q = ${bare};`)).toEqual([]);
 		});
 
 		it('is reported when the rule it names is switched off, since that rule reports nothing', () => {
-			const text = `// decisionlint-disable-next-line JEV004\nconst q = ${bare};`;
-			expect(found(text, { JEV004: 'off' }).map((f) => f.code)).toEqual([
-				'JEV010',
+			const text = `// decisionlint-disable-next-line DEC004\nconst q = ${bare};`;
+			expect(found(text, { DEC004: 'off' }).map((f) => f.code)).toEqual([
+				'DEC010',
 			]);
 		});
 
 		it('is not reported when it names only rules that Jev checks, which linting never runs', () => {
 			expect(
 				codes(
-					`// decisionlint-disable-next-line JEV303 JEV305\nconst q = ${clean};`,
+					`// decisionlint-disable-next-line DEC303 DEC305\nconst q = ${clean};`,
 				),
 			).toEqual([]);
 		});
@@ -951,8 +960,8 @@ describe('suppression', () => {
 
 		it('can be switched off, and is not silenced by the comment it reports', () => {
 			const text = `// decisionlint-disable\nconst q = ${clean};`;
-			expect(found(text).map((f) => f.code)).toEqual(['JEV010']);
-			expect(found(text, { JEV010: 'off' })).toEqual([]);
+			expect(found(text).map((f) => f.code)).toEqual(['DEC010']);
+			expect(found(text, { DEC010: 'off' })).toEqual([]);
 		});
 
 		it('costs nothing in a file with no such comment', () => {
@@ -960,16 +969,25 @@ describe('suppression', () => {
 		});
 	});
 
-	it('drops a finding listed in the ignore setting', () => {
+	it('drops a finding listed under the code the rule had before 1.0.0', () => {
 		const text = request(
 			`"team": { "type": "choice", "instructions": "Which one fits?", "criteria": { "a": null, "b": null } }`,
 		);
 		expect(
 			codes(text, { ...DEFAULT_OPTIONS, ignore: ['JEV004:team'] }),
 		).toEqual([]);
+	});
+
+	it('drops a finding listed in the ignore setting', () => {
+		const text = request(
+			`"team": { "type": "choice", "instructions": "Which one fits?", "criteria": { "a": null, "b": null } }`,
+		);
 		expect(
-			codes(text, { ...DEFAULT_OPTIONS, ignore: ['JEV004:other'] }),
-		).toEqual(['JEV004']);
+			codes(text, { ...DEFAULT_OPTIONS, ignore: ['DEC004:team'] }),
+		).toEqual([]);
+		expect(
+			codes(text, { ...DEFAULT_OPTIONS, ignore: ['DEC004:other'] }),
+		).toEqual(['DEC004']);
 	});
 
 	it('applies a configured severity and switches a rule off', () => {
@@ -978,11 +996,11 @@ describe('suppression', () => {
 		);
 		expect(lintText(text).findings[0]?.severity).toBe('info');
 		expect(
-			lintText(text, { ...DEFAULT_OPTIONS, rules: { JEV004: 'error' } })
+			lintText(text, { ...DEFAULT_OPTIONS, rules: { DEC004: 'error' } })
 				.findings[0]?.severity,
 		).toBe('error');
 		expect(
-			codes(text, { ...DEFAULT_OPTIONS, rules: { JEV004: 'off' } }),
+			codes(text, { ...DEFAULT_OPTIONS, rules: { DEC004: 'off' } }),
 		).toEqual([]);
 	});
 });
@@ -994,15 +1012,15 @@ describe('a request whose only question is broken', () => {
 	it('is reported when the type is one slip from a real one', () => {
 		expect(
 			lone(`{ "type": "nuol", "instructions": "Did it arrive late?" }`),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 		expect(
 			lone(
 				`{ "type": "choise", "instructions": "Which team takes it?", "criteria": { "a": "A", "other": "Else" } }`,
 			),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 		expect(
 			lone(`{ "type": "scor", "instructions": "How late is it?" }`),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 	});
 
 	it('is reported when it has criteria and no type', () => {
@@ -1010,7 +1028,7 @@ describe('a request whose only question is broken', () => {
 			lone(
 				`{ "instructions": "Did it arrive late?", "criteria": { "true": "Late", "false": "On time" } }`,
 			),
-		).toEqual(['JEV007']);
+		).toEqual(['DEC007']);
 	});
 
 	it.each([
@@ -1041,7 +1059,7 @@ describe('a request whose only question is broken', () => {
 	it('is still read when no other word in the file marks it as Jev', () => {
 		const text = `{ "questions": { "late": { "type": "nuol", "instructions": "Did it arrive late?" } } }`;
 		expect(text).not.toMatch(/noul|choice|score|jev/);
-		expect(codes(text)).toEqual(['JEV007']);
+		expect(codes(text)).toEqual(['DEC007']);
 	});
 
 	it('offers the fix for the slip', () => {
@@ -1051,12 +1069,12 @@ describe('a request whose only question is broken', () => {
 	});
 });
 
-describe('JEV011 description-repeats-name', () => {
+describe('DEC011 description-repeats-name', () => {
 	it('fires on an option described as its own name, however spelt', () => {
 		const text = request(
 			`"team": { "type": "choice", "instructions": "Which team takes it?", "criteria": { "billing": "Billing", "tech_support": "Tech support.", "a": "Option A", "other": "Anything else" } }`,
 		);
-		const found = lintText(text).findings.filter((f) => f.code === 'JEV011');
+		const found = lintText(text).findings.filter((f) => f.code === 'DEC011');
 		expect(found.map((f) => f.message)).toEqual([
 			expect.stringContaining("'billing' only repeats its name"),
 			expect.stringContaining("'tech_support' only repeats its name"),
@@ -1068,7 +1086,7 @@ describe('JEV011 description-repeats-name', () => {
 		const text = request(
 			`"angry": { "type": "noul", "instructions": "Is the customer angry?", "criteria": { "true": "Yes", "false": "No." } }`,
 		);
-		expect(codes(text)).toEqual(['JEV011', 'JEV011']);
+		expect(codes(text)).toEqual(['DEC011', 'DEC011']);
 	});
 
 	it('is quiet on a description, a null, or criteria that describe the case', () => {
@@ -1079,7 +1097,7 @@ describe('JEV011 description-repeats-name', () => {
 	});
 });
 
-describe('JEV012 terse-instructions', () => {
+describe('DEC012 terse-instructions', () => {
 	it.each([
 		['one word', 'Refund?', 'are one word'],
 		['two words', 'Pick one.', 'are two words'],
@@ -1088,7 +1106,7 @@ describe('JEV012 terse-instructions', () => {
 		const text = request(
 			`"q": { "type": "noul", "instructions": ${JSON.stringify(instructions)} }`,
 		);
-		const found = lintText(text).findings.find((f) => f.code === 'JEV012');
+		const found = lintText(text).findings.find((f) => f.code === 'DEC012');
 		expect(found?.message).toContain(`The instructions ${said}`);
 	});
 
@@ -1106,7 +1124,7 @@ describe('JEV012 terse-instructions', () => {
 			`"q": { "type": "noul", "instructions": "Is \`text\` relevant?" }`,
 		],
 		[
-			'an empty string, which JEV007 reports',
+			'an empty string, which DEC007 reports',
 			`"q": { "type": "noul", "instructions": "" }`,
 		],
 		['a template slot', `"q": { "type": "noul", "instructions": "$question" }`],
@@ -1115,7 +1133,7 @@ describe('JEV012 terse-instructions', () => {
 			`"q": { "type": "noul", "instructions": "至急？" }`,
 		],
 	])('is quiet on %s', (_name, question) => {
-		expect(codes(request(question))).not.toContain('JEV012');
+		expect(codes(request(question))).not.toContain('DEC012');
 	});
 
 	it("is quiet on another client's question shape", () => {
@@ -1127,17 +1145,17 @@ describe('JEV012 terse-instructions', () => {
 	});
 });
 
-describe('JEV006 on a list of options wrapped in a one-option map', () => {
+describe('DEC006 on a list of options wrapped in a one-option map', () => {
 	const wrapped = `const q = { questions: { team: { type: 'choice', instructions: 'Which team takes it?', criteria: { options: ['billing', 'technical', 'other'] } } } };`;
 
 	it('reports it as the shape mistake it is, not as a one-option Choice', () => {
 		const found = lintText(wrapped).findings;
-		expect(found.map((f) => f.code)).toEqual(['JEV006']);
+		expect(found.map((f) => f.code)).toEqual(['DEC006']);
 		expect(found[0]?.message).toContain("answers 'options' every time");
 	});
 
 	it('offers the map as an unsafe fix, since the API accepts the mistake', () => {
-		const found = finding(wrapped, 'JEV006');
+		const found = finding(wrapped, 'DEC006');
 		expect(found.fix?.safe).toBe(false);
 		const mended = apply(wrapped, found);
 		expect(mended).toContain(
@@ -1161,7 +1179,7 @@ describe('text that names a property of Object.prototype', () => {
 			`"q": { "type": "noul", "instructions": "Has it shipped?", "criteria": { "${key}": "It left.", "false": "Still here." } }`,
 		);
 		const [found] = lintText(text).findings;
-		expect(found).toMatchObject({ code: 'JEV006', fix: undefined });
+		expect(found).toMatchObject({ code: 'DEC006', fix: undefined });
 		expect(fixText(text, DEFAULT_OPTIONS)).toEqual({ text, fixed: 0 });
 	});
 
@@ -1178,7 +1196,7 @@ describe('text that names a property of Object.prototype', () => {
 			const beside = request(
 				`${CLEAN_NOUL}, "q": { "type": "${type}", "instructions": "Has it shipped?" }`,
 			);
-			expect(finding(beside, 'JEV007').message).toContain(
+			expect(finding(beside, 'DEC007').message).toContain(
 				`Question type "${type}" does not exist`,
 			);
 		},
@@ -1188,7 +1206,7 @@ describe('text that names a property of Object.prototype', () => {
 		'reads a bare JavaScript name %s as a value it cannot see',
 		(name) => {
 			const text = `const r = { questions: { q: { type: 'noul', instructions: ${name}, criteria: ${name} } } };`;
-			expect(codes(text)).toEqual(['JEV000']);
+			expect(codes(text)).toEqual(['DEC000']);
 			expect(lintText(text).unreadableCount).toBe(1);
 		},
 	);
@@ -1217,7 +1235,7 @@ describe('text that names a property of Object.prototype', () => {
 				expect(
 					result.findings.map((finding) => finding.code),
 					name,
-				).toEqual(['JEV000']);
+				).toEqual(['DEC000']);
 			}
 		},
 	);
@@ -1253,14 +1271,14 @@ describe("a directive written under the tool's old name", () => {
 	const bad = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } };`;
 
 	it('still silences', () => {
-		expect(codes(`// jevlint-le-disable-next-line JEV004\n${bad}`)).toEqual([]);
-		expect(codes(`// jevlint-le-disable JEV004\n${bad}`)).toEqual([]);
+		expect(codes(`// jevlint-le-disable-next-line DEC004\n${bad}`)).toEqual([]);
+		expect(codes(`// jevlint-le-disable DEC004\n${bad}`)).toEqual([]);
 	});
 
 	it('is still reported when it silences nothing', () => {
-		expect(codes(`// jevlint-le-disable-next-line JEV009\n${bad}`)).toEqual([
-			'JEV010',
-			'JEV004',
+		expect(codes(`// jevlint-le-disable-next-line DEC009\n${bad}`)).toEqual([
+			'DEC010',
+			'DEC004',
 		]);
 	});
 });

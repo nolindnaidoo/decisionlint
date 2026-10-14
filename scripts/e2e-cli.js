@@ -25,7 +25,7 @@ function cli(args, input) {
 	return { status: result.status, out: result.stdout, err: result.stderr };
 }
 
-const codes = (out) => [...out.matchAll(/ {2}(JEV\d{3}) {2}/g)].map((m) => m[1]);
+const codes = (out) => [...out.matchAll(/ {2}(DEC\d{3}) {2}/g)].map((m) => m[1]);
 
 const version = cli(['--version']);
 assert.strictEqual(version.out.trim(), require(join(root, 'package.json')).version);
@@ -34,14 +34,14 @@ assert.strictEqual(version.out.trim(), require(join(root, 'package.json')).versi
 const python = cli(['--format', 'compact', 'triage.py']);
 assert.strictEqual(python.status, 1, python.err);
 assert.deepStrictEqual(codes(python.out), [
-	'JEV004', 'JEV008', 'JEV000', 'JEV009', 'JEV006', 'JEV005', 'JEV001',
+	'DEC004', 'DEC008', 'DEC000', 'DEC009', 'DEC006', 'DEC005', 'DEC001',
 ]);
 
 for (const name of ['triage.rs', 'triage.go']) {
 	const typed = cli(['--format', 'compact', name]);
 	assert.strictEqual(typed.status, 1, typed.err);
 	assert.deepStrictEqual(codes(typed.out), [
-		'JEV001', 'JEV004', 'JEV008', 'JEV000', 'JEV006', 'JEV009',
+		'DEC001', 'DEC004', 'DEC008', 'DEC000', 'DEC006', 'DEC009',
 	]);
 }
 
@@ -60,7 +60,7 @@ const piped = cli(
 	['--format', 'compact', '--stdin-filename', 'q.json'],
 	'{ "model": "jev-latest", "questions": { "a": { "type": "noul", "instructions": "Is it late?" } } }',
 );
-assert.deepStrictEqual(codes(piped.out), ['JEV001']);
+assert.deepStrictEqual(codes(piped.out), ['DEC001']);
 assert.strictEqual(piped.status, 0);
 
 const wrong = cli(['--fromat', 'json']);
@@ -137,11 +137,11 @@ assert.strictEqual(linted.files[0].findings.length, 7);
 // The answer as data is the text, so a client may read either.
 assert.deepStrictEqual(replies[2].result.structuredContent, linted);
 // The rule pages ship in the bundle: an agent with no network still gets an example.
-const explained = cli(['--mcp'], `${JSON.stringify({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'explain_rule', arguments: { code: 'JEV006' } } })}\n`);
+const explained = cli(['--mcp'], `${JSON.stringify({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'explain_rule', arguments: { code: 'DEC006' } } })}\n`);
 assert.strictEqual(explained.status, 0, explained.err);
 const page = JSON.parse(explained.out.trim()).result;
 assert.strictEqual(page.isError, false);
-assert.match(page.content[0].text, /^# JEV006 criteria-shape\n/);
+assert.match(page.content[0].text, /^# DEC006 criteria-shape\n/);
 assert.match(page.content[0].text, /## Flagged\n/);
 assert.strictEqual(page.structuredContent.markdown, page.content[0].text);
 
@@ -151,13 +151,13 @@ const npmManifest = require(join(root, 'npm', 'package.json'));
 const library = require(join(root, 'npm', npmManifest.main));
 assert.strictEqual(library.api, 1);
 assert.deepStrictEqual([...library.syntaxes].sort(), ['go', 'js', 'python', 'rust']);
-assert.ok(library.rules.JEV004.docs.startsWith('https://'));
-assert.ok(library.rules.JEV004.page.endsWith('/docs/rules/JEV004.md'));
+assert.ok(library.rules.DEC004.docs.startsWith('https://'));
+assert.ok(library.rules.DEC004.page.endsWith('/docs/rules/DEC004.md'));
 const BROKEN_NOUL = '{ "questions": { "late": { "type": "noul", "instructions": "Did it arrive late?", "criteria": { "yes": "Late", "no": "On time" } } } }';
 const libraryOptions = { rules: {}, fallbackOptions: ['other'], ignore: [] };
 assert.deepStrictEqual(
 	library.lint(BROKEN_NOUL, libraryOptions, 'js').findings.map((finding) => finding.code),
-	['JEV006', 'JEV006'],
+	['DEC006', 'DEC006'],
 );
 assert.strictEqual(library.fix(BROKEN_NOUL, libraryOptions, 'js').fixed, 2);
 // Requiring it must not start the command line or touch the process.

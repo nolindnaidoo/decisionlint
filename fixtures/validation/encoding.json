@@ -1,6 +1,6 @@
 [
   {
-    "rule": "JEV111",
+    "rule": "DEC111",
     "name": "a colour given as hex against the same colour named",
     "cases": [
       {

@@ -27,8 +27,8 @@ describe('fixing a text', () => {
 		// Pinning a model and adding an option change what the request does.
 		expect(text).toContain('"jev-latest"');
 		expect(text).not.toContain('"other"');
-		expect(codes(text)).toContain('JEV001');
-		expect(codes(text)).toContain('JEV004');
+		expect(codes(text)).toContain('DEC001');
+		expect(codes(text)).toContain('DEC004');
 	});
 
 	it('leaves valid JSON valid', () => {
@@ -46,9 +46,9 @@ describe('fixing a text', () => {
 	});
 
 	it('does not fix a finding that is switched off or silenced', () => {
-		const off = { ...OPTIONS, rules: { JEV006: 'off' as const } };
+		const off = { ...OPTIONS, rules: { DEC006: 'off' as const } };
 		expect(fixText(BROKEN, off).text).toContain('"yes"');
-		const silenced = `// decisionlint-disable JEV006\nconst q = { type: 'noul', instructions: 'Is it late?', criteria: { yes: 'Late', no: 'On time' } };`;
+		const silenced = `// decisionlint-disable DEC006\nconst q = { type: 'noul', instructions: 'Is it late?', criteria: { yes: 'Late', no: 'On time' } };`;
 		expect(fixText(silenced, OPTIONS)).toEqual({ text: silenced, fixed: 0 });
 	});
 

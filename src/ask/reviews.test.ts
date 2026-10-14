@@ -62,7 +62,7 @@ describe('what is put to Jev', () => {
 			question: { type: 'noul', instructions: 'Is it large?' },
 		});
 		expect(request?.model).toBe(MODEL);
-		expect(Object.keys(request?.questions ?? {})).toEqual(['JEV301', 'JEV302']);
+		expect(Object.keys(request?.questions ?? {})).toEqual(['DEC301', 'DEC302']);
 	});
 
 	// Ids with a dot are the per-entry locating questions.
@@ -76,8 +76,8 @@ describe('what is put to Jev', () => {
 
 	it('asks only the checks that fit the question type', () => {
 		expect(main({ type: 'noul', instructions: 'Is it so?' })).toEqual([
-			'JEV301',
-			'JEV302',
+			'DEC301',
+			'DEC302',
 		]);
 		expect(
 			main({
@@ -85,14 +85,14 @@ describe('what is put to Jev', () => {
 				instructions: 'Which one fits?',
 				criteria: { a: 'A', b: 'B', c: 'C' },
 			}),
-		).toEqual(['JEV301', 'JEV303', 'JEV305', 'JEV306', 'JEV307']);
+		).toEqual(['DEC301', 'DEC303', 'DEC305', 'DEC306', 'DEC307']);
 		expect(
 			main({
 				type: 'score',
 				instructions: 'Rate the damage',
 				criteria: ['x', 'y'],
 			}),
-		).toEqual(['JEV301', 'JEV304', 'JEV306', 'JEV308']);
+		).toEqual(['DEC301', 'DEC304', 'DEC306', 'DEC308']);
 	});
 
 	it('asks about other questions only when there are some, and names them', () => {
@@ -113,7 +113,7 @@ describe('what is put to Jev', () => {
 			},
 		);
 		expect(beside?.state.other_questions).toEqual(['topic', 'mood']);
-		expect(Object.keys(beside?.questions ?? {})).toContain('JEV309');
+		expect(Object.keys(beside?.questions ?? {})).toContain('DEC309');
 	});
 
 	it('sends the state only when it is given one', () => {
@@ -134,7 +134,7 @@ describe('what is put to Jev', () => {
 			},
 		);
 		expect(withState?.state.state).toEqual({ note: 'n' });
-		expect(Object.keys(withState?.questions ?? {})).toContain('JEV311');
+		expect(Object.keys(withState?.questions ?? {})).toContain('DEC311');
 	});
 
 	it('sends nothing when every check that fits is switched off', () => {
@@ -149,11 +149,11 @@ describe('what is put to Jev', () => {
 
 	it('reports a check only at or above its cutoff', () => {
 		const cutoff =
-			REVIEWS.find((review) => review.code === 'JEV302')?.cutoff ?? 0;
-		expect(readAnswers({ JEV302: { noul: cutoff - 0.01 } })).toEqual([]);
+			REVIEWS.find((review) => review.code === 'DEC302')?.cutoff ?? 0;
+		expect(readAnswers({ DEC302: { noul: cutoff - 0.01 } })).toEqual([]);
 		expect(
-			readAnswers({ JEV302: { noul: cutoff } }).map((f) => f.code),
-		).toEqual(['JEV302']);
+			readAnswers({ DEC302: { noul: cutoff } }).map((f) => f.code),
+		).toEqual(['DEC302']);
 		expect(readAnswers({})).toEqual([]);
 	});
 
@@ -165,30 +165,30 @@ describe('what is put to Jev', () => {
 				criteria: { pet: 'An animal kept at home', dog: 'A dog' },
 			},
 			MODEL,
-			new Set(['JEV303']),
+			new Set(['DEC303']),
 		);
 		expect(Object.keys(request?.questions ?? {})).toEqual([
-			'JEV303',
-			'JEV303.0',
-			'JEV303.1',
+			'DEC303',
+			'DEC303.0',
+			'DEC303.1',
 		]);
-		expect(JSON.stringify(request?.questions['JEV303.1'])).toContain(
+		expect(JSON.stringify(request?.questions['DEC303.1'])).toContain(
 			'\\"dog\\"',
 		);
 	});
 
 	it('names the two entries Jev rates highest, and none when it rates none', () => {
 		const pointed = readAnswers({
-			JEV303: { noul: 0.9 },
-			'JEV303.0': { noul: 0.2 },
-			'JEV303.1': { noul: 0.7 },
-			'JEV303.2': { noul: 0.6 },
+			DEC303: { noul: 0.9 },
+			'DEC303.0': { noul: 0.2 },
+			'DEC303.1': { noul: 0.7 },
+			'DEC303.2': { noul: 0.6 },
 		});
 		expect(pointed[0]?.culprits).toEqual([1, 2]);
 		const vague = readAnswers({
-			JEV303: { noul: 0.9 },
-			'JEV303.0': { noul: 0.3 },
-			'JEV303.1': { noul: 0.2 },
+			DEC303: { noul: 0.9 },
+			'DEC303.0': { noul: 0.3 },
+			'DEC303.1': { noul: 0.2 },
 		});
 		expect(vague[0]?.culprits).toEqual([]);
 	});
@@ -200,9 +200,9 @@ describe('what is put to Jev', () => {
 		const request = buildRequest(
 			{ type: 'choice', instructions: 'Which one fits?', criteria },
 			MODEL,
-			new Set(['JEV303']),
+			new Set(['DEC303']),
 		);
-		expect(Object.keys(request?.questions ?? {})).toEqual(['JEV303']);
+		expect(Object.keys(request?.questions ?? {})).toEqual(['DEC303']);
 	});
 
 	it('asks one request about every pair of questions, and about the state if given', () => {
@@ -214,39 +214,39 @@ describe('what is put to Jev', () => {
 		const pairs = buildRequestReview(
 			questions,
 			MODEL,
-			new Set(['JEV310', 'JEV312']),
+			new Set(['DEC310', 'DEC312']),
 		);
 		expect(Object.keys(pairs?.questions ?? {})).toEqual([
-			'JEV310.0.1',
-			'JEV310.0.2',
-			'JEV310.1.2',
+			'DEC310.0.1',
+			'DEC310.0.2',
+			'DEC310.1.2',
 		]);
 		expect('state' in (pairs?.state ?? {})).toBe(false);
 		const withState = buildRequestReview(
 			questions,
 			MODEL,
-			new Set(['JEV310', 'JEV312']),
+			new Set(['DEC310', 'DEC312']),
 			'text',
 		);
-		expect(Object.keys(withState?.questions ?? {})).toContain('JEV312');
+		expect(Object.keys(withState?.questions ?? {})).toContain('DEC312');
 		expect(
 			buildRequestReview(
 				{ a: questions.a },
 				MODEL,
-				new Set(['JEV310', 'JEV312']),
+				new Set(['DEC310', 'DEC312']),
 			),
 		).toBeUndefined();
 	});
 
 	it('reads a pair above the cutoff back to its two question ids', () => {
 		const found = readRequestAnswers(['a', 'b', 'c'], {
-			'JEV310.0.1': { noul: 0.02 },
-			'JEV310.1.2': { noul: 0.6 },
-			JEV312: { noul: 0.99 },
+			'DEC310.0.1': { noul: 0.02 },
+			'DEC310.1.2': { noul: 0.6 },
+			DEC312: { noul: 0.99 },
 		});
 		expect(found).toEqual([
-			{ code: 'JEV310', first: 'b', second: 'c', probability: 0.6 },
-			{ code: 'JEV312', probability: 0.99 },
+			{ code: 'DEC310', first: 'b', second: 'c', probability: 0.6 },
+			{ code: 'DEC312', probability: 0.99 },
 		]);
 	});
 
@@ -274,10 +274,10 @@ describe('cutoffs against the saved calibration', () => {
 		),
 	);
 	const LABEL: Record<string, string> = {
-		JEV301: 'JEV102',
-		JEV302: 'JEV112',
-		JEV303: 'JEV303',
-		JEV304: 'JEV304',
+		DEC301: 'DEC102',
+		DEC302: 'DEC112',
+		DEC303: 'DEC303',
+		DEC304: 'DEC304',
 	};
 
 	it.each(REVIEWS)(
@@ -335,14 +335,14 @@ describe('the client', () => {
 		const fetch = vi.fn(async () =>
 			reply(200, {
 				model: MODEL,
-				answers: answered({ JEV302: { noul: 0.9 } }),
+				answers: answered({ DEC302: { noul: 0.9 } }),
 				usage: { input_tokens: 300 },
 			}),
 		);
 		const result = await ask(deps(fetch), request);
 		expect(result).toEqual({
 			model: MODEL,
-			answers: answered({ JEV302: { noul: 0.9 } }),
+			answers: answered({ DEC302: { noul: 0.9 } }),
 			inputTokens: 300,
 		});
 		const init = (

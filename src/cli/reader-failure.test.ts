@@ -54,7 +54,7 @@ async function cli(args: string[], tree: Record<string, string>, stdin = '') {
 describe('a file the reader fails on', () => {
 	it('is named, and does not take the other files with it', async () => {
 		const result = await cli(['.'], { 'a.json': BAD, 'b.json': 'POISON' });
-		expect(result.out).toContain('JEV004');
+		expect(result.out).toContain('DEC004');
 		expect(result.out).toContain('1 path could not be read: b.json.');
 		expect(result.status).toBe(EXIT.passed);
 	});

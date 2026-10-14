@@ -16,7 +16,7 @@ import {
 	readQuestions,
 	syntaxForPath,
 } from '../lint/lint';
-import { pageFor, RULE_CODES, RULES } from '../lint/rules';
+import { currentCode, pageFor, RULE_CODES, RULES } from '../lint/rules';
 import { ASK_PLATFORM_IDS, targetById } from '../lint/targets';
 import type { RuleCode, Syntax } from '../types';
 import { failureMessage, planAsk, ROUTE_ENV, routeFrom, runAsk } from './ask';
@@ -104,7 +104,7 @@ const SENDS = Object.freeze({
 const RULES_SCHEMA = Object.freeze({
 	type: 'object',
 	description:
-		'Rule levels to override, such as { "JEV004": "off" }. Levels: off, hint, info, warning, error.',
+		'Rule levels to override, such as { "DEC004": "off" }. Levels: off, hint, info, warning, error.',
 	additionalProperties: { type: 'string' },
 });
 const TEXT_SCHEMA = Object.freeze({
@@ -156,7 +156,7 @@ const POSITION = Object.freeze({
 const FINDING_SCHEMA = Object.freeze({
 	type: 'object',
 	properties: {
-		code: { type: 'string', description: 'The rule, such as JEV004.' },
+		code: { type: 'string', description: 'The rule, such as DEC004.' },
 		rule: { type: 'string', description: "The rule's name." },
 		severity: { type: 'string', enum: ['hint', 'info', 'warning', 'error'] },
 		message: { type: 'string' },
@@ -555,7 +555,7 @@ function fixTextTool(input: Json, io: Io): Outcome {
 	return ok({ text: mended.text, fixed: mended.fixed, ...left.structured });
 }
 
-const runsHere = (code: RuleCode) => !code.startsWith('JEV3');
+const runsHere = (code: RuleCode) => !code.startsWith('DEC3');
 
 function describe(code: RuleCode): Json {
 	return {
@@ -577,7 +577,7 @@ function listRulesTool(): Outcome {
 function explainRuleTool(input: Json): Outcome {
 	const { code } = input;
 	if (typeof code !== 'string') return fail("'code' must be a string.");
-	const asked = code.trim().toUpperCase();
+	const asked = currentCode(code.trim().toUpperCase());
 	const known = RULE_CODES.find((candidate) => candidate === asked);
 	if (!known)
 		return fail(`Unknown rule: ${code}. list_rules names every rule.`);
@@ -881,7 +881,7 @@ const TOOLS: ReadonlyArray<Tool> = Object.freeze([
 		inputSchema: {
 			type: 'object',
 			properties: {
-				code: { type: 'string', description: 'The rule, such as JEV004.' },
+				code: { type: 'string', description: 'The rule, such as DEC004.' },
 			},
 			required: ['code'],
 		},

@@ -62,30 +62,30 @@ describe("OpenAI's Decisions API shape", () => {
 
 	it('runs every rule with evidence behind it, and none about the TypeSafe API', () => {
 		expect(codes(OPENAI_BODY)).toEqual([
-			'JEV102',
-			'JEV004',
-			'JEV011',
-			'JEV012',
-			'JEV011',
+			'DEC102',
+			'DEC004',
+			'DEC011',
+			'DEC012',
+			'DEC011',
 		]);
 	});
 
 	it('names Luna in its messages, not Jev', () => {
 		const messages = lintText(OPENAI_BODY).findings.map((f) => f.message);
 		expect(messages.some((m) => /\bJev\b/.test(m))).toBe(false);
-		expect(finding(OPENAI_BODY, 'JEV102').message).toContain(
+		expect(finding(OPENAI_BODY, 'DEC102').message).toContain(
 			'asks Luna to count',
 		);
-		expect(finding(OPENAI_BODY, 'JEV011').message).toContain(
+		expect(finding(OPENAI_BODY, 'DEC011').message).toContain(
 			'Luna matches the state',
 		);
 	});
 
 	it('is read through the openai SDK in TypeScript and Python', () => {
 		const ts = `const r = await client.decisions.create({ model: 'gpt-6-luna', input: text, questions: [{ type: 'predicate', name: 'refund', instructions: 'Refund?' }] });`;
-		expect(codes(ts)).toEqual(['JEV012']);
+		expect(codes(ts)).toEqual(['DEC012']);
 		const py = `r = client.decisions.create(model="gpt-6-luna", input=text, questions=[{"type": "predicate", "name": "refund", "instructions": "Refund?"}])`;
-		expect(codes(py, 'python')).toEqual(['JEV012']);
+		expect(codes(py, 'python')).toEqual(['DEC012']);
 		expect(readQuestions(py, 'python').questions[0]).toMatchObject({
 			id: 'refund',
 			inRequest: true,
@@ -125,7 +125,7 @@ describe("OpenAI's Decisions API shape", () => {
 	])(
 		'reports the shape mistake of %s in its own words',
 		(_name, text, message) => {
-			const found = finding(text, 'JEV006');
+			const found = finding(text, 'DEC006');
 			expect(found.message).toBe(message);
 			expect(found.fix).toBeUndefined();
 		},
@@ -133,25 +133,25 @@ describe("OpenAI's Decisions API shape", () => {
 
 	it('offers the fallback option as a list entry, spelt like the one before it', () => {
 		const text = `{ "questions": [ { "type": "choice", "name": "team", "instructions": "Which team takes it?", "choices": [\n    { "value": "billing", "description": "Charges" },\n    { "value": "technical", "description": "Faults" }\n  ] } ] }`;
-		const fixed = apply(text, finding(text, 'JEV004'));
+		const fixed = apply(text, finding(text, 'DEC004'));
 		expect(fixed).toContain(
 			'{ "value": "technical", "description": "Faults" },\n    { "value": "other", "description": "Fits none of the other options" }\n  ]',
 		);
 		expect(codes(fixed)).toEqual([]);
 		const ts = `const q = { type: 'choice', name: 'team', instructions: 'Which team takes it?', choices: [{ value: 'billing', description: 'Charges' }, { value: 'technical', description: 'Faults' }] };`;
-		expect(apply(ts, finding(ts, 'JEV004'))).toContain(
+		expect(apply(ts, finding(ts, 'DEC004'))).toContain(
 			"{ value: 'technical', description: 'Faults' }, { value: 'other', description: 'Fits none of the other options' }]",
 		);
 	});
 
 	it('reports a repeated name as a duplicate id', () => {
 		const text = `{ "questions": [ { "type": "predicate", "name": "late", "instructions": "Is the parcel late?" }, { "type": "predicate", "name": "late", "instructions": "Is the lid cracked?" } ] }`;
-		expect(codes(text)).toEqual(['JEV005']);
+		expect(codes(text)).toEqual(['DEC005']);
 	});
 
 	it('reports a mistyped type in a list the way it does in a map, in its own type names', () => {
 		const text = `{ "questions": [ { "type": "predicat", "name": "late", "instructions": "Is the parcel late?" } ] }`;
-		const found = finding(text, 'JEV007');
+		const found = finding(text, 'DEC007');
 		expect(found.message).toBe(
 			'Question type "predicat" does not exist. The types are predicate, choice and score.',
 		);
@@ -180,17 +180,17 @@ const result = await decide({
 			['team', 'choice', 'vercel'],
 			['sev', 'score', 'vercel'],
 		]);
-		expect(codes(text)).toEqual(['JEV012', 'JEV004', 'JEV011', 'JEV110']);
+		expect(codes(text)).toEqual(['DEC012', 'DEC004', 'DEC011', 'DEC110']);
 	});
 
 	it('says "the model", since the SDK routes to either vendor', () => {
-		expect(finding(text, 'JEV011').message).toContain(
+		expect(finding(text, 'DEC011').message).toContain(
 			'The model matches the state',
 		);
 	});
 
 	it('adds the fallback option to the options map', () => {
-		expect(apply(text, finding(text, 'JEV004'))).toContain(
+		expect(apply(text, finding(text, 'DEC004'))).toContain(
 			"technical: 'Faults', other: 'Fits none of the other options' }",
 		);
 	});

@@ -11,6 +11,8 @@ import {
 	OLD_CONFIG_FILE,
 	parseConfig,
 	readLintOptions,
+	readRule,
+	readRules,
 } from './projectConfig';
 
 const disk = (tree: Record<string, string>) => {
@@ -26,27 +28,27 @@ const disk = (tree: Record<string, string>) => {
 		},
 	};
 };
-const OFF = '{ "rules": { "JEV004": "off" } }';
+const OFF = '{ "rules": { "DEC004": "off" } }';
 
 describe('a project settings file', () => {
 	it('holds rules, fallback options, what to ignore and which files to leave out', () => {
 		expect(
 			parseConfig(
-				'{ "rules": { "JEV004": "error" }, "fallbackOptions": ["else"], "ignore": ["JEV112:big"], "exclude": ["fixtures"] }',
+				'{ "rules": { "DEC004": "error" }, "fallbackOptions": ["else"], "ignore": ["DEC112:big"], "exclude": ["fixtures"] }',
 			),
 		).toEqual({
-			rules: { JEV004: 'error' },
+			rules: { DEC004: 'error' },
 			fallbackOptions: ['else'],
-			ignore: ['JEV112:big'],
+			ignore: ['DEC112:big'],
 			exclude: ['fixtures'],
 		});
 	});
 
 	it.each([
 		['{ "rule": {} }', "'rule' is not a setting"],
-		['{ "rules": { "JEV999": "off" } }', "'JEV999' is not a rule code"],
-		['{ "rules": { "JEV004": "loud" } }', "'loud' is not a level"],
-		['{ "ignore": "JEV004:team" }', "'ignore' must be a list of strings"],
+		['{ "rules": { "DEC999": "off" } }', "'DEC999' is not a rule code"],
+		['{ "rules": { "DEC004": "loud" } }', "'loud' is not a level"],
+		['{ "ignore": "DEC004:team" }', "'ignore' must be a list of strings"],
 		['{ "exclude": "fixtures" }', "'exclude' must be a list of strings"],
 		['{ "target": "jay" }', "'target' must be one of typesafe, openai"],
 		['{ "target": ["litellm"] }', "'target' must be one of"],
@@ -61,6 +63,18 @@ describe('a project settings file', () => {
 			target: 'litellm',
 		});
 		expect(readLintOptions({ target: '' })).not.toHaveProperty('target');
+	});
+
+	it('reads the codes and names rules had before 1.0.0, and reports the spelling it was given', () => {
+		expect(readRule('JEV004=off')).toEqual(['DEC004', 'off']);
+		expect(readRule('jev-counting=warning')).toEqual(['DEC301', 'warning']);
+		expect(readRule('JEV999=off')).toBe(
+			"'JEV999' is not a rule code or a rule name.",
+		);
+		expect(readRules({ JEV001: 'off', 'jev-counting': 'off' })).toEqual({
+			DEC001: 'off',
+			DEC301: 'off',
+		});
 	});
 
 	it('is described by a schema with the same keys, levels and targets', () => {

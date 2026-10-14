@@ -55,7 +55,7 @@ past `--max-warnings`.
 
 ### Asking a model
 
-`--ask` runs the checks that ask a decision model, `JEV301` to `JEV312`, after
+`--ask` runs the checks that ask a decision model, `DEC301` to `DEC312`, after
 the linting. It is the only option that uses the network, and nothing in a
 settings file can turn it on.
 
@@ -100,8 +100,8 @@ extension reads the same file, so the editor and CI agree.
 
 ```json
 {
-  "rules": { "JEV004": "error", "JEV112": "off" },
-  "ignore": ["JEV004:department"],
+  "rules": { "DEC004": "error", "DEC112": "off" },
+  "ignore": ["DEC004:department"],
   "exclude": ["fixtures", "**/*.generated.ts"]
 }
 ```

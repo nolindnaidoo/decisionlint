@@ -4,11 +4,11 @@ use serde_json::{json, Value};
 
 pub fn triage(note: &str, mechanic: &str) -> Value {
     json!({
-        // JEV001: an alias moves to each new release.
+        // DEC001: an alias moves to each new release.
         "model": "jev-latest",
         "state": { "note": note },
         "questions": {
-            // JEV004: nothing to pick when the job is neither of these.
+            // DEC004: nothing to pick when the job is neither of these.
             "job_type": {
                 "type": "choice",
                 "instructions": "What kind of job is this?",
@@ -17,18 +17,18 @@ pub fn triage(note: &str, mechanic: &str) -> Value {
                     "brakes": "Pads, cables, levers or discs"
                 }
             },
-            // JEV008: bare numbers say nothing about what each level means.
+            // DEC008: bare numbers say nothing about what each level means.
             "hurry": {
                 "type": "score",
                 "instructions": "How soon does the customer need the bike back?",
                 "criteria": ["1", "2", "3"]
             },
-            // JEV000: the wording is only known when this runs.
+            // DEC000: the wording is only known when this runs.
             "for_mechanic": {
                 "type": "noul",
                 "instructions": format!("Is this a job {mechanic} takes?")
             },
-            // JEV006: a Score takes an ordered list, not a map.
+            // DEC006: a Score takes an ordered list, not a map.
             "wear": {
                 "type": "score",
                 "instructions": "How worn is the drivetrain?",
@@ -38,7 +38,7 @@ pub fn triage(note: &str, mechanic: &str) -> Value {
     })
 }
 
-/// The same request pasted as text. JEV009: one option leaves no decision to make.
+/// The same request pasted as text. DEC009: one option leaves no decision to make.
 pub const FRAME: &str = r#"{
     "questions": {
         "frame": {

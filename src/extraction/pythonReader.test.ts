@@ -138,7 +138,7 @@ log = f"{ {'type': 'noul', 'instructions': name} }"`);
 
 	it('keeps duplicate keys', () => {
 		const text = `q = {"questions": {"a": {"type": "noul", "instructions": "Is there one?"}, "a": {"type": "noul", "instructions": "Are there two?"}}}`;
-		expect(codes(text)).toContain('JEV005');
+		expect(codes(text)).toContain('DEC005');
 	});
 });
 
@@ -230,7 +230,7 @@ describe('the Python SDK', () => {
 		expect(found.questions.map((q) => q.open)).toEqual([true, true]);
 		expect(
 			codes(`${SDK}q = {"questions": {"a": Choice(**fields)}}`),
-		).not.toContain('JEV006');
+		).not.toContain('DEC006');
 	});
 });
 
@@ -247,11 +247,11 @@ describe('rules on Python', () => {
     model="jev-latest",
 )`;
 		expect(codes(text)).toEqual([
-			'JEV004',
-			'JEV008',
-			'JEV006',
-			'JEV006',
-			'JEV001',
+			'DEC004',
+			'DEC008',
+			'DEC006',
+			'DEC006',
+			'DEC001',
 		]);
 	});
 
@@ -263,7 +263,7 @@ describe('rules on Python', () => {
 
 	it('honours a suppression written as a Python comment', () => {
 		const text = `${SDK}q = {"questions": {
-    # decisionlint-disable-next-line JEV004
+    # decisionlint-disable-next-line DEC004
     "team": Choice(instructions="Which team takes it?", criteria={"billing": "Charges", "technical": "Faults"}),
 }}`;
 		expect(codes(text)).toEqual([]);
@@ -281,7 +281,7 @@ describe('fixes on Python', () => {
 
 	it('adds a fallback option as a quoted key, never a bare name', () => {
 		const text = `${SDK}q = {"questions": {"team": Choice(instructions="Which team takes it?", criteria={'billing': 'Charges', 'technical': 'Faults'})}}`;
-		const out = apply(text, finding(text, 'JEV004').fix);
+		const out = apply(text, finding(text, 'DEC004').fix);
 		expect(out).toContain(
 			`'technical': 'Faults', 'other': 'Fits none of the other options'}`,
 		);
@@ -290,14 +290,14 @@ describe('fixes on Python', () => {
 
 	it('turns a Choice list into a dict with None', () => {
 		const text = `${SDK}q = {"questions": {"team": Choice(instructions="Which team takes it?", criteria=["billing", "other"])}}`;
-		const out = apply(text, finding(text, 'JEV006').fix);
+		const out = apply(text, finding(text, 'DEC006').fix);
 		expect(out).toContain('criteria={ "billing": None, "other": None }');
 		expect(codes(out)).toEqual([]);
 	});
 
 	it('pins a model written with a prefix', () => {
 		const text = `${SDK}client.system_one(ticket, {"a": Noul(instructions="Is it so?")}, model=r'jev-latest')`;
-		expect(apply(text, finding(text, 'JEV001').fix)).toContain(
+		expect(apply(text, finding(text, 'DEC001').fix)).toContain(
 			'model="jev-1.13.0")',
 		);
 	});
@@ -332,13 +332,13 @@ out = clf.invoke({"state": note, "questions": {
 		const text = `import langchain_typesafe as lc
 q = {"questions": {"late": lc.Noul(instructions="Is the parcel late?", criteria=lc.NoulCriteria(true="yes", false="no"))}}`;
 		// One finding per criterion that says nothing.
-		expect(codes(text)).toEqual(['JEV011', 'JEV011']);
+		expect(codes(text)).toEqual(['DEC011', 'DEC011']);
 	});
 
 	it("leaves another library's NoulCriteria unread", () => {
 		const text = `${SDK}from mylib import NoulCriteria
 q = {"questions": {"late": Noul(instructions="Is the parcel late?", criteria=NoulCriteria(true="yes", false="no"))}}`;
 		expect(read(text).questions[0]?.criteria?.kind).toBe('unreadable');
-		expect(codes(text)).toEqual(['JEV000']);
+		expect(codes(text)).toEqual(['DEC000']);
 	});
 });

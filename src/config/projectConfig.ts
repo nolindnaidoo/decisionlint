@@ -1,5 +1,5 @@
 import { DEFAULT_FALLBACK_OPTIONS } from '../lint/lint';
-import { RULE_CODES, RULES } from '../lint/rules';
+import { currentCode, RULE_CODES, RULES } from '../lint/rules';
 import { TARGET_IDS, targetById } from '../lint/targets';
 import type { LintOptions, RuleCode, Severity } from '../types';
 
@@ -37,11 +37,19 @@ const BY_NAME: ReadonlyMap<string, RuleCode> = new Map(
 	RULE_CODES.map((code) => [RULES[code].name, code]),
 );
 
-/** A rule and a level, written as `JEV004=warning` or `missing-fallback=warn`, or the reason it is not one. */
+// The names the model-backed rules had before 1.0.0, `jev-counting`, read
+// for ever beside the old codes.
+const currentSpelling = (rule: string): string =>
+	rule.startsWith('jev-') && BY_NAME.has(`model-${rule.slice(4)}`)
+		? `model-${rule.slice(4)}`
+		: currentCode(rule);
+
+/** A rule and a level, written as `DEC004=warning` or `missing-fallback=warn`, or the reason it is not one. */
 export function readRule(text: string): readonly [RuleCode, Level] | string {
-	const [rule = '', given = ''] = text.split('=');
+	const [written = '', given = ''] = text.split('=');
+	const rule = currentSpelling(written);
 	const code = CODES.has(rule) ? (rule as RuleCode) : BY_NAME.get(rule);
-	if (!code) return `'${rule}' is not a rule code or a rule name.`;
+	if (!code) return `'${written}' is not a rule code or a rule name.`;
 	const level = LEVEL_ALIASES.get(given) ?? given;
 	if (!LEVELS.includes(level))
 		return `'${given}' is not a level. Use one of ${LEVELS.join(', ')}.`;

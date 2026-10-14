@@ -10,14 +10,14 @@ import {
 import { buildRequest } from './reviews';
 
 const ALL = new Set([
-	'JEV301',
-	'JEV302',
-	'JEV303',
-	'JEV304',
-	'JEV305',
-	'JEV306',
-	'JEV307',
-	'JEV308',
+	'DEC301',
+	'DEC302',
+	'DEC303',
+	'DEC304',
+	'DEC305',
+	'DEC306',
+	'DEC307',
+	'DEC308',
 ]);
 const question = {
 	type: 'choice' as const,
@@ -289,13 +289,13 @@ describe('a review sent to TypeSafe', () => {
 
 	it('reads a reply with one answer per question asked, as the API reference promises', async () => {
 		const result = await askJev(
-			answered({ JEV303: { type: 'noul', noul: 0.8 } }),
+			answered({ DEC303: { type: 'noul', noul: 0.8 } }),
 		);
 		if (isFailure(result)) throw new Error(result.detail);
 		expect(result.model).toBe('jev-1.13.0');
 		expect(result.inputTokens).toBe(296);
 		expect(Object.keys(result.answers).sort()).toEqual([...asked].sort());
-		expect(result.answers.JEV303).toEqual({ type: 'noul', noul: 0.8 });
+		expect(result.answers.DEC303).toEqual({ type: 'noul', noul: 0.8 });
 	});
 
 	// A 200 whose body answers nothing is a proxy, a sign-in page or a bug, not
@@ -380,7 +380,7 @@ describe("a review sent to OpenAI's Decisions API", () => {
 	it('goes to the Decisions endpoint as predicates, with the question as text input', async () => {
 		const sent: Sent[] = [];
 		const reply = {
-			answers: [{ type: 'predicate', name: 'JEV303', probability: 0.8 }],
+			answers: [{ type: 'predicate', name: 'DEC303', probability: 0.8 }],
 			usage: { input_tokens: 321 },
 		};
 		const result = await ask(
@@ -403,18 +403,18 @@ describe("a review sent to OpenAI's Decisions API", () => {
 		expect(JSON.parse(body.input)).toEqual({ question });
 		expect(body.questions.every((q) => q.type === 'predicate')).toBe(true);
 		// Jev's criteria become part of the instructions, since a predicate has no criteria field.
-		const overlap = body.questions.find((q) => q.name === 'JEV303');
+		const overlap = body.questions.find((q) => q.name === 'DEC303');
 		expect(overlap?.instructions).toContain(
 			'Answer yes when: Two of the options cover some of the same cases.',
 		);
 		expect(overlap?.instructions).toContain('Answer no when:');
 		// A locating question's dot travels as underscores and comes back.
-		expect(body.questions.some((q) => q.name === 'JEV303__0')).toBe(true);
+		expect(body.questions.some((q) => q.name === 'DEC303__0')).toBe(true);
 		if (isFailure(result)) throw new Error(result.detail);
 		expect(result).toEqual({
 			model: 'gpt-6-luna',
 			inputTokens: 321,
-			answers: { JEV303: { noul: 0.8 } },
+			answers: { DEC303: { noul: 0.8 } },
 		});
 	});
 
@@ -422,9 +422,9 @@ describe("a review sent to OpenAI's Decisions API", () => {
 		const reply = {
 			model: 'gpt-6-luna',
 			answers: [
-				{ type: 'predicate', name: 'JEV303', probability: 0.9 },
-				{ type: 'predicate', name: 'JEV303__1', probability: 0.7 },
-				{ type: 'refusal', name: 'JEV301' },
+				{ type: 'predicate', name: 'DEC303', probability: 0.9 },
+				{ type: 'predicate', name: 'DEC303__1', probability: 0.7 },
+				{ type: 'refusal', name: 'DEC301' },
 			],
 		};
 		const result = await ask(
@@ -438,8 +438,8 @@ describe("a review sent to OpenAI's Decisions API", () => {
 		);
 		if (isFailure(result)) throw new Error(result.detail);
 		expect(result.answers).toEqual({
-			JEV303: { noul: 0.9 },
-			'JEV303.1': { noul: 0.7 },
+			DEC303: { noul: 0.9 },
+			'DEC303.1': { noul: 0.7 },
 		});
 	});
 

@@ -1,121 +1,121 @@
 {
- "JEV000": {
+ "DEC000": {
   "syntax": "js",
   "bad": "const request = {\n  questions: {\n    late: { type: 'noul', instructions: buildQuestion(order) },\n  },\n};",
   "good": "const request = {\n  questions: {\n    late: { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' },\n  },\n};"
  },
- "JEV001": {
+ "DEC001": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-latest\",\n  \"questions\": {\n    \"late\": { \"type\": \"noul\", \"instructions\": \"Did the parcel arrive after the promised day?\" }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"late\": { \"type\": \"noul\", \"instructions\": \"Did the parcel arrive after the promised day?\" }\n  }\n}"
  },
- "JEV002": {
+ "DEC002": {
   "note": "It takes 256 options to trigger, which is too long to show here."
  },
- "JEV003": {
+ "DEC003": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"urgency\": { \"type\": \"score\", \"instructions\": \"How urgent is the request?\", \"criteria\": [\"Level 0 of urgency: none\", \"Level 1 of urgency: trivial\", \"Level 2 of urgency: minor\", \"Level 3 of urgency: low\", \"Level 4 of urgency: modest\", \"Level 5 of urgency: medium\", \"Level 6 of urgency: raised\", \"Level 7 of urgency: high\", \"Level 8 of urgency: severe\", \"Level 9 of urgency: critical\", \"Level 10 of urgency: emergency\"] }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"urgency\": { \"type\": \"score\", \"instructions\": \"How urgent is the request?\", \"criteria\": [\"Can wait a week or more\", \"Needed within a few days\", \"Needed today\"] }\n  }\n}"
  },
- "JEV004": {
+ "DEC004": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"choice\",\n      \"instructions\": \"Which team should handle this?\",\n      \"criteria\": {\n        \"billing\": \"Charges, invoices and payment problems\",\n        \"technical\": \"Faults, errors and outages\"\n      }\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"choice\",\n      \"instructions\": \"Which team should handle this?\",\n      \"criteria\": {\n        \"billing\": \"Charges, invoices and payment problems\",\n        \"technical\": \"Faults, errors and outages\",\n        \"other\": \"Fits none of the other options\"\n      }\n    }\n  }\n}"
  },
- "JEV005": {
+ "DEC005": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"team\": { \"type\": \"noul\", \"instructions\": \"Is this for the billing team?\" },\n    \"team\": { \"type\": \"noul\", \"instructions\": \"Is this for the delivery team?\" }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"billing\": { \"type\": \"noul\", \"instructions\": \"Is this for the billing team?\" },\n    \"delivery\": { \"type\": \"noul\", \"instructions\": \"Is this for the delivery team?\" }\n  }\n}"
  },
- "JEV006": {
+ "DEC006": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"late\": { \"type\": \"noul\", \"instructions\": \"Did the parcel arrive after the promised day?\", \"criteria\": { \"yes\": \"It arrived after the promised day\", \"no\": \"It arrived on or before it\" } }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"late\": { \"type\": \"noul\", \"instructions\": \"Did the parcel arrive after the promised day?\", \"criteria\": { \"true\": \"It arrived after the promised day\", \"false\": \"It arrived on or before it\" } }\n  }\n}"
  },
- "JEV007": {
+ "DEC007": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"refund\": { \"type\": \"noul\", \"instructions\": \"Does the customer ask for a refund?\" },\n    \"late\": { \"type\": \"nuol\", \"instructions\": \"Did the parcel arrive after the promised day?\" }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"refund\": { \"type\": \"noul\", \"instructions\": \"Does the customer ask for a refund?\" },\n    \"late\": { \"type\": \"noul\", \"instructions\": \"Did the parcel arrive after the promised day?\" }\n  }\n}"
  },
- "JEV008": {
+ "DEC008": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"score\",\n      \"instructions\": \"How severe is this bug report?\",\n      \"criteria\": [\n        \"0\",\n        \"1\",\n        \"2\"\n      ]\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"score\",\n      \"instructions\": \"How severe is this bug report?\",\n      \"criteria\": [\n        \"Cosmetic, and nobody is blocked\",\n        \"Broken or degraded, but a workaround exists\",\n        \"No workaround, and work has stopped\"\n      ]\n    }\n  }\n}"
  },
- "JEV009": {
+ "DEC009": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"team\": { \"type\": \"choice\", \"instructions\": \"Which team should handle this?\", \"criteria\": { \"billing\": \"Charges and refunds\" } }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"team\": { \"type\": \"choice\", \"instructions\": \"Which team should handle this?\", \"criteria\": { \"billing\": \"Charges and refunds\", \"delivery\": \"Late or damaged parcels\", \"other\": \"Fits neither\" } }\n  }\n}"
  },
- "JEV010": {
+ "DEC010": {
   "syntax": "js",
-  "bad": "// decisionlint-disable-next-line JEV004\nconst late = { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' };",
+  "bad": "// decisionlint-disable-next-line DEC004\nconst late = { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' };",
   "good": "const late = { type: 'noul', instructions: 'Did the parcel arrive after the promised day?' };"
  },
- "JEV011": {
+ "DEC011": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"choice\",\n      \"instructions\": \"Which team should handle this?\",\n      \"criteria\": {\n        \"billing\": \"Billing\",\n        \"technical\": \"Technical\",\n        \"other\": \"Other\"\n      }\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"choice\",\n      \"instructions\": \"Which team should handle this?\",\n      \"criteria\": {\n        \"billing\": \"Charges, invoices and payment problems\",\n        \"technical\": \"Faults, errors and outages\",\n        \"other\": \"Fits none of the other options\"\n      }\n    }\n  }\n}"
  },
- "JEV012": {
+ "DEC012": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Refund?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the customer ask for their money back?\"\n    }\n  }\n}"
  },
- "JEV013": {
+ "DEC013": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-99.0.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the customer ask for their money back?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the customer ask for their money back?\"\n    }\n  }\n}"
  },
- "JEV014": {
+ "DEC014": {
   "note": "It takes a `target` that publishes a limit, such as `litellm`, and 129 questions to trigger, which is too long to show here."
  },
- "JEV101": {
+ "DEC101": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is it not the case that the order has not shipped?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Has the order shipped?\"\n    }\n  }\n}"
  },
- "JEV102": {
+ "DEC102": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Are more than three of the items in `items` the name of a fruit?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\"\n}"
  },
- "JEV103": {
+ "DEC103": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"early\": { \"type\": \"noul\", \"instructions\": \"Was the order placed before the sale started?\" }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"sale\": { \"type\": \"noul\", \"instructions\": \"Does the order mention a sale price?\" }\n  }\n}"
  },
- "JEV104": {
+ "DEC104": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is the customer angry and asking for a refund?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"a\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is the customer angry?\"\n    },\n    \"b\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is the customer asking for a refund?\"\n    }\n  }\n}"
  },
- "JEV105": {
+ "DEC105": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"summary\": { \"type\": \"noul\", \"instructions\": \"Write a one-line summary of the complaint.\" }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"refund\": { \"type\": \"noul\", \"instructions\": \"Does the customer ask for a refund?\" }\n  }\n}"
  },
- "JEV107": {
+ "DEC107": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is the message free of personal data?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the message contain personal data?\"\n    }\n  }\n}"
  },
- "JEV108": {
+ "DEC108": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the message contain personal data?\",\n      \"criteria\": {\n        \"true\": \"No personal detail appears.\",\n        \"false\": \"A name, address, phone number or email appears.\"\n      }\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Does the message contain personal data?\",\n      \"criteria\": {\n        \"true\": \"A name, address, phone number or email appears.\",\n        \"false\": \"No personal detail appears.\"\n      }\n    }\n  }\n}"
  },
- "JEV110": {
+ "DEC110": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"score\",\n      \"instructions\": \"How severe is this bug report?\",\n      \"criteria\": [\n        \"Low\",\n        \"Medium\",\n        \"High\"\n      ]\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"score\",\n      \"instructions\": \"How severe is this bug report?\",\n      \"criteria\": [\n        \"Cosmetic, and nobody is blocked\",\n        \"Broken or degraded, but a workaround exists\",\n        \"No workaround, and work has stopped\"\n      ]\n    }\n  }\n}"
  },
- "JEV111": {
+ "DEC111": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"brand\": { \"type\": \"noul\", \"instructions\": \"Is the button colour #FF6600?\" }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"brand\": { \"type\": \"noul\", \"instructions\": \"Is the button orange?\" }\n  }\n}"
  },
- "JEV112": {
+ "DEC112": {
   "syntax": "json",
   "bad": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is the order large?\"\n    }\n  }\n}",
   "good": "{\n  \"model\": \"jev-1.13.0\",\n  \"questions\": {\n    \"q\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Is the order large?\",\n      \"criteria\": {\n        \"true\": \"The order is at least one pallet or needs a lorry.\",\n        \"false\": \"The order is loose items a person could carry.\"\n      }\n    }\n  }\n}"

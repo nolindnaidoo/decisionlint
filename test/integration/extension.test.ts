@@ -9,61 +9,61 @@ const EXTENSION_ID = 'nolindnaidoo.decisionlint';
 // the fixture: change one and this table together.
 const EXPECTED: Readonly<Record<string, ReadonlyArray<string>>> = {
 	'triage.jev.json': [
-		'JEV001',
-		'JEV004',
-		'JEV008',
-		'JEV006',
-		'JEV006',
-		'JEV007',
-		'JEV006',
-		'JEV005',
+		'DEC001',
+		'DEC004',
+		'DEC008',
+		'DEC006',
+		'DEC006',
+		'DEC007',
+		'DEC006',
+		'DEC005',
 	],
 	'triage.ts': [
-		'JEV001',
-		'JEV004',
-		'JEV008',
-		'JEV000',
-		'JEV009',
-		'JEV007',
-		'JEV005',
+		'DEC001',
+		'DEC004',
+		'DEC008',
+		'DEC000',
+		'DEC009',
+		'DEC007',
+		'DEC005',
 	],
 	'triage.py': [
-		'JEV004',
-		'JEV008',
-		'JEV000',
-		'JEV009',
-		'JEV006',
-		'JEV005',
-		'JEV001',
+		'DEC004',
+		'DEC008',
+		'DEC000',
+		'DEC009',
+		'DEC006',
+		'DEC005',
+		'DEC001',
 	],
 	'triage.rs': [
-		'JEV001',
-		'JEV004',
-		'JEV008',
-		'JEV000',
-		'JEV006',
-		'JEV009',
+		'DEC001',
+		'DEC004',
+		'DEC008',
+		'DEC000',
+		'DEC006',
+		'DEC009',
 	],
 	'triage.go': [
-		'JEV001',
-		'JEV004',
-		'JEV008',
-		'JEV000',
-		'JEV006',
-		'JEV009',
+		'DEC001',
+		'DEC004',
+		'DEC008',
+		'DEC000',
+		'DEC006',
+		'DEC009',
 	],
 	'clean.ts': [],
 	'missing-state.jev.json': [],
 	'wording.jev.json': [
-		'JEV101',
-		'JEV102',
-		'JEV105',
-		'JEV110',
-		'JEV103',
-		'JEV112',
+		'DEC101',
+		'DEC102',
+		'DEC105',
+		'DEC110',
+		'DEC103',
+		'DEC112',
 	],
-	'.oxlintrc.json': ['JEV001', 'JEV005', 'JEV007'],
-	'decisions.json': ['JEV102', 'JEV004', 'JEV011', 'JEV012', 'JEV011'],
+	'.oxlintrc.json': ['DEC001', 'DEC005', 'DEC007'],
+	'decisions.json': ['DEC102', 'DEC004', 'DEC011', 'DEC012', 'DEC011'],
 };
 
 function sample(name: string): vscode.Uri {
@@ -201,13 +201,13 @@ describe('DecisionLint in a real editor', function () {
 				diagnostic.severity,
 			]),
 		);
-		assert.strictEqual(bySeverity.JEV000, vscode.DiagnosticSeverity.Hint);
+		assert.strictEqual(bySeverity.DEC000, vscode.DiagnosticSeverity.Hint);
 		assert.strictEqual(
-			bySeverity.JEV004,
+			bySeverity.DEC004,
 			vscode.DiagnosticSeverity.Information,
 		);
-		assert.strictEqual(bySeverity.JEV001, vscode.DiagnosticSeverity.Warning);
-		assert.strictEqual(bySeverity.JEV007, vscode.DiagnosticSeverity.Error);
+		assert.strictEqual(bySeverity.DEC001, vscode.DiagnosticSeverity.Warning);
+		assert.strictEqual(bySeverity.DEC007, vscode.DiagnosticSeverity.Error);
 		for (const diagnostic of ours(sample('triage.ts'))) {
 			const code = diagnostic.code;
 			assert.ok(typeof code === 'object' && code.target, 'no docs link');
@@ -228,14 +228,14 @@ describe('DecisionLint in a real editor', function () {
 				`${codeOf(diagnostic)} ${editor.document.getText(diagnostic.range)}`,
 		);
 		assert.deepStrictEqual(texts, [
-			'JEV001 "jev-latest"',
-			'JEV004 "job_type"',
-			'JEV008 ["0", "1", "2"]',
-			'JEV006 "yes"',
-			'JEV006 "no"',
-			'JEV007 "nuol"',
-			'JEV006 "criteria"',
-			'JEV005 "job_type"',
+			'DEC001 "jev-latest"',
+			'DEC004 "job_type"',
+			'DEC008 ["0", "1", "2"]',
+			'DEC006 "yes"',
+			'DEC006 "no"',
+			'DEC007 "nuol"',
+			'DEC006 "criteria"',
+			'DEC005 "job_type"',
 		]);
 	});
 
@@ -244,7 +244,7 @@ describe('DecisionLint in a real editor', function () {
 		const uri = sample('triage.jev.json');
 		await untilCodes(uri, EXPECTED['triage.jev.json'] ?? []);
 		const target = ours(uri).find(
-			(diagnostic) => codeOf(diagnostic) === 'JEV004',
+			(diagnostic) => codeOf(diagnostic) === 'DEC004',
 		);
 		assert.ok(target);
 
@@ -259,8 +259,8 @@ describe('DecisionLint in a real editor', function () {
 		assert.strictEqual(await vscode.workspace.applyEdit(fix.edit), true);
 
 		await until(
-			() => !codes(uri).includes('JEV004'),
-			() => `JEV004 still reported: ${JSON.stringify(codes(uri))}`,
+			() => !codes(uri).includes('DEC004'),
+			() => `DEC004 still reported: ${JSON.stringify(codes(uri))}`,
 		);
 		const text = editor.document.getText();
 		assert.ok(
@@ -276,12 +276,12 @@ describe('DecisionLint in a real editor', function () {
 		const uri = sample('triage.ts');
 		await untilCodes(uri, EXPECTED['triage.ts'] ?? []);
 		const target = ours(uri).find(
-			(diagnostic) => codeOf(diagnostic) === 'JEV008',
+			(diagnostic) => codeOf(diagnostic) === 'DEC008',
 		);
 		assert.ok(target);
 		const actions = await quickFixes(uri, target.range);
 		const silence = actions.find(
-			(action) => action.title === 'Disable JEV008 for this line',
+			(action) => action.title === 'Disable DEC008 for this line',
 		);
 		assert.ok(
 			silence?.edit,
@@ -289,8 +289,8 @@ describe('DecisionLint in a real editor', function () {
 		);
 		assert.strictEqual(await vscode.workspace.applyEdit(silence.edit), true);
 		await until(
-			() => !codes(uri).includes('JEV008'),
-			() => `JEV008 still reported: ${JSON.stringify(codes(uri))}`,
+			() => !codes(uri).includes('DEC008'),
+			() => `DEC008 still reported: ${JSON.stringify(codes(uri))}`,
 		);
 	});
 
@@ -307,7 +307,7 @@ describe('DecisionLint in a real editor', function () {
 			await editor.edit((builder) => builder.replace(range, "'jev-latest'")),
 			true,
 		);
-		await untilCodes(uri, ['JEV001']);
+		await untilCodes(uri, ['DEC001']);
 	});
 
 	it('honours a rule switched off in settings', async () => {
@@ -316,19 +316,19 @@ describe('DecisionLint in a real editor', function () {
 		await untilCodes(sample('triage.ts'), EXPECTED['triage.ts'] ?? []);
 		await settings.update(
 			'rules',
-			{ JEV004: 'off', JEV000: 'off' },
+			{ DEC004: 'off', DEC000: 'off' },
 			vscode.ConfigurationTarget.Global,
 		);
 		try {
-			// With JEV004 off, the comment in the sample that silences a JEV004
+			// With DEC004 off, the comment in the sample that silences a DEC004
 			// silences nothing, and is reported where that finding would have been.
 			await untilCodes(sample('triage.ts'), [
-				'JEV001',
-				'JEV008',
-				'JEV010',
-				'JEV009',
-				'JEV007',
-				'JEV005',
+				'DEC001',
+				'DEC008',
+				'DEC010',
+				'DEC009',
+				'DEC007',
+				'DEC005',
 			]);
 		} finally {
 			await settings.update(
@@ -346,11 +346,11 @@ describe('DecisionLint in a real editor', function () {
 		await untilCodes(uri, EXPECTED['wording.jev.json'] ?? []);
 		await settings.update(
 			'rules',
-			{ JEV104: 'warning' },
+			{ DEC104: 'warning' },
 			vscode.ConfigurationTarget.Global,
 		);
 		try {
-			await untilCodes(uri, [...(EXPECTED['wording.jev.json'] ?? []), 'JEV104']);
+			await untilCodes(uri, [...(EXPECTED['wording.jev.json'] ?? []), 'DEC104']);
 		} finally {
 			await settings.update(
 				'rules',
@@ -372,7 +372,7 @@ describe('DecisionLint in a real editor', function () {
 			syntaxes: ['js'],
 			rules: {},
 			lint: () => ({
-				findings: [{ code: 'JEV777', message: 'From the installed copy.', span: { start: 0, end: 1 }, questionId: undefined, fix: undefined, severity: 'warning' }],
+				findings: [{ code: 'DEC777', message: 'From the installed copy.', span: { start: 0, end: 1 }, questionId: undefined, fix: undefined, severity: 'warning' }],
 				questionCount: 1,
 				unreadableCount: 0,
 			}),
@@ -387,11 +387,11 @@ describe('DecisionLint in a real editor', function () {
 			// The extension keeps what it knows of a folder's packages for a few
 			// seconds, so the file is nudged until the new copy is noticed.
 			const deadline = Date.now() + 40_000;
-			while (Date.now() < deadline && codes(uri).join() !== 'JEV777') {
+			while (Date.now() < deadline && codes(uri).join() !== 'DEC777') {
 				await editor.edit((builder) => builder.insert(new vscode.Position(0, 0), ' '));
 				await new Promise((resolve) => setTimeout(resolve, 1000));
 			}
-			assert.deepStrictEqual(codes(uri), ['JEV777']);
+			assert.deepStrictEqual(codes(uri), ['DEC777']);
 			assert.strictEqual(ours(uri)[0]?.message, 'From the installed copy.');
 		} finally {
 			fs.unlinkSync(library);

@@ -139,7 +139,7 @@ exports.run = async function run() {
 	assert.ok(fs.existsSync(server), 'dist/cli.js is missing from the installed VSIX. Check .vscodeignore');
 	assert.deepStrictEqual(
 		(contributes.mcpServerDefinitionProviders || []).map((p) => p.id),
-		['decisionlint-le'],
+		['jevlint-le'],
 	);
 	const asked = [
 		{ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } },

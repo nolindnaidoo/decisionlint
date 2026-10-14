@@ -53,24 +53,24 @@ export type Slot =
 
 export const ASK_COMMANDS = Object.freeze({
 	ask: Object.freeze({
-		typesafe: 'decisionlint-le.askJev',
-		openai: 'decisionlint-le.askLuna',
-		openrouter: 'decisionlint-le.askOpenRouter',
-		vercel: 'decisionlint-le.askVercel',
-		llmgateway: 'decisionlint-le.askLlmGateway',
-		liquid: 'decisionlint-le.askLiquid',
-		[ENDPOINT_SLOT]: 'decisionlint-le.askEndpoint',
+		typesafe: 'jevlint-le.askJev',
+		openai: 'jevlint-le.askLuna',
+		openrouter: 'jevlint-le.askOpenRouter',
+		vercel: 'jevlint-le.askVercel',
+		llmgateway: 'jevlint-le.askLlmGateway',
+		liquid: 'jevlint-le.askLiquid',
+		[ENDPOINT_SLOT]: 'jevlint-le.askEndpoint',
 	}) as Readonly<Record<Slot, string>>,
 	setKey: Object.freeze({
-		typesafe: 'decisionlint-le.setTypeSafeApiKey',
-		openai: 'decisionlint-le.setOpenAIApiKey',
-		openrouter: 'decisionlint-le.setOpenRouterApiKey',
-		vercel: 'decisionlint-le.setVercelApiKey',
-		llmgateway: 'decisionlint-le.setLlmGatewayApiKey',
-		liquid: 'decisionlint-le.setLiquidApiKey',
-		[ENDPOINT_SLOT]: 'decisionlint-le.setEndpointApiKey',
+		typesafe: 'jevlint-le.setTypeSafeApiKey',
+		openai: 'jevlint-le.setOpenAIApiKey',
+		openrouter: 'jevlint-le.setOpenRouterApiKey',
+		vercel: 'jevlint-le.setVercelApiKey',
+		llmgateway: 'jevlint-le.setLlmGatewayApiKey',
+		liquid: 'jevlint-le.setLiquidApiKey',
+		[ENDPOINT_SLOT]: 'jevlint-le.setEndpointApiKey',
 	}) as Readonly<Record<Slot, string>>,
-	clearKeys: 'decisionlint-le.clearApiKeys',
+	clearKeys: 'jevlint-le.clearApiKeys',
 });
 
 /** The slots, in the order the commands are declared. `extension.test.ts` holds it to the table's platforms. */
@@ -98,6 +98,13 @@ const KEY_TITLES: ReadonlyMap<Slot, string> = new Map<Slot, string>([
 /** Where a slot's key sits in the keychain. */
 const secretFor = (slot: Slot): string => `decisionlint-le.key.${slot}`;
 
+// Where JevLint-LE kept its two keys. The extension id is the same, so the
+// keychain is the same, and a key stored under the old name is still read.
+const LEGACY_SECRETS: ReadonlyMap<Slot, string> = new Map<Slot, string>([
+	['typesafe', 'jevlint-le.typesafeApiKey'],
+	['openai', 'jevlint-le.openaiApiKey'],
+]);
+
 /** What a slot is called where a key is asked for. */
 const labelOf = (slot: Slot): string => targetById(slot)?.name ?? 'Endpoint';
 
@@ -106,7 +113,7 @@ export const SEND = 'Send';
 const HOW_TO_TRUST =
 	" To turn it on, run 'Workspaces: Manage Workspace Trust' and trust this folder.";
 const HOW_TO_ROUTE =
-	'Set decisionlint-le.ask.endpoint to the full URL the host listens at, decisionlint-le.ask.endpointShape where its path does not say, and decisionlint-le.ask.endpointModel to the model id it serves.';
+	'Set jevlint-le.ask.endpoint to the full URL the host listens at, jevlint-le.ask.endpointShape where its path does not say, and jevlint-le.ask.endpointModel to the model id it serves.';
 
 /** Why a run failed, naming the platform and, for a bad key, the command that sets a new one. */
 export function failureMessage(
@@ -248,7 +255,16 @@ export async function findKey(
 		(key) => ({ key }),
 		() => ({ locked: true as const }),
 	);
-	const key = ('key' in stored && stored.key) || deps.env[provider.envKey];
+	const legacy = LEGACY_SECRETS.get(provider.slot as Slot);
+	const kept =
+		legacy && 'key' in stored && !stored.key
+			? await deps.secrets.get(legacy).then(
+					(key) => key,
+					() => undefined,
+				)
+			: undefined;
+	const key =
+		('key' in stored && stored.key) || kept || deps.env[provider.envKey];
 	if (key) return { key };
 	// A host the user runs may take no key, and then none is sent.
 	if (provider.keyOptional) return { key: '' };
@@ -400,8 +416,8 @@ async function setApiKey(deps: Deps, slot: Slot): Promise<void> {
 // Every slot's key goes, so one command leaves nothing behind.
 async function clearApiKeys(deps: Deps): Promise<void> {
 	const cleared = await Promise.all(
-		SLOTS.map((slot) =>
-			deps.secrets.delete(secretFor(slot)).then(
+		[...SLOTS.map(secretFor), ...LEGACY_SECRETS.values()].map((secret) =>
+			deps.secrets.delete(secret).then(
 				() => true,
 				() => false,
 			),

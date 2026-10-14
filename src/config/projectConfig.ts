@@ -90,7 +90,7 @@ export function parseConfig(text: string | undefined): LintOptions | string {
 
 /**
  * The lint settings in `config`, checked as the file is checked, or the
- * reason they cannot be used. The editor's own `decisionlint-le.*` settings are
+ * reason they cannot be used. The editor's own `jevlint-le.*` settings are
  * read through here too, so a typo'd rule code is refused in both places and
  * never dropped quietly, leaving the rule on.
  */

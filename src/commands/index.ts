@@ -12,15 +12,15 @@ type Deps = Readonly<{
 }>;
 
 export const COMMANDS = Object.freeze({
-	lintFile: 'decisionlint-le.lintFile',
-	lintWorkspace: 'decisionlint-le.lintWorkspace',
-	openSettings: 'decisionlint-le.openSettings',
+	lintFile: 'jevlint-le.lintFile',
+	lintWorkspace: 'jevlint-le.lintWorkspace',
+	openSettings: 'jevlint-le.openSettings',
 });
 
 const SKIP_REASONS = Object.freeze({
 	language:
 		'DecisionLint-LE reads JSON, JavaScript, TypeScript, Python, Rust and Go files. This file is none of those.',
-	size: 'This file is larger than `decisionlint-le.maxFileSizeBytes` and was not linted.',
+	size: 'This file is larger than `jevlint-le.maxFileSizeBytes` and was not linted.',
 	excluded: 'This file is left out by `exclude` in decisionlint-le.json.',
 });
 
@@ -188,7 +188,7 @@ async function lintEveryFile(deps: Deps): Promise<void> {
 async function openSettings(): Promise<void> {
 	await vscode.commands.executeCommand(
 		'workbench.action.openSettings',
-		'@ext:nolindnaidoo.decisionlint-le',
+		'@ext:nolindnaidoo.jevlint-le',
 	);
 }
 

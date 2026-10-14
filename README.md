@@ -15,9 +15,9 @@ Part of the LE family.
 ## Install
 
 - **VS Code:** search for DecisionLint-LE in the Extensions view, or run
-  `ext install nolindnaidoo.decisionlint-le`.
+  `ext install nolindnaidoo.jevlint-le`.
 - **Cursor, VSCodium and other editors that use Open VSX:** the same name,
-  `nolindnaidoo.decisionlint-le`.
+  `nolindnaidoo.jevlint-le`.
 - **Command line:** `npx decisionlint-le`. Nothing to install first.
 - **MCP server, for an agent host:** `npx -y decisionlint-le-mcp`.
 
@@ -195,7 +195,7 @@ Three things follow from the table:
 - **The limits a request is held to are its platform's.** The platform is
   read from the model id where its spelling says, from the one platform a
   URL in the file names, or from `target` in `decisionlint-le.json` or
-  `decisionlint-le.target` for a project that sends everything to one place. A
+  `jevlint-le.target` for a project that sends everything to one place. A
   platform that publishes no limit gets no finding for it. Nothing says
   where a request goes: a TypeSafe-shaped question keeps TypeSafe's limits,
   and any other shape keeps none.
@@ -232,26 +232,26 @@ There is one command per platform, and each has its own key:
 | **Ask via Vercel AI Gateway About This File** | Vercel AI Gateway | `typesafe-ai/jev` | **Set Vercel AI Gateway API Key**, or `AI_GATEWAY_API_KEY` |
 | **Ask via LLM Gateway About This File** | LLM Gateway | `jev-1.13.0` | **Set LLM Gateway API Key**, or `LLM_GATEWAY_API_KEY` |
 | **Ask Liquid d1 About This File** | Liquid AI | `d1` | **Set Liquid AI API Key**, or `LIQUID_API_KEY` |
-| **Ask the Model at My Endpoint About This File** | `decisionlint-le.ask.endpoint` | `decisionlint-le.ask.endpointModel` | **Set Endpoint API Key**, or none |
+| **Ask the Model at My Endpoint About This File** | `jevlint-le.ask.endpoint` | `jevlint-le.ask.endpointModel` | **Set Endpoint API Key**, or none |
 
 1. Give it the platform's key, in any of three ways. Run its **Set ... API
    Key** command and paste the key, which stores it in your operating system
-   keychain. Or type it into **Settings** under `decisionlint-le.ask.keys`,
+   keychain. Or type it into **Settings** under `jevlint-le.ask.keys`,
    by the platform's id, which can only be set in your user settings and is
    left out of Settings Sync. Or put it in the environment variable the
    platform names, in the environment VS Code runs in.
 2. Open a file with questions and run the platform's **Ask** command.
 
-The model each command sends is `decisionlint-le.ask.models`, by platform.
+The model each command sends is `jevlint-le.ask.models`, by platform.
 The TypeSafe default is the version the checks' cutoffs were set on, and a
 finding from any other model, Luna included, says so until that model is
 measured the same way. The probe asks Jev at TypeSafe, with the TypeSafe
 key and model.
 
 **For a platform you host**, a llama.cpp, vLLM, LiteLLM or Ollaya, set
-`decisionlint-le.ask.endpoint` to the full URL it listens at,
-`decisionlint-le.ask.endpointModel` to the model id it serves, and
-`decisionlint-le.ask.endpointShape` to `typesafe` or `openai` when the path
+`jevlint-le.ask.endpoint` to the full URL it listens at,
+`jevlint-le.ask.endpointModel` to the model id it serves, and
+`jevlint-le.ask.endpointShape` to `typesafe` or `openai` when the path
 does not end in `/systemone` or `/decisions`. Then run **Ask the Model at My
 Endpoint**. It sends the `endpoint` key if you set one, else the key in
 `TYPESAFE_API_KEY` or `OPENAI_API_KEY`, whichever the shape's SDK reads, or
@@ -266,13 +266,13 @@ What to know before you run it:
   that is roughly three thousandths of a cent per question, and at OpenAI's
   about a hundredth of a cent.
 - **Only questions are sent**: type, instructions, criteria and ids. Your
-  `state` is not, unless you turn on `decisionlint-le.ask.sendState`. With that on,
+  `state` is not, unless you turn on `jevlint-le.ask.sendState`. With that on,
   a state written out in the file is sent too, and two more checks run: does
   the state hold what each question asks about, and does it carry text that
   gives orders to its reader.
 - **A question with a part built at runtime is not sent.** The summary says
   how many were held back.
-- **A run sends at most `decisionlint-le.ask.maxCalls` requests**, 25 by default.
+- **A run sends at most `jevlint-le.ask.maxCalls` requests**, 25 by default.
 - **It is disabled in an untrusted workspace.** Run **Workspaces: Manage
   Workspace Trust** and trust the folder to turn it on.
 - **Findings disappear when you edit the file**, because they were about the
@@ -280,7 +280,7 @@ What to know before you run it:
 - **Each finding shows the probability Jev gave it.** Treat it as an argument
   with a number attached, not a verdict.
 
-Turn on `decisionlint-le.ask.confirm` and it first tells you how many requests it
+Turn on `jevlint-le.ask.confirm` and it first tells you how many requests it
 will make, roughly how many tokens and what that costs, and waits for a yes.
 It is off by default: running the command is the decision to send.
 
@@ -527,7 +527,7 @@ Nothing else in this extension uses the network. On the command line, only
   on only while it is right on at least 9 of 10 of its findings on public
   code it was not tuned against. Four that describe failure modes in
   TypeSafe's docs, `JEV104`, `JEV107`, `JEV108` and `JEV111`, did not fail on
-  `jev-1.13.0` and are off. Switch any of them on in `decisionlint-le.rules`. Two
+  `jev-1.13.0` and are off. Switch any of them on in `jevlint-le.rules`. Two
   more were removed in 0.4.0 for being wrong every time they fired.
 - **Anything about a question that is not in English.**
 - **What a lone object lacks.** A `{ type, instructions }` outside a
@@ -564,7 +564,7 @@ any run says how many it would mend.
 In the editor, fix on save does the same:
 
 ```json
-{ "editor.codeActionsOnSave": { "source.fixAll.decisionlint-le": "explicit" } }
+{ "editor.codeActionsOnSave": { "source.fixAll.jevlint-le": "explicit" } }
 ```
 
 Adding a fallback option and pinning a model change what a working request
@@ -573,7 +573,7 @@ does, so they are never written for you. They stay on the lightbulb.
 JSON has no comments, so use the setting:
 
 ```json
-{ "decisionlint-le.ignore": ["JEV004:side"] }
+{ "jevlint-le.ignore": ["JEV004:side"] }
 ```
 
 ## Keyboard shortcuts
@@ -587,32 +587,32 @@ Or write them into `keybindings.json`. The keys here are only an example:
 
 ```json
 [
-  { "key": "ctrl+alt+j", "command": "decisionlint-le.lintFile", "when": "editorTextFocus" },
-  { "key": "ctrl+alt+k", "command": "decisionlint-le.askJev", "when": "editorTextFocus" }
+  { "key": "ctrl+alt+j", "command": "jevlint-le.lintFile", "when": "editorTextFocus" },
+  { "key": "ctrl+alt+k", "command": "jevlint-le.askJev", "when": "editorTextFocus" }
 ]
 ```
 
 | Command | Id |
 |---|---|
-| Lint the Questions in This File | `decisionlint-le.lintFile` |
-| Lint the Questions in the Workspace | `decisionlint-le.lintWorkspace` |
-| Open Settings | `decisionlint-le.openSettings` |
-| Ask Jev About This File | `decisionlint-le.askJev` |
-| Ask Luna About This File | `decisionlint-le.askLuna` |
-| Ask via OpenRouter About This File | `decisionlint-le.askOpenRouter` |
-| Ask via Vercel AI Gateway About This File | `decisionlint-le.askVercel` |
-| Ask via LLM Gateway About This File | `decisionlint-le.askLlmGateway` |
-| Ask Liquid d1 About This File | `decisionlint-le.askLiquid` |
-| Ask the Model at My Endpoint About This File | `decisionlint-le.askEndpoint` |
-| Set TypeSafe API Key | `decisionlint-le.setTypeSafeApiKey` |
-| Set OpenAI API Key | `decisionlint-le.setOpenAIApiKey` |
-| Set OpenRouter API Key | `decisionlint-le.setOpenRouterApiKey` |
-| Set Vercel AI Gateway API Key | `decisionlint-le.setVercelApiKey` |
-| Set LLM Gateway API Key | `decisionlint-le.setLlmGatewayApiKey` |
-| Set Liquid AI API Key | `decisionlint-le.setLiquidApiKey` |
-| Set Endpoint API Key | `decisionlint-le.setEndpointApiKey` |
-| Clear API Keys | `decisionlint-le.clearApiKeys` |
-| Probe the Question at the Cursor | `decisionlint-le.probeQuestion` |
+| Lint the Questions in This File | `jevlint-le.lintFile` |
+| Lint the Questions in the Workspace | `jevlint-le.lintWorkspace` |
+| Open Settings | `jevlint-le.openSettings` |
+| Ask Jev About This File | `jevlint-le.askJev` |
+| Ask Luna About This File | `jevlint-le.askLuna` |
+| Ask via OpenRouter About This File | `jevlint-le.askOpenRouter` |
+| Ask via Vercel AI Gateway About This File | `jevlint-le.askVercel` |
+| Ask via LLM Gateway About This File | `jevlint-le.askLlmGateway` |
+| Ask Liquid d1 About This File | `jevlint-le.askLiquid` |
+| Ask the Model at My Endpoint About This File | `jevlint-le.askEndpoint` |
+| Set TypeSafe API Key | `jevlint-le.setTypeSafeApiKey` |
+| Set OpenAI API Key | `jevlint-le.setOpenAIApiKey` |
+| Set OpenRouter API Key | `jevlint-le.setOpenRouterApiKey` |
+| Set Vercel AI Gateway API Key | `jevlint-le.setVercelApiKey` |
+| Set LLM Gateway API Key | `jevlint-le.setLlmGatewayApiKey` |
+| Set Liquid AI API Key | `jevlint-le.setLiquidApiKey` |
+| Set Endpoint API Key | `jevlint-le.setEndpointApiKey` |
+| Clear API Keys | `jevlint-le.clearApiKeys` |
+| Probe the Question at the Cursor | `jevlint-le.probeQuestion` |
 
 The Ask commands and the probe send requests with your key, so pick keys for
 them you will not press by accident.
@@ -621,22 +621,22 @@ them you will not press by accident.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `decisionlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as it would in a `decisionlint-le.json` |
-| `decisionlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
-| `decisionlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `decisionlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `decisionlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
-| `decisionlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
-| `decisionlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
-| `decisionlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
-| `decisionlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
-| `decisionlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
-| `decisionlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
-| `decisionlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
-| `decisionlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
-| `decisionlint-le.exclude` | `node_modules` and build output | Files the workspace command skips |
-| `decisionlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
-| `decisionlint-le.notificationsLevel` | `important` | How much is said in notifications. `all` adds a summary after each command, and `silent` shows a message only when a command could not run. Findings always show in the editor |
+| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as it would in a `decisionlint-le.json` |
+| `jevlint-le.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `JEV004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
+| `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `jevlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `jevlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
+| `jevlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
+| `jevlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `jevlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
+| `jevlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
+| `jevlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
+| `jevlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
+| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
+| `jevlint-le.exclude` | `node_modules` and build output | Files the workspace command skips |
+| `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
+| `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `all` adds a summary after each command, and `silent` shows a message only when a command could not run. Findings always show in the editor |
 
 ## Development
 

@@ -1,7 +1,7 @@
 # decisionlint-le-mcp
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint-le">
+  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le">
     <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
   </a>
   <a href="https://open-vsx.org/extension/nolindnaidoo/decisionlint-le">
@@ -49,7 +49,7 @@ claude mcp add decisionlint-le -- npx -y decisionlint-le-mcp
 
 **VS Code** needs nothing here. Install the extension instead. It carries
 this server and registers it for you:
-[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint-le)
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.jevlint-le)
 · [Open VSX](https://open-vsx.org/extension/nolindnaidoo/decisionlint-le)
 
 **Already running `decisionlint-le` in CI?** The same server is

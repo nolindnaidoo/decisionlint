@@ -223,22 +223,22 @@ Scores sent with no levels.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `decisionlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `decisionlint-le.json` |
-| `decisionlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
-| `decisionlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
-| `decisionlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `decisionlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
-| `decisionlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
-| `decisionlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
-| `decisionlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
-| `decisionlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
-| `decisionlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
-| `decisionlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
-| `decisionlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
-| `decisionlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
-| `decisionlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
-| `decisionlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
-| `decisionlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
+| `jevlint-le.rules` | `{}` | Severity per rule, by code or name: `off`, `hint`, `info`, `warning`, `error`. An entry that names no rule or no level stops linting and says why, as in a `decisionlint-le.json` |
+| `jevlint-le.fallbackOptions` | the list above | Option names that satisfy `JEV004` |
+| `jevlint-le.ignore` | `[]` | `CODE:questionId` entries to drop |
+| `jevlint-le.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
+| `jevlint-le.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `jevlint-le.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
+| `jevlint-le.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
+| `jevlint-le.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
+| `jevlint-le.ask.endpointModel` | `""` | The model id sent to that endpoint |
+| `jevlint-le.ask.maxCalls` | `25` | The most requests one Ask command may send |
+| `jevlint-le.ask.sendState` | `false` | Also send a state written in the file, so the model can check it |
+| `jevlint-le.ask.confirm` | `false` | Before a paid command sends anything, show what it will send and cost, and wait for a yes |
+| `jevlint-le.include` | JSON, JavaScript, TypeScript, Python, Rust and Go files | Files the workspace command lints |
+| `jevlint-le.exclude` | `node_modules`, build output | Files the workspace command skips |
+| `jevlint-le.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
+| `jevlint-le.notificationsLevel` | `important` | How much is said in notifications. `important` hides the summary after a command that worked, and `all` shows it. `silent` also hides notes that a run was cancelled or left files out. Why a command could not run is shown at every level |
 
 ### Not built from the first draft of this spec
 
@@ -271,7 +271,7 @@ or its primitives guide.
 | JEV111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
 | JEV112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
 
-A rule that is `off` still runs when switched on in `decisionlint-le.rules`.
+A rule that is `off` still runs when switched on in `jevlint-le.rules`.
 
 Text inside backticks or double quotes is left out before a wording rule
 reads a question, because it is a field name or quoted data and not the
@@ -600,7 +600,7 @@ check on every pair of up to ten questions, and `JEV312`.
 
 **The key.** `DecisionLint-LE: Set TypeSafe API Key` stores it in the operating
 system keychain through VS Code's secret storage. It can also be typed into
-the `decisionlint-le.ask.keys` setting, by the owner's decision: a settings
+the `jevlint-le.ask.keys` setting, by the owner's decision: a settings
 field is where people look. A settings file is plain text, so that setting
 has application scope, which means it can be set only in user settings and
 never in a workspace, where it would be committed with the repository, and
@@ -610,17 +610,17 @@ message and no log.
 
 **What is sent.** By default only questions: type, instructions, criteria and
 ids. The `state` a program would send with them is not. `JEV311` and `JEV312`
-read the state, so they run only when `decisionlint-le.ask.sendState` is on, and
+read the state, so they run only when `jevlint-le.ask.sendState` is on, and
 only where the state is written out in the file, which in practice means
 request JSON files.
 
 **What it will not send.** A question with any part built at runtime, since
 Jev would be judging something other than what runs. Anything in an untrusted
-workspace. More than `decisionlint-le.ask.maxCalls` requests in one run, 25 by
+workspace. More than `jevlint-le.ask.maxCalls` requests in one run, 25 by
 default. Each of these is counted in the summary, so a short run never looks
 like a complete one.
 
-**A confirmation, when asked for.** With `decisionlint-le.ask.confirm` on, the
+**A confirmation, when asked for.** With `jevlint-le.ask.confirm` on, the
 command first shows how many requests it will make, an estimate of the input
 tokens and the cost, whether the state is included, and what it is holding
 back, and waits for a yes. It is off by default, by the owner's decision:
@@ -633,7 +633,7 @@ errs high.
 **After an edit** the findings are removed. They were about text that has
 changed.
 
-**The model is pinned** to `jev-1.13.0` in `decisionlint-le.ask.models`, because the
+**The model is pinned** to `jev-1.13.0` in `jevlint-le.ask.models`, because the
 cutoffs below were set on that version.
 
 ### How the cutoffs were set
@@ -1235,10 +1235,10 @@ shape rule reports a Decisions mistake in OpenAI's own field names, and a
 mistyped `predicate` is caught and fixed; a shape mistake in the AI SDK's
 form cannot be told from a foreign client and is left alone.
 
-**Asking Luna.** `--ask-model gpt-6-luna`, or `decisionlint-le.ask.models` in the
+**Asking Luna.** `--ask-model gpt-6-luna`, or `jevlint-le.ask.models` in the
 editor, sends the same checks to OpenAI's Decisions API with the key in
 `OPENAI_API_KEY`, or in the keychain through **Set OpenAI API Key**, or in
-`decisionlint-le.ask.keys`. `ask/provider.ts` is the one file that knows
+`jevlint-le.ask.keys`. `ask/provider.ts` is the one file that knows
 the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
@@ -1314,7 +1314,7 @@ rule.
 
 **D2. The target of a request is resolved from the file, and resolved is not
 guessed.** In order: the `target` setting in `decisionlint-le.json` or
-`decisionlint-le.target`, for a project that sends everything to one platform;
+`jevlint-le.target`, for a project that sends everything to one platform;
 a base URL written in the file whose host a target claims; the model id,
 where its spelling names a platform (`@cf/`, `~typesafe/`, a `liquid`
 model) or a family of them (`openai/` is every gateway, so it resolves to
@@ -1337,7 +1337,7 @@ tag or a deployment name is not a Jev id, so neither rule reads it.
 shape, the endpoint and the name of the environment variable that holds the
 key. A vendor with a fixed host, TypeSafe, OpenAI, Liquid, OpenRouter, LLM
 Gateway and Vercel, needs nothing set. A runtime the user hosts, llama.cpp,
-vLLM, Ollaya, LiteLLM, needs an endpoint, from `decisionlint-le.ask.endpoint` in
+vLLM, Ollaya, LiteLLM, needs an endpoint, from `jevlint-le.ask.endpoint` in
 the editor or `--ask-endpoint` on the command line, and the shape to send is
 the target's or, for a host the table does not know, `--ask-shape`. A model
 id that resolves to no fixed host, such as `openai/gpt-6-luna-decisions`

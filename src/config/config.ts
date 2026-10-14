@@ -10,7 +10,8 @@ import { ASK_TARGETS, type Shape } from '../lint/targets';
 import type { LintOptions } from '../types';
 import { readLintOptions } from './projectConfig';
 
-export const SECTION = 'decisionlint-le';
+/** The settings section, which is the extension's id and stays so for everyone who has it installed. */
+export const SECTION = 'jevlint-le';
 
 /** `all` shows every message, `important` hides summaries, `silent` shows only why a command could not run. */
 export type NotificationsLevel = 'all' | 'important' | 'silent';

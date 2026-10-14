@@ -15,9 +15,8 @@ describe('the pinned model', () => {
 	it('is the default of the editor setting', () => {
 		const manifest = JSON.parse(read('package.json'));
 		expect(
-			manifest.contributes.configuration.properties[
-				'decisionlint-le.ask.models'
-			].default.typesafe,
+			manifest.contributes.configuration.properties['jevlint-le.ask.models']
+				.default.typesafe,
 		).toBe(DEFAULT_MODEL);
 	});
 
@@ -31,7 +30,7 @@ describe('the pinned model', () => {
 
 	// SPEC.md also records past runs by the version they were made on, so only
 	// the lines that state the default are held to it.
-	it.each(['| `decisionlint-le.ask.models` |', '**The model is pinned** to'])(
+	it.each(['| `jevlint-le.ask.models` |', '**The model is pinned** to'])(
 		'is the version SPEC.md gives on the line starting %s',
 		(start) => {
 			const lines = read('SPEC.md')

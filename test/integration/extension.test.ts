@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 
-const EXTENSION_ID = 'nolindnaidoo.decisionlint-le';
+const EXTENSION_ID = 'nolindnaidoo.jevlint-le';
 
 // What each sample is written to trigger, in document order. The samples are
 // the fixture: change one and this table together.
@@ -170,7 +170,7 @@ describe('DecisionLint-LE in a real editor', function () {
 	});
 
 	it('lints the whole workspace without opening a file, and skips node_modules', async () => {
-		await vscode.commands.executeCommand('decisionlint-le.lintWorkspace');
+		await vscode.commands.executeCommand('jevlint-le.lintWorkspace');
 		for (const [name, expected] of Object.entries(EXPECTED))
 			await untilCodes(sample(name), expected);
 		const stray = vscode.languages
@@ -311,7 +311,7 @@ describe('DecisionLint-LE in a real editor', function () {
 	});
 
 	it('honours a rule switched off in settings', async () => {
-		const settings = vscode.workspace.getConfiguration('decisionlint-le');
+		const settings = vscode.workspace.getConfiguration('jevlint-le');
 		await open('triage.ts');
 		await untilCodes(sample('triage.ts'), EXPECTED['triage.ts'] ?? []);
 		await settings.update(
@@ -340,7 +340,7 @@ describe('DecisionLint-LE in a real editor', function () {
 	});
 
 	it('runs a wording rule that is off by default once it is switched on', async () => {
-		const settings = vscode.workspace.getConfiguration('decisionlint-le');
+		const settings = vscode.workspace.getConfiguration('jevlint-le');
 		const uri = sample('wording.jev.json');
 		await open('wording.jev.json');
 		await untilCodes(uri, EXPECTED['wording.jev.json'] ?? []);

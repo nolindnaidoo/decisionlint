@@ -70,7 +70,7 @@ describe('a project settings file', () => {
 		expect(Object.keys(schema.properties)).toEqual(CONFIG_KEYS);
 		expect(schema.properties.target.enum).toEqual(TARGET_IDS);
 		const manifestTargets = JSON.parse(readFileSync('package.json', 'utf8'))
-			.contributes.configuration.properties['decisionlint-le.target'].enum;
+			.contributes.configuration.properties['jevlint-le.target'].enum;
 		expect(manifestTargets).toEqual(['', ...TARGET_IDS]);
 		expect(schema.properties.rules.additionalProperties.enum).toEqual([
 			...LEVELS,

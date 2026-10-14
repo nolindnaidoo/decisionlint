@@ -16,8 +16,16 @@ settled which platforms exist and what each publishes is in
 `docs/research/`, and what the code takes from it is in `lint/targets.ts`.
 
 **Status:** released; the current version is the top heading of `CHANGELOG.md`.
-The name appears in `package.json`, the `decisionlint-le.*` settings and commands,
-the `decisionlint-le-disable` directive and the diagnostic source.
+The product is DecisionLint-LE, and it was JevLint-LE until 1.0.0. The
+extension keeps the old install identity on purpose, so the people who have
+it get the new version in place: the extension id is `nolindnaidoo.jevlint-le`,
+its settings are `jevlint-le.*` and its command ids `jevlint-le.*`, and its
+keychain still reads the two keys JevLint-LE stored. Everything else carries
+the new name: the display name, every title and message, the diagnostic
+source `decisionlint-le`, the shared files `decisionlint-le.json` and
+`decisionlint-le-disable` (the old spellings still read), the npm packages
+`decisionlint-le` and `decisionlint-le-mcp`, the MCP server
+`io.github.nolindnaidoo/decisionlint-le`, and the repository.
 
 ## Architecture
 
@@ -206,7 +214,7 @@ family's files, copied unchanged from `regex-le`.
   defaults would show findings CI does not, or hide ones it does. The editor
   clears the file's findings and says why. The command line exits 2.
 - **The editor's lint settings go through the settings file's reader.**
-  `decisionlint-le.rules`, `fallbackOptions`, `ignore` and `target` are read by
+  `jevlint-le.rules`, `fallbackOptions`, `ignore` and `target` are read by
   `readLintOptions` in `config/projectConfig.ts`, so a rule entry that names
   no rule or no level, or a list that is not one, stops linting with the same
   sentence a `decisionlint-le.json` would give, and a rule may be named by its

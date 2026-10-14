@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 /** Must equal the id declared under `mcpServerDefinitionProviders` in the manifest. */
-export const MCP_PROVIDER_ID = 'decisionlint-le';
+export const MCP_PROVIDER_ID = 'jevlint-le';
 /** The command line, shipped in the extension. Run with `--mcp` it is the server. */
 export const MCP_BUNDLE = 'dist/cli.js';
 

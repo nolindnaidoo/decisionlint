@@ -19,16 +19,24 @@ const RUNTIME = `const r = { questions: { a: { type: 'noul', instructions: build
 const STATED = `{ "state": { "note": "Wheel wobbles." }, "model": "jev-1.13.0", "questions": { "a": { "type": "noul", "instructions": "Is there one?" }, "b": { "type": "noul", "instructions": "Are there two?" } } }`;
 const KEY = { TYPESAFE_API_KEY: 'apikey_secret_value' };
 
+// One answer per question asked, as TypeSafe answers; the given ones override a no.
+const answerAll = (body: string): Record<string, { noul: number }> =>
+	Object.fromEntries(
+		Object.keys(JSON.parse(body).questions ?? {}).map((id) => [
+			id,
+			{ noul: 0 },
+		]),
+	);
 const jevSays = (
 	answers: Record<string, { noul: number }> = {},
 	status = 200,
 ) =>
-	vi.fn(async () => ({
+	vi.fn(async (_url: string, init: { body: string }) => ({
 		ok: status === 200,
 		status,
 		json: async () => ({
 			model: 'jev-1.13.0',
-			answers,
+			answers: { ...answerAll(init.body), ...answers },
 			usage: { input_tokens: 310 },
 		}),
 		text: async () => '',
@@ -2017,14 +2025,14 @@ describe('checking with Jev', () => {
 
 	it('does not call a stopped run finished, or a network failure', async () => {
 		const stop = new AbortController();
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: { body: string }) => {
 			stop.abort();
 			return {
 				ok: true,
 				status: 200,
 				json: async () => ({
 					model: 'jev-1.13.0',
-					answers: {},
+					answers: answerAll(init.body),
 					usage: { input_tokens: 310 },
 				}),
 				text: async () => '',

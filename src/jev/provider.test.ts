@@ -61,6 +61,107 @@ describe('which vendor a model belongs to', () => {
 	});
 });
 
+describe('a review sent to TypeSafe', () => {
+	const request = buildRequest(question, 'jev-1.13.0', ALL);
+	if (!request) throw new Error('no request');
+	const asked = Object.keys(request.questions);
+	const answered = (over: Record<string, unknown> = {}) => ({
+		model: 'jev-1.13.0',
+		answers: {
+			...Object.fromEntries(
+				asked.map((id) => [id, { type: 'noul', noul: 0.1 }]),
+			),
+			...over,
+		},
+		usage: { input_tokens: 296, output_tokens: 20 },
+	});
+	const askJev = (reply: unknown) =>
+		ask(
+			{ fetch: fakeFetch(reply, []), key: 'k', wait: async () => {} },
+			request,
+		);
+
+	it('reads a reply with one answer per question asked, as the API reference promises', async () => {
+		const result = await askJev(
+			answered({ JEV303: { type: 'noul', noul: 0.8 } }),
+		);
+		if (isFailure(result)) throw new Error(result.detail);
+		expect(result.model).toBe('jev-1.13.0');
+		expect(result.inputTokens).toBe(296);
+		expect(Object.keys(result.answers).sort()).toEqual([...asked].sort());
+		expect(result.answers.JEV303).toEqual({ type: 'noul', noul: 0.8 });
+	});
+
+	// A 200 whose body answers nothing is a proxy, a sign-in page or a bug, not
+	// Jev: the reference returns one answer per question under the same ids.
+	it('calls a reply with no answers garbled, naming the first question it lacks', async () => {
+		const result = await askJev({
+			model: 'jev-1.13.0',
+			answers: {},
+			usage: {},
+		});
+		expect(result).toEqual({
+			kind: 'garbled',
+			detail: `no answer for '${asked[0]}'`,
+		});
+	});
+
+	it('calls a reply that lacks one of the questions garbled', async () => {
+		const [dropped = ''] = asked.slice(-1);
+		const body = answered();
+		delete (body.answers as Record<string, unknown>)[dropped];
+		expect(await askJev(body)).toEqual({
+			kind: 'garbled',
+			detail: `no answer for '${dropped}'`,
+		});
+	});
+
+	it('calls an answer without its value garbled', async () => {
+		const [first = ''] = asked;
+		expect(await askJev(answered({ [first]: { type: 'noul' } }))).toEqual({
+			kind: 'garbled',
+			detail: `the answer for '${first}' has no noul`,
+		});
+	});
+
+	it('reads a choice and a score answer by the field their type requires', async () => {
+		const probe = {
+			state: { note: 'Cracked lid.' },
+			model: 'jev-1.13.0',
+			questions: {
+				q: {
+					type: 'choice',
+					instructions: 'What went wrong?',
+					criteria: { late: 'Late', damaged: 'Damaged' },
+				},
+			},
+		};
+		const asking = (reply: unknown) =>
+			ask(
+				{ fetch: fakeFetch(reply, []), key: 'k', wait: async () => {} },
+				probe,
+			);
+		const good = await asking({
+			answers: {
+				q: {
+					type: 'choice',
+					choice: 'damaged',
+					probabilities: { late: 0.1, damaged: 0.9 },
+					confidence: 0.8,
+				},
+			},
+		});
+		if (isFailure(good)) throw new Error(good.detail);
+		expect(good.answers.q).toMatchObject({ choice: 'damaged' });
+		expect(
+			await asking({ answers: { q: { type: 'choice', confidence: 0.8 } } }),
+		).toEqual({
+			kind: 'garbled',
+			detail: "the answer for 'q' has no choice",
+		});
+	});
+});
+
 describe("a review sent to OpenAI's Decisions API", () => {
 	const request = buildRequest(question, 'gpt-6-luna', ALL);
 	if (!request) throw new Error('no request');

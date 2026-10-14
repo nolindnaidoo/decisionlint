@@ -308,6 +308,13 @@ describe('the client', () => {
 		ALL,
 	);
 	if (!request) throw new Error('no request');
+	// One answer per question asked, as TypeSafe answers; the given ones override a no.
+	const answered = (over: Record<string, unknown> = {}) => ({
+		...Object.fromEntries(
+			Object.keys(request.questions).map((id) => [id, { noul: 0 }]),
+		),
+		...over,
+	});
 	const reply = (status: number, body: unknown = {}) => ({
 		ok: status === 200,
 		status,
@@ -324,14 +331,14 @@ describe('the client', () => {
 		const fetch = vi.fn(async () =>
 			reply(200, {
 				model: MODEL,
-				answers: { JEV302: { noul: 0.9 } },
+				answers: answered({ JEV302: { noul: 0.9 } }),
 				usage: { input_tokens: 300 },
 			}),
 		);
 		const result = await ask(deps(fetch), request);
 		expect(result).toEqual({
 			model: MODEL,
-			answers: { JEV302: { noul: 0.9 } },
+			answers: answered({ JEV302: { noul: 0.9 } }),
 			inputTokens: 300,
 		});
 		const init = (
@@ -365,7 +372,7 @@ describe('the client', () => {
 			.fn()
 			.mockResolvedValueOnce(reply(529))
 			.mockResolvedValueOnce(
-				reply(200, { model: MODEL, answers: {}, usage: {} }),
+				reply(200, { model: MODEL, answers: answered(), usage: {} }),
 			);
 		expect(isFailure(await ask(deps(fetch), request))).toBe(false);
 	});

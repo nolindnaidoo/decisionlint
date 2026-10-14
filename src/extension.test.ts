@@ -19,6 +19,16 @@ const manifest = JSON.parse(
 const BARE_CHOICE = `const q = { type: 'choice', instructions: 'Which one fits?', criteria: { a: null, b: null } };`;
 
 type Doc = vscode.TextDocument & { text: string };
+type Init = { body: string };
+
+// One answer per question asked, as TypeSafe answers; the given ones override a no.
+const answerAll = (body: string): Record<string, unknown> =>
+	Object.fromEntries(
+		Object.keys(JSON.parse(body).questions ?? {}).map((id) => [
+			id,
+			{ noul: 0 },
+		]),
+	);
 
 function doc(
 	text: string,
@@ -560,12 +570,12 @@ describe('check with Jev', () => {
 	const FROM_JEV = 'file:///a.ts#jevlint-le-jev';
 	const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 	const jevSays = (answers: Record<string, { noul: number }>, status = 200) =>
-		vi.fn(async () => ({
+		vi.fn(async (_url: string, init: Init) => ({
 			ok: status === 200,
 			status,
 			json: async () => ({
 				model: 'jev-1.13.0',
-				answers,
+				answers: { ...answerAll(init.body), ...answers },
 				usage: { input_tokens: 310 },
 			}),
 			text: async () => '',
@@ -1215,14 +1225,14 @@ describe('a command whose body throws', () => {
 describe('how much it says', () => {
 	const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 	const reply = (cancel = false) =>
-		vi.fn(async () => {
+		vi.fn(async (_url: string, init: Init) => {
 			if (cancel) _state.cancel?.();
 			return {
 				ok: true,
 				status: 200,
 				json: async () => ({
 					model: 'jev-1.13.0',
-					answers: {},
+					answers: answerAll(init.body),
 					usage: { input_tokens: 1 },
 				}),
 				text: async () => '',
@@ -1332,12 +1342,12 @@ describe('the editor context menu', () => {
 describe('when the editor fails', () => {
 	const TWO = `const r = { questions: { a: { type: 'noul', instructions: 'Is the order large?' }, b: { type: 'noul', instructions: 'Is the parcel heavy?' } } };`;
 	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
-	const reply = (answers: unknown) => ({
+	const reply = (init: Init, answers: Record<string, unknown>) => ({
 		ok: true,
 		status: 200,
 		json: async () => ({
 			model: 'jev-1.13.0',
-			answers,
+			answers: { ...answerAll(init.body), ...answers },
 			usage: { input_tokens: 300 },
 		}),
 		text: async () => '',
@@ -1359,7 +1369,9 @@ describe('when the editor fails', () => {
 	it('drops what Jev said when the settings it was filtered by change', async () => {
 		vi.stubGlobal(
 			'fetch',
-			vi.fn(async () => reply({ JEV302: { noul: 0.9 } })),
+			vi.fn(async (_url: string, init: Init) =>
+				reply(init, { JEV302: { noul: 0.9 } }),
+			),
 		);
 		start(doc(TWO));
 		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
@@ -1371,11 +1383,11 @@ describe('when the editor fails', () => {
 
 	it('shows nothing from Jev about text that was edited during the run', async () => {
 		const document = doc(TWO);
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: Init) => {
 			// The user types while the first answer is on its way back.
 			document.text = `// edited\n${TWO}`;
 			_state.listeners.change?.({ document });
-			return reply({ JEV302: { noul: 0.9 } });
+			return reply(init, { JEV302: { noul: 0.9 } });
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(document);
@@ -1393,9 +1405,9 @@ describe('when the editor fails', () => {
 		const document = doc(TWO);
 		vi.stubGlobal(
 			'fetch',
-			vi.fn(async () => {
+			vi.fn(async (_url: string, init: Init) => {
 				_state.listeners.close?.(document);
-				return reply({ JEV302: { noul: 0.9 } });
+				return reply(init, { JEV302: { noul: 0.9 } });
 			}),
 		);
 		start(document);
@@ -1407,9 +1419,9 @@ describe('when the editor fails', () => {
 	it('does not start a second Jev check of a file while one is running', async () => {
 		let answer: (() => void) | undefined;
 		const fetch = vi.fn(
-			() =>
+			(_url: string, init: Init) =>
 				new Promise((resolve) => {
-					answer = () => resolve(reply({}));
+					answer = () => resolve(reply(init, {}));
 				}),
 		);
 		vi.stubGlobal('fetch', fetch);
@@ -1433,9 +1445,9 @@ describe('when the editor fails', () => {
 
 	it('says a Jev check was cancelled, and how much of it ran', async () => {
 		// The user presses cancel while the first answer is on its way back.
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: Init) => {
 			_state.cancel?.();
-			return reply({ JEV302: { noul: 0.9 } });
+			return reply(init, { JEV302: { noul: 0.9 } });
 		});
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
@@ -1446,11 +1458,13 @@ describe('when the editor fails', () => {
 	});
 
 	it('does not call a cancelled request a network failure', async () => {
-		const fetch = vi.fn(async (_url: string, init: { signal: AbortSignal }) => {
-			_state.cancel?.();
-			init.signal.throwIfAborted();
-			return reply({});
-		});
+		const fetch = vi.fn(
+			async (_url: string, init: Init & { signal: AbortSignal }) => {
+				_state.cancel?.();
+				init.signal.throwIfAborted();
+				return reply(init, {});
+			},
+		);
 		vi.stubGlobal('fetch', fetch);
 		start(doc(TWO));
 		_state.secrets.set('jevlint-le.typesafeApiKey', 'k');
@@ -1460,9 +1474,9 @@ describe('when the editor fails', () => {
 	});
 
 	it('shows no probe report for a probe that was cancelled part way', async () => {
-		const fetch = vi.fn(async () => {
+		const fetch = vi.fn(async (_url: string, init: Init) => {
 			_state.cancel?.();
-			return reply({
+			return reply(init, {
 				q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
 			});
 		});
@@ -1478,8 +1492,10 @@ describe('when the editor fails', () => {
 	it('still tells the user what a probe found when the report cannot be opened', async () => {
 		vi.stubGlobal(
 			'fetch',
-			vi.fn(async () =>
-				reply({ q: { type: 'choice', choice: 'damaged', confidence: 0.6 } }),
+			vi.fn(async (_url: string, init: Init) =>
+				reply(init, {
+					q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
+				}),
 			),
 		);
 		probing();
@@ -1509,7 +1525,7 @@ describe('when the editor fails', () => {
 	});
 
 	it('falls back to the environment key when the keychain cannot be read', async () => {
-		const fetch = vi.fn(async () => reply({}));
+		const fetch = vi.fn(async (_url: string, init: Init) => reply(init, {}));
 		vi.stubGlobal('fetch', fetch);
 		vi.stubEnv('TYPESAFE_API_KEY', 'from-env');
 		start(doc(TWO));

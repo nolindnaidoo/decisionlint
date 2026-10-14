@@ -53,6 +53,12 @@ would have caught it. Nothing new to configure.
   entry in a `jevlint-le.json` always has. Before, the entry was dropped and
   the rule stayed on with no word. `jevlint-le.rules` also takes a rule by its
   name and `warn` for `warning`, as the file does.
+- **A reply from TypeSafe that answers fewer questions than were asked is a
+  failure, not a clean check.** TypeSafe's API reference returns one answer
+  per question under the same ids, each with its type's value. A 200 whose
+  body lacks a question's answer, or carries one without its `noul`, `choice`
+  or `score`, is now reported as "did not answer with a Jev reply", naming the
+  question, where before it read as a check with nothing to report.
 - **The documents are held to the code.** The settings tables, the tool
   tables and counts, the README's example pins and every test file a document
   names are read by a test, and nine stale sentences were corrected.

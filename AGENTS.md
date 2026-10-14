@@ -425,9 +425,14 @@ family's files, copied unchanged from `regex-le`.
   when any part is built at runtime, and the run counts what it held back.
 - **No test calls TypeSafe.** `fetch` is stubbed. The scripts under `scripts/`
   that do call it are run by hand, and each has a `--dry-run` and a call limit.
-- **A reply is a Jev reply or it is a failure.** `jev/client.ts` checks the
-  shape before reading it. A 200 from a proxy read as "no answers" would
-  report a clean check that never ran.
+- **A reply is a Jev reply or it is a failure.** `jev/provider.ts` checks the
+  body against the request before reading it: TypeSafe's API reference
+  returns one answer per question, under the same ids, each carrying its
+  type's value, so a body that answers fewer questions than were asked, or
+  answers one without its value, is `garbled`, naming the question. A 200
+  from a proxy read as "no answers" would report a clean check that never
+  ran. `provider.test.ts` drives each shape; every test fixture answers what
+  was asked, as the vendor does.
 - **Every request has a time limit, and a stop ends a wait at once.** A
   stalled connection would otherwise hold a CI job until it was killed.
   Only `busy` and `server` failures are retried.

@@ -292,12 +292,10 @@ family's files, copied unchanged from `regex-le`.
   master, and `<surface>.gif` made from it, with everything the take needs
   in `assets/demos/<surface>/`. The npm READMEs ship to npm, where a
   relative image does not resolve, so they link the GIFs by raw URL.
-  `assets/demo.gif`, `assets/demo-cli.gif` and `scripts/record-editor-demo.mjs`
-  are the old layout, kept until the LE Tools site reads the new one.
 - **The editor take opens a VS Code window for about 25 seconds.** Say so
-  before running it on someone's machine. Hot exit must stay on in
-  `assets/demo/editor/settings.json`, or closing the window stops on a save
-  dialog.
+  before running it on someone's machine. Hot exit must stay on in the shared
+  settings, `../letools-site/scripts/demo-editor-settings.json`, or closing
+  the window stops on a save dialog.
 - **The schema does not validate what a rule validates.** In a `*.jev.json`
   file both would underline the same token. The schema describes fields and
   requires the top-level keys. Rules own everything about a question.

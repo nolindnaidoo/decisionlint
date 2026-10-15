@@ -433,10 +433,11 @@ family's files, copied unchanged from `regex-le`.
   Gateway, `d1` to Liquid AI. A spelling that names no host, such as
   `openai/gpt-6-luna-decisions`, which every gateway writes, is refused
   with nothing sent: routed to OpenAI it would spend the key on a request
-  that fails there. The user names any other host with `jev.endpoint` in
-  the editor, `--ask-endpoint` on the command line, or
-  `DECISIONLINT_ASK_ENDPOINT` for the server, and the shape with `jev.shape`,
-  `--ask-shape` or `DECISIONLINT_ASK_SHAPE` where the path does not end in
+  that fails there. The user names any other host with
+  `decisionlint.ask.endpoint` in the editor, `--ask-endpoint` on the command
+  line, or `DECISIONLINT_ASK_ENDPOINT` for the server, and the shape with
+  `decisionlint.ask.endpointShape`, `--ask-shape` or `DECISIONLINT_ASK_SHAPE`
+  where the path does not end in
   `/systemone` or `/decisions`. The endpoint is read from the same places as
   the key and never from `decisionlint.json`, a project's `.env` or a tool
   argument: a repository or an agent could otherwise point the key at a host
@@ -507,7 +508,8 @@ family's files, copied unchanged from `regex-le`.
   both commands.
 - **A probe changes layout, never wording.** A reworded question changes its
   meaning too, and then a moved answer proves nothing.
-- **State is sent only when the user turns `jev.sendState` on,** and only a
+- **State is sent only when the user turns `decisionlint.ask.sendState` on,**
+  and only a
   state written out in the file. The request builder adds it, and the ids of
   sibling questions, only for the checks that read them.
 - **Jev is never shown a question with holes.** `toLiteral` returns nothing

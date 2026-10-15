@@ -32,7 +32,7 @@ export function checkRelease(page: string): ReleaseCheck {
 	if (latest === undefined) {
 		return {
 			failures: [
-				`${MODELS_PAGE} no longer says what jev-latest points to. Read the page and mend readAliases in src/jev/released.ts.`,
+				`${MODELS_PAGE} no longer says what jev-latest points to. Read the page and mend readAliases in src/ask/released.ts.`,
 			],
 			warnings: [],
 		};

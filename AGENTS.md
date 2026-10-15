@@ -595,6 +595,12 @@ family's files, copied unchanged from `regex-le`.
   The `Jev release` workflow runs `bun run check:jev-release` weekly and fails
   when `jev-latest` has moved off `KNOWN_VERSION`, or when the models page no
   longer says where it points.
+- **Every relative import in `scripts/` resolves, and a test says so.**
+  `scripts/` is outside `tsc`'s `include` and outside vitest's, both family
+  files, so no gate loads a script. The move from `src/jev/` to `src/ask/`
+  left four scripts, the weekly release check among them, importing a
+  directory that was gone, with every gate green. `src/script-imports.test.ts`
+  resolves each import the way the runtime would.
 - **A Jev check's cutoff is read from `fixtures/validation/calibration.json`,**
   never guessed. `reviews.test.ts` fails if a cutoff would flag a good corpus
   question. Rerun `scripts/calibrate-reviews.ts` when the model changes.

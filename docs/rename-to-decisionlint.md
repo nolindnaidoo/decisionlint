@@ -141,8 +141,12 @@ endpoint when its shape is `typesafe`.
    `open-vsx/publish-extensions`, sent on 2026-10-14 as
    EclipseFdn/publish-extensions#1191, with `disallowInstall` false so that
    auto-update still delivers 0.9.0 and its notice; a nightly job applies
-   it once merged. The Marketplace's banner is the discussion comment,
-   deferred by the owner: that listing had 6 installs.
+   it once merged. The Marketplace's banner was requested the same day as
+   a comment in the VS Code team's "Deprecated extensions" discussion,
+   microsoft/vscode-discussions#1, comment 18939969, asking that the old
+   listing stay installable for the same reason. Recent requests there
+   were asked to confirm ownership by email to the Marketplace team, which
+   only the owner can do.
 8. Reservations, each its own authorization and optional: the GitHub
    organisation `decisionlint` and the domain `decisionlint.dev`, both of
    which only the owner can create.

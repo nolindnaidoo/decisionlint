@@ -19,7 +19,7 @@ Type `unset CLAUDECODE CLAUDE_CODE_CHILD_SESSION CLAUDE_CODE_ENTRYPOINT CLAUDE_C
 Enter
 Type `D=$PWD; cd "$(mktemp -d /tmp/parcels.XXXX)" && cp "$D/request.jev.json" . && printf '{"mcpServers":{"decisionlint":{"command":"node","args":["%s"]}}}' "$D/../../../mcp/server.js" > mcp.json && PS1="$ " && clear`
 Enter
-Type `clear && claude --mcp-config mcp.json --strict-mcp-config --allowedTools "mcp__decisionlint__lint_paths mcp__decisionlint__explain_rule Read" --disallowedTools Bash`
+Type `clear && claude --mcp-config mcp.json --strict-mcp-config --allowedTools "mcp__decisionlint__lint_paths mcp__decisionlint__explain_rule Read" --disallowedTools Bash WebFetch WebSearch Agent`
 Enter
 Sleep 6s
 # The folder-trust prompt opens on "No, exit".

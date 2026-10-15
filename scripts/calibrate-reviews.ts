@@ -14,16 +14,16 @@
  *   bun scripts/calibrate-reviews.ts --report     read calibration.json, no calls
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { ask, type Fetch, isFailure } from '../src/jev/client';
-import type { QuestionLiteral } from '../src/jev/literal';
-import { DEFAULT_MODEL } from '../src/jev/review';
+import { ask, type Fetch, isFailure } from '../src/ask/client';
+import type { QuestionLiteral } from '../src/ask/literal';
+import { DEFAULT_MODEL } from '../src/ask/review';
 import {
 	buildRequest,
 	buildRequestReview,
 	REQUEST_REVIEWS,
 	REVIEWS,
 	type ReviewRequest,
-} from '../src/jev/reviews';
+} from '../src/ask/reviews';
 
 type Entry = { id: string; defects: string[]; question: QuestionLiteral; siblings?: string[] };
 type RequestEntry = {

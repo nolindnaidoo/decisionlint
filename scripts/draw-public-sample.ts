@@ -18,7 +18,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { toLiteral } from '../src/jev/literal';
+import { toLiteral } from '../src/ask/literal';
 import { readQuestions, syntaxForPath } from '../src/lint/lint';
 
 const root = join(import.meta.dir, '..');

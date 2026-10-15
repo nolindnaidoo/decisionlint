@@ -17,7 +17,7 @@
  * answered, because a result is only true of that version.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
-import { DEFAULT_MODEL } from '../src/jev/review';
+import { DEFAULT_MODEL } from '../src/ask/review';
 
 type Question = Record<string, unknown>;
 type Arm = {

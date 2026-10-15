@@ -6,7 +6,7 @@
  *
  *   bun run check:jev-release
  */
-import { checkRelease, MODELS_PAGE } from '../src/jev/released';
+import { checkRelease, MODELS_PAGE } from '../src/ask/released';
 
 const response = await fetch(MODELS_PAGE, { signal: AbortSignal.timeout(30_000) });
 if (!response.ok) {

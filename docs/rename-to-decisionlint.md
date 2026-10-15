@@ -1,9 +1,11 @@
 # Rename to DecisionLint
 
-Status: steps 1 to 4 done on 2026-10-14, step 5 onward pending, each its
-own authorization. Ships as 1.0.0 with the every-platform work in `SPEC.md`
-under "Every provider". Nothing of 0.9.0 was published, so its new surfaces
-are named right here instead of aliased.
+Status: steps 1 to 7 done on 2026-10-14. Step 6's site change is in
+letools-site pull request #56, and merging it is the deploy, its own
+authorization. Step 8 is optional and the owner's. Shipped as 1.0.0 with
+the every-platform work in `SPEC.md` under "Every provider". Nothing of
+0.9.0 was published, so its new surfaces are named right here instead of
+aliased.
 
 ## Decisions
 
@@ -118,6 +120,10 @@ endpoint when its shape is `typesafe`.
 6. The site and the local directory: `letools-site` lists `decisionlint`
    as the author's, outside the family, and the directory is renamed to
    match. The site's deploy is a push to its `main`, its own authorization.
+   Done on 2026-10-14 as letools-site pull request #56: the registry entry,
+   the regenerated facts and demo, the ordering, the fleet lists and ledger,
+   the home copy, and a redirect from `/tools/jevlint-le`, which the 0.8.1
+   listing links. The directory is `decisionlint`.
 7. Bridge the old names, each its own authorization: `jevlint-le@0.9.0`
    and `jevlint-le-mcp@0.9.0` as shims that depend on the new packages at
    `^1`, then `npm deprecate` both; a final `nolindnaidoo.jevlint-le`

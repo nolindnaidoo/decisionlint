@@ -10,7 +10,7 @@ your own key, at whichever platform you send it to.
 
 By the author of the LE tools.
 
-![DecisionLint in VS Code: two findings explained on hover, then two fixed with a quick fix](assets/demo.gif)
+![DecisionLint in VS Code: two findings explained on hover, then two fixed with a quick fix](assets/demos/editor.gif)
 
 ## Install
 
@@ -346,7 +346,7 @@ tooltip.
 The **Ask** commands and the probe always run the extension's own
 code, whatever the project installs.
 
-![The command line reporting three findings on a small request](assets/demo-cli.gif)
+![The command line reporting three findings on a small request](assets/demos/cli.gif)
 
 ```bash
 npx decisionlint src/                 # a directory, searched for files it reads
@@ -467,6 +467,8 @@ other client, point it at the server package:
   }
 }
 ```
+
+![An agent in Claude Code linting a request through the MCP server and listing its three findings](assets/demos/mcp.gif)
 
 A project that already pins `decisionlint` for CI has the same server behind
 `npx decisionlint --mcp`. The package with no flag is the one to give a client,

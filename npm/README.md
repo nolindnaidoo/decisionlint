@@ -9,6 +9,8 @@ The rules and their defaults were set by measuring what each defect costs
 Jev. Luna has not been measured yet, so on a Luna question they are the same
 rules with Jev's defaults.
 
+![The command line reporting three findings on a small request](https://raw.githubusercontent.com/nolindnaidoo/decisionlint/main/assets/demos/cli.gif)
+
 This package is the command line and the library, with the MCP server behind
 `--mcp`. An agent host installs the server on its own as
 [`decisionlint-mcp`](https://www.npmjs.com/package/decisionlint-mcp). None of it

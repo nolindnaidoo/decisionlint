@@ -282,15 +282,18 @@ family's files, copied unchanged from `regex-le`.
   transparent background, drawn from `icon-source.svg` beside it. It is a
   placeholder the owner may replace. The installed-extension test fails if it
   does not ship.
-- **The README's only relative links are the two demo images.** `vsce
+- **The README's only relative links are the three demo images.** `vsce
   package` rewrites them to the repository's raw URL, which works because the
   manifest names the repository and the repository is public. Any other
   relative link would point at a file that does not ship.
-- **Both demos are recorded, not drawn.** `assets/demo.gif` is the editor:
-  `scripts/record-editor-demo.mjs` drives a private copy of VS Code with
-  Playwright and records the window. `assets/demo-cli.gif` is the command
-  line, driven by `assets/demo-cli.tape` with `vhs`. Record one again when
-  what it shows changes. The LE Tools site reads `assets/demo.gif`.
+- **The demos are recorded, not drawn**, to the fleet standard in
+  `../letools-site/DEMOS.md`, by that repo's `bun run record:demo ../decisionlint
+  <editor|cli|mcp>`. Each surface is `assets/demos/<surface>.mp4`, the
+  master, and `<surface>.gif` made from it, with everything the take needs
+  in `assets/demos/<surface>/`. The npm READMEs ship to npm, where a
+  relative image does not resolve, so they link the GIFs by raw URL.
+  `assets/demo.gif`, `assets/demo-cli.gif` and `scripts/record-editor-demo.mjs`
+  are the old layout, kept until the LE Tools site reads the new one.
 - **The editor take opens a VS Code window for about 25 seconds.** Say so
   before running it on someone's machine. Hot exit must stay on in
   `assets/demo/editor/settings.json`, or closing the window stops on a save

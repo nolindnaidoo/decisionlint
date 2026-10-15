@@ -136,7 +136,13 @@ endpoint when its shape is `typesafe`.
    `shim/extension`, proven by `scripts/e2e-shims.js`, published by
    `release-shim.yml` with one opt-in per target, in the order npm,
    deprecate, Open VSX, Marketplace, registry. The publisher binary's
-   `status` command is the route confirmed against the raw docs.
+   `status` command is the route confirmed against the raw docs. The Open
+   VSX banner is a pull request to the control file in
+   `open-vsx/publish-extensions`, sent on 2026-10-14 as
+   EclipseFdn/publish-extensions#1191, with `disallowInstall` false so that
+   auto-update still delivers 0.9.0 and its notice; a nightly job applies
+   it once merged. The Marketplace's banner is the discussion comment,
+   deferred by the owner: that listing had 6 installs.
 8. Reservations, each its own authorization and optional: the GitHub
    organisation `decisionlint` and the domain `decisionlint.dev`, both of
    which only the owner can create.

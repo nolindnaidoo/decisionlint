@@ -130,4 +130,36 @@ describe('what the documents claim', () => {
 		for (const [path, name] of named)
 			expect(existing, `${path} names ${name}`).toContain(name);
 	});
+
+	it('names only settings and commands the manifest declares', () => {
+		// The rename to the ask verb left `jev.endpoint`, `jev.shape`,
+		// `jev.sendState` and `jev.confirm` in AGENTS.md and SPEC.md for a day:
+		// ids no setting had any more, read as true by the next reader. Every
+		// `decisionlint.<id>` a document names is a setting, a command or the
+		// settings file, and no document names a setting by the old prefix.
+		const declared = new Set([
+			'decisionlint.json',
+			...Object.keys(manifest.contributes.configuration.properties),
+			...manifest.contributes.commands.map(
+				(command: { command: string }) => command.command,
+			),
+		]);
+		const documents = [
+			'AGENTS.md',
+			'SPEC.md',
+			'README.md',
+			'npm/README.md',
+			'mcp/README.md',
+		];
+		const named = documents.flatMap((path) =>
+			[...read(path).matchAll(/`(decisionlint\.[A-Za-z.]+)`/g)].map(
+				(match) => [path, match[1] ?? ''] as const,
+			),
+		);
+		expect(named.length).toBeGreaterThan(0);
+		for (const [path, id] of named)
+			expect(declared, `${path} names ${id}`).toContain(id);
+		for (const path of documents)
+			expect(read(path).match(/`jev\.[a-z][A-Za-z]*`/g), path).toBeNull();
+	});
 });

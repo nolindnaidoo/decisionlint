@@ -1093,8 +1093,9 @@ it says the answer is too close to call and blames no layout.
 
 It needs the state as a literal in the file, so it works on request JSON files
 and on code that writes the state inline. It sends that state without the
-`jev.sendState` setting, because a probe is a test against the real input.
-It asks first only when `jev.confirm` is on. Five or six requests per probe.
+`decisionlint.ask.sendState` setting, because a probe is a test against the
+real input. It asks first only when `decisionlint.ask.confirm` is on. Five or
+six requests per probe.
 
 Tried once against `jev-1.13.0` on a parcel that was both late and damaged:
 the answer held at "damaged" through every variant with confidence between
@@ -1374,7 +1375,7 @@ version is finished in one pull request with its changelog dated.
 | Phase | Builds | Done when |
 |---|---|---|
 | P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `DEC001` and `DEC013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `DEC003`, an unknown target changes nothing |
-| P2 | `ask/provider.ts` from the target table, `jev.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
+| P2 | `ask/provider.ts` from the target table, `decisionlint.ask.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
 | P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go is still to do |
 | P4 | A URL in the file resolves the target, over the model id and under the setting; the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
 

@@ -143,6 +143,7 @@ endpoint when its shape is `typesafe`.
 
 ## Outstanding
 
-- The two demo recordings are taken again under D6, because the problems
-  panel names the diagnostic source and the command line names the
-  command.
+Nothing. The two demo recordings were taken again under D6 on 2026-10-14,
+in the rename commits, because the problems panel names the diagnostic
+source and the command line names the command. Both show the new name and
+the `DEC` codes.

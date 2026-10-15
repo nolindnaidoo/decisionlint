@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "questions": {
+    "team": {
+      "type": "choice",
+      "instructions": "Which team should handle this?",
+      "criteria": ["billing", "delivery"]
+    },
+    "late": {
+      "type": "noul",
+      "instructions": "Did more than two parcels arrive late?"
+    }
+  }
+}

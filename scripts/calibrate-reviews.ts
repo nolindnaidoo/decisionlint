@@ -12,11 +12,22 @@
  *   bun scripts/calibrate-reviews.ts --dry-run
  *   doppler run -- bun scripts/calibrate-reviews.ts
  *   bun scripts/calibrate-reviews.ts --report     read calibration.json, no calls
+ *   doppler run -- bun scripts/calibrate-reviews.ts --model gpt-6-luna
+ *   doppler run -- bun scripts/calibrate-reviews.ts --platform openrouter
+ *
+ * `--platform` sends to a row of `TARGETS` on its default model, and
+ * `--model` alone to the platform its spelling names. The key is read from
+ * that platform's variable. Every pair but TypeSafe on `DEFAULT_MODEL` is
+ * saved to its own file, because a probability is only true of the model
+ * and route that gave it, and a file per pair keeps a gateway's Jev
+ * comparable with TypeSafe's.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { ask, type Fetch, isFailure } from '../src/ask/client';
 import type { QuestionLiteral } from '../src/ask/literal';
+import { type Provider, providerFor, providerForTarget } from '../src/ask/provider';
 import { DEFAULT_MODEL } from '../src/ask/review';
+import { TARGET_IDS, targetById } from '../src/lint/targets';
 import {
 	buildRequest,
 	buildRequestReview,
@@ -46,14 +57,35 @@ type Reading = { id: string; p: number };
 
 // The wording defect each check is the meaning-reading version of. Others are labeled by their own code.
 const LABEL: Record<string, string> = { DEC301: 'DEC102', DEC302: 'DEC112' };
-const MODEL = DEFAULT_MODEL;
+const flag = (name: string): string | undefined => {
+	const at = process.argv.indexOf(name);
+	return at === -1 ? undefined : process.argv[at + 1];
+};
+const platform = flag('--platform');
+const target = platform === undefined ? undefined : targetById(platform);
+if (platform !== undefined && !target) {
+	console.error(`'${platform}' is not a platform. The ids are ${TARGET_IDS.join(', ')}.`);
+	process.exit(1);
+}
+const MODEL = flag('--model') ?? target?.defaultModel ?? DEFAULT_MODEL;
+const routed = target ? providerForTarget(target, MODEL) : providerFor(MODEL);
+if (typeof routed === 'string') {
+	console.error(routed);
+	process.exit(1);
+}
+const provider: Provider = routed;
 const MAX_CALLS = 400;
+// LLM Gateway spells Jev `jev-1.13.0` as TypeSafe does, so the platform is in the name too.
+const fileName =
+	provider.slot === 'typesafe' && MODEL === DEFAULT_MODEL
+		? 'calibration.json'
+		: `calibration-${provider.slot}-${MODEL.replace(/[^A-Za-z0-9.-]+/g, '_')}.json`;
 
 const load = <T>(name: string): T =>
 	JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), 'utf8'));
 const corpus = load<Entry[]>('corpus/questions.json');
 const requests = load<RequestEntry[]>('corpus/requests.json');
-const out = new URL('../fixtures/validation/calibration.json', import.meta.url);
+const out = new URL(`../fixtures/validation/${fileName}`, import.meta.url);
 const saved: Saved = existsSync(out)
 	? JSON.parse(readFileSync(out, 'utf8'))
 	: { ranOn: '', model: '', calls: 0, inputTokens: 0, probabilities: {} };
@@ -103,10 +135,14 @@ async function collect(key: string, list: Job[]): Promise<void> {
 		if (calls >= MAX_CALLS) throw new Error(`stopped at ${MAX_CALLS} calls`);
 		calls += 1;
 		const reply = await ask(
-			{ fetch: fetch as unknown as Fetch, key, wait: (ms) => new Promise((r) => setTimeout(r, ms)) },
+			{ fetch: fetch as unknown as Fetch, key, provider, wait: (ms) => new Promise((r) => setTimeout(r, ms)) },
 			job.request,
 		);
-		if (isFailure(reply)) throw new Error(`${job.id}: ${reply.kind} ${reply.detail}`);
+		// Saved before failing, so a run stopped part way keeps what it paid for.
+		if (isFailure(reply)) {
+			writeFileSync(out, `${JSON.stringify(saved, null, 1)}\n`);
+			throw new Error(`${job.id}: ${reply.kind} ${reply.detail}`);
+		}
 		saved.model = reply.model;
 		saved.inputTokens += reply.inputTokens;
 		saved.probabilities[job.id] = {
@@ -177,12 +213,12 @@ async function main(): Promise<void> {
 	if (process.argv.includes('--report')) return report();
 	const list = jobs();
 	if (process.argv.includes('--dry-run')) {
-		console.log(`Dry run: ${list.length} calls would be made. Nothing was sent.`);
+		console.log(`Dry run: ${list.length} calls to ${provider.vendor} on ${MODEL} would be made, saved to ${fileName}. Nothing was sent.`);
 		return;
 	}
-	const key = process.env.TYPESAFE_API_KEY;
+	const key = process.env[provider.envKey];
 	if (!key) {
-		console.error('TYPESAFE_API_KEY is not set. Run under `doppler run --`, or pass --dry-run.');
+		console.error(`${provider.envKey} is not set. Run under \`doppler run --\`, or pass --dry-run.`);
 		process.exit(1);
 	}
 	await collect(key, list);

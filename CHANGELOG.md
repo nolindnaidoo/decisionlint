@@ -15,6 +15,13 @@ LLM Gateway or Vercel, Jev is sent the Decisions shape, and its answers moved
 by 0.033 on average and flipped 8 of 1114 verdicts. A finding there now says
 "The cutoff was set on jev-1.13.0 at TypeSafe, not through LLM Gateway."
 
+**The cutoffs are published, with how they hold up on every platform.**
+[docs/cutoffs.md](docs/cutoffs.md) lists each model-backed check's cutoff,
+how many known defects it caught and how many good questions it flagged on
+Jev, Luna and d1, and how far each platform's answers sit from the same
+model elsewhere. It is written from the saved runs. The README has a section
+on where the checks have been tested, and every rule page links the table.
+
 **The cost shown before a check no longer comes in low.** It was a third
 under what Luna billed and an eighth under d1, because it counted the
 request before it was put in the platform's shape and assumed Jev's

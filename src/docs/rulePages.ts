@@ -110,7 +110,7 @@ function asked(code: RuleCode): string {
 			'',
 		);
 	lines.push(
-		`It is reported when Jev puts the probability of yes at ${cutoff} or more. That cutoff was set from a small number of examples on \`${DEFAULT_MODEL}\`, so treat a finding as an argument with a number attached, not a verdict.`,
+		`It is reported when Jev puts the probability of yes at ${cutoff} or more. That cutoff was set from a small number of examples on \`${DEFAULT_MODEL}\`, so treat a finding as an argument with a number attached, not a verdict. How it holds up on each model and platform it was run on is in [the cutoffs page](../cutoffs.md).`,
 		'',
 	);
 	return lines.join('\n');

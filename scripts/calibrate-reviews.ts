@@ -27,11 +27,11 @@ import { ask, type Fetch, isFailure } from '../src/ask/client';
 import type { QuestionLiteral } from '../src/ask/literal';
 import { type Provider, providerFor, providerForTarget } from '../src/ask/provider';
 import { DEFAULT_MODEL } from '../src/ask/review';
+import { CHECKS, calibrationFile, cutoffOf, readingsOf } from '../src/docs/calibration';
 import { TARGET_IDS, targetById } from '../src/lint/targets';
 import {
 	buildRequest,
 	buildRequestReview,
-	REQUEST_REVIEWS,
 	REVIEWS,
 	type ReviewRequest,
 } from '../src/ask/reviews';
@@ -55,8 +55,6 @@ type Saved = {
 type Job = { id: string; request: ReviewRequest };
 type Reading = { id: string; p: number };
 
-// The wording defect each check is the meaning-reading version of. Others are labeled by their own code.
-const LABEL: Record<string, string> = { DEC301: 'DEC102', DEC302: 'DEC112' };
 const flag = (name: string): string | undefined => {
 	const at = process.argv.indexOf(name);
 	return at === -1 ? undefined : process.argv[at + 1];
@@ -75,11 +73,7 @@ if (typeof routed === 'string') {
 }
 const provider: Provider = routed;
 const MAX_CALLS = 400;
-// LLM Gateway spells Jev exactly as TypeSafe does, so the platform is in the name too.
-const fileName =
-	provider.slot === 'typesafe' && MODEL === DEFAULT_MODEL
-		? 'calibration.json'
-		: `calibration-${provider.slot}-${MODEL.replace(/[^A-Za-z0-9.-]+/g, '_')}.json`;
+const fileName = calibrationFile(provider.slot, MODEL);
 
 const load = <T>(name: string): T =>
 	JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), 'utf8'));
@@ -167,46 +161,11 @@ function show(code: string, bad: Reading[], good: Reading[]): void {
 }
 
 function report(): void {
-	const at = (id: string, code: string) => saved.probabilities[id]?.[code];
-	const read = (ids: string[], code: string): Reading[] =>
-		ids.flatMap((id) => {
-			const p = at(id, code);
-			return p === undefined ? [] : [{ id, p }];
-		});
-	for (const review of REVIEWS.filter((r) => r.code !== 'DEC311')) {
-		const label = LABEL[review.code] ?? review.code;
-		show(
-			review.code,
-			read(corpus.filter((e) => e.defects.includes(label)).map((e) => e.id), review.code),
-			read(corpus.filter((e) => !e.defects.length).map((e) => e.id), review.code),
-		);
+	for (const code of CHECKS) {
+		const { bad, good } = readingsOf(code, saved, corpus, requests);
+		show(code, [...bad], [...good]);
 	}
-	const pairs = requests.flatMap((entry) => {
-		const ids = Object.keys(entry.questions);
-		return Object.entries(saved.probabilities[entry.id] ?? {}).flatMap(([code, p]) => {
-			const match = /^DEC310\.(\d+)\.(\d+)$/.exec(code);
-			if (!match) return [];
-			const a = ids[Number(match[1])] as string;
-			const b = ids[Number(match[2])] as string;
-			const bad = entry.overlapping.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
-			return [{ id: `${entry.id}:${a}+${b}`, p, bad }];
-		});
-	});
-	show('DEC310', pairs.filter((x) => x.bad), pairs.filter((x) => !x.bad));
-	const stated = requests.filter((entry) => entry.state !== undefined);
-	const perQuestion = stated.flatMap((entry) =>
-		Object.keys(entry.questions).flatMap((id) => {
-			const p = at(`${entry.id}/${id}`, 'DEC311');
-			return p === undefined ? [] : [{ id: `${entry.id}/${id}`, p, bad: (entry.missing ?? []).includes(id) }];
-		}),
-	);
-	show('DEC311', perQuestion.filter((x) => x.bad), perQuestion.filter((x) => !x.bad));
-	const orders = stated.flatMap((entry) => {
-		const p = at(entry.id, 'DEC312');
-		return p === undefined ? [] : [{ id: entry.id, p, bad: Boolean(entry.injected) }];
-	});
-	show('DEC312', orders.filter((x) => x.bad), orders.filter((x) => !x.bad));
-	console.log(`\ncutoffs in code: ${[...REVIEWS.map((r) => `${r.code} ${r.cutoff}`), `DEC310 ${REQUEST_REVIEWS.DEC310.cutoff}`, `DEC312 ${REQUEST_REVIEWS.DEC312.cutoff}`].join(', ')}`);
+	console.log(`\ncutoffs in code: ${CHECKS.map((code) => `${code} ${cutoffOf(code)}`).join(', ')}`);
 }
 
 async function main(): Promise<void> {

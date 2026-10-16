@@ -212,6 +212,30 @@ Three things follow from the table:
 unrelated projects that reimplement `/v1/systemone`; the one llama.cpp
 serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 
+## Where it has been tested
+
+Every platform below was sent real requests through its live API, and the
+model-backed checks were run over the whole calibration set on each:
+
+- TypeSafe, `jev-1.13.0`, where the cutoffs were set.
+- OpenRouter, `typesafe/jev-1.13`. It answers as TypeSafe does, so its
+  findings are treated as calibrated.
+- LLM Gateway, `jev-1.13.0`, and Vercel AI Gateway, `typesafe-ai/jev`. Both
+  are sent OpenAI's shape, which moves Jev's answers a little, so their
+  findings say the cutoff was set at TypeSafe.
+- OpenAI, `gpt-6-luna`, and Vercel AI Gateway, `openai/gpt-6-luna-decisions`,
+  which answers as OpenAI does.
+- Liquid AI, `d1`.
+
+Luna and d1 keep Jev's cutoffs. They catch most defects on both, miss more
+than on Jev, and every finding from them says where its cutoff was set.
+[docs/cutoffs.md](docs/cutoffs.md) has each cutoff, how many known
+defects it caught and how many good questions it flagged on each model, and
+how far each platform's answers sit from the same model elsewhere. It is
+written from the saved runs, so its numbers are the runs' own. The samples
+are small, so treat them as rough evidence. LiteLLM, Eden AI and llama.cpp
+have not been run yet.
+
 ## Ask a model about a file
 
 Rules `DEC301` to `DEC312` are not part of linting. They run only when you run

@@ -654,6 +654,13 @@ family's files, copied unchanged from `regex-le`.
   are imported into `docs/rulePages.ts`, so they ship inside the bundle and
   `explain_rule` renders the same page offline. A test holds the import to
   the file.
+- **The cutoffs page is generated, never edited.** `bun run docs:cutoffs`
+  writes `docs/cutoffs.md` from every `fixtures/validation/calibration*.json`,
+  through `src/docs/calibration.ts`, which `calibrate-reviews.ts --report`
+  reads too, so a check's bad and good examples are defined once.
+  `cutoffsPage.test.ts` fails when the page is stale, when a run is kept that
+  `ROUTES` does not list, and when the README's tested section leaves a route
+  out. Run it after every calibration run or cutoff change.
 - **A good example has nothing wrong with it.** The test runs every offline
   rule over each one. An example that trips a second rule teaches the wrong
   thing.

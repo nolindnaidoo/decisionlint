@@ -1,7 +1,7 @@
 {
   "name": "decisionlint",
   "publisher": "nolindnaidoo",
-  "displayName": "DecisionLint: Jev/Luna",
+  "displayName": "DecisionLint: Jev/Luna Lint",
   "description": "Lint Jev and Luna decision-model questions. TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna), OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. Works offline with no API key, and one command asks the model itself to check a file.",
   "icon": "src/assets/images/icon.png",
   "version": "1.0.1",

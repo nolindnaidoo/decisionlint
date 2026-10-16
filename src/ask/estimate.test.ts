@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { targetById } from '../lint/targets';
 import type { QuestionLiteral } from './literal';
 import { providerForTarget } from './provider';
-import { estimateTokens } from './review';
+import { estimateTokens, roughTokens } from './review';
 import {
 	buildRequest,
 	buildRequestReview,
@@ -52,6 +52,21 @@ function calibrationRequests(model: string): ReviewRequest[] {
 	}
 	return list.filter((request): request is ReviewRequest => !!request);
 }
+
+describe('the token estimate as shown', () => {
+	it.each([
+		[0, '0'],
+		[9, '9'],
+		[310, '310'],
+		[311, '320'],
+		[6939, '7,000'],
+		[10289, '11,000'],
+		[10000, '10,000'],
+		[123456, '130,000'],
+	])('shows %d as %s, rounded up to two figures', (estimate, shown) => {
+		expect(roughTokens(estimate)).toBe(shown);
+	});
+});
 
 describe('the token estimate', () => {
 	// Each run's file holds what the platform billed for one fresh pass. The

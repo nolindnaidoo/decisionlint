@@ -263,9 +263,10 @@ your key at a host of its choosing.
 What to know before you run it:
 
 - **It uses your key and your credits.** One request per question and one more
-  per request body, about 800 input tokens each. At TypeSafe's published price
-  that is roughly three thousandths of a cent per question, and at OpenAI's
-  about a hundredth of a cent.
+  per request body, roughly 800 input tokens each on Jev and twice that on
+  Luna. At TypeSafe's published price that is a few thousandths of a cent
+  per question, and at OpenAI's one or two hundredths. The count shown before
+  sending is an estimate, rounded up, and what the platform bills can differ.
 - **Only questions are sent**: type, instructions, criteria and ids. Your
   `state` is not, unless you turn on `decisionlint.ask.sendState`. With that on,
   a state written out in the file is sent too, and two more checks run: does

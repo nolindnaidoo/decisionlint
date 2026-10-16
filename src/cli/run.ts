@@ -1,5 +1,6 @@
 import type { Fetch } from '../ask/client';
 import { asSubject } from '../ask/provider';
+import { roughTokens } from '../ask/review';
 import {
 	createConfigLoader,
 	folderOf,
@@ -467,7 +468,7 @@ function refuseFix(options: CliOptions): string | undefined {
 
 const sending = (jev: AskTotals): string =>
 	[
-		`Sending ${plural(jev.planned, 'request')} to ${jev.vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.`,
+		`Sending ${plural(jev.planned, 'request')} to ${jev.vendor} on ${jev.model}, roughly ${roughTokens(jev.estimatedInputTokens)} input tokens.`,
 		jev.state ? 'State is sent.' : 'State is not sent.',
 		...[heldBack(jev) ?? []].flat(),
 	].join(' ');

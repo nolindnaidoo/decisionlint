@@ -114,6 +114,16 @@ const REVIEW_CODES: ReadonlyArray<RuleCode> = [
 const CHARS_PER_TOKEN: ReadonlyMap<string, number> = new Map([['Jev', 2]]);
 const UNMEASURED_CHARS_PER_TOKEN = 1.5;
 
+/**
+ * An estimate as it is shown: rounded up to two significant figures, so five
+ * digits do not read as a measurement and the figure still errs high.
+ */
+export function roughTokens(estimate: number): string {
+	const digits = Math.floor(Math.log10(Math.max(estimate, 1))) + 1;
+	const step = 10 ** Math.max(0, digits - 2);
+	return (Math.ceil(estimate / step) * step).toLocaleString('en-US');
+}
+
 /** Input tokens for a request as `provider` sends it. */
 export function estimateTokens(
 	request: ReviewRequest,

@@ -708,7 +708,7 @@ describe('check with Jev', () => {
 		expect(fetch).not.toHaveBeenCalled();
 		// One question, one line under it: how much, what it costs, what leaves the machine.
 		expect(_state.modals[0]).toMatch(
-			/^Send 1 request to TypeSafe\?\nAbout [\d,]+ tokens, under 1¢\. Your state is not sent\.$/,
+			/^Send 1 request to TypeSafe\?\nRoughly [\d,]+ tokens, under 1¢\. Your state is not sent\.$/,
 		);
 	});
 

@@ -1,4 +1,5 @@
 import { asSubject } from '../ask/provider';
+import { roughTokens } from '../ask/review';
 import { pageFor, RULES } from '../lint/rules';
 import type { ReportedFinding, Severity, Span } from '../types';
 import type { Format } from './args';
@@ -42,7 +43,7 @@ export type AskTotals = Readonly<{
 	runtime: number;
 	/** Requests left out for being past the limit. */
 	overLimit: number;
-	/** An estimate made before sending. */
+	/** A rough estimate made before sending. What the platform bills can differ. */
 	estimatedInputTokens: number;
 	/** What the vendor counted. */
 	inputTokens: number;
@@ -142,7 +143,7 @@ function describeAsk(jev: AskTotals): ReadonlyArray<string> {
 	const state = jev.state ? ' State is sent.' : '';
 	const said = jev.sent
 		? `${asSubject(jev.answerer)} answered ${jev.answered} of ${requests} on ${jev.model}, ${jev.inputTokens} input tokens.`
-		: `--ask would send ${requests} to ${jev.vendor} on ${jev.model}, about ${jev.estimatedInputTokens} input tokens.${state}`;
+		: `--ask would send ${requests} to ${jev.vendor} on ${jev.model}, roughly ${roughTokens(jev.estimatedInputTokens)} input tokens.${state}`;
 	const held = heldBack(jev);
 	return held ? [said, held] : [said];
 }

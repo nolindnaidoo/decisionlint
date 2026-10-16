@@ -15,6 +15,8 @@ under what Luna billed and an eighth under d1, because it counted the
 request before it was put in the platform's shape and assumed Jev's
 characters per token for every model. It now counts the body that is sent
 and, for any model but Jev, the lowest ratio measured.
+Every surface shows it as roughly, rounded up to two figures: "roughly
+11,000 input tokens" where it said "about 10289".
 
 ## 1.0.0 — 2026-10-14
 

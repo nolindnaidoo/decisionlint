@@ -1879,7 +1879,7 @@ describe('checking with Jev', () => {
 		});
 		const text = await cli(['--ask-plan', '.'], { 'a.ts': VAGUE });
 		expect(text.out).toMatch(
-			/--ask would send 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\./,
+			/--ask would send 1 request to TypeSafe on jev-1\.13\.0, roughly [\d,]+ input tokens\./,
 		);
 	});
 
@@ -1960,7 +1960,7 @@ describe('checking with Jev', () => {
 			'Jev answered 1 of 1 request on jev-1.13.0, 310 input tokens.',
 		);
 		expect(result.err).toMatch(
-			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\. State is not sent\.\n$/,
+			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.13\.0, roughly [\d,]+ input tokens\. State is not sent\.\n$/,
 		);
 	});
 

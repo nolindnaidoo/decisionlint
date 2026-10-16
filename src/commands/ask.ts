@@ -7,6 +7,7 @@ import {
 	providerFor,
 	providerForTarget,
 } from '../ask/provider';
+import { roughTokens } from '../ask/review';
 import type { Configuration } from '../config/config';
 import { targetById } from '../lint/targets';
 import type { Resolved } from '../services/projectConfigs';
@@ -207,7 +208,7 @@ function ask(plan: ReviewPlan, provider: Provider): Prompt {
 			? `${provider.vendor} publishes no price this tool has read`
 			: cents < 1
 				? 'under 1¢'
-				: `about ${Math.ceil(cents)}¢`;
+				: `roughly ${Math.ceil(cents)}¢`;
 	const state = plan.sendsState
 		? 'Your state is sent too.'
 		: 'Your state is not sent.';
@@ -218,7 +219,7 @@ function ask(plan: ReviewPlan, provider: Provider): Prompt {
 	return {
 		message: `Send ${plural(plan.requests, 'request')} to ${provider.vendor}?`,
 		detail: [
-			`About ${plan.inputTokens.toLocaleString('en-US')} tokens, ${cost}. ${state}`,
+			`Roughly ${roughTokens(plan.inputTokens)} tokens, ${cost}. ${state}`,
 			...(skipped.length ? [`Skipped: ${skipped.join(', ')}.`] : []),
 		].join('\n'),
 	};

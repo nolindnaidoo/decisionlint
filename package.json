@@ -1,10 +1,10 @@
 {
   "name": "decisionlint",
   "publisher": "nolindnaidoo",
-  "displayName": "DecisionLint",
-  "description": "Lint the questions you send to a decision model, TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna) or any platform that serves one: OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. No API key and no network calls. One command asks the model itself to check a file.",
+  "displayName": "DecisionLint: Jev/Luna Lint",
+  "description": "Lint Jev and Luna decision-model questions. TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna), OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. Works offline with no API key, and one command asks the model itself to check a file.",
   "icon": "src/assets/images/icon.png",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "license": "MIT",
   "author": {
@@ -26,7 +26,7 @@
   "categories": [
     "Linters"
   ],
-  "keywords": ["decisionlint", "decision lint", "decision linter", "decision model", "decision model linter", "decisions api", "openai decisions", "gpt-6-luna", "luna", "openai", "typesafe", "jev", "jevlint", "jev linter", "system one", "openrouter", "vercel ai gateway", "ai gateway", "litellm", "llm gateway", "eden ai", "liquid ai", "liquid d1", "microsoft decision-1", "cloudflare", "llama.cpp", "vllm", "ollaya", "noul", "predicate", "choice", "score", "questions", "prompt lint", "lint", "linter", "python", "typescript", "javascript", "rust", "go", "json", "mcp", "cli", "ci"],
+  "keywords": ["jev", "luna", "jev lint", "luna lint", "jev linter", "luna linter", "jevlint", "lunalint", "gpt-6-luna", "typesafe", "openai decisions", "decisions api", "decision model", "decision model linter", "decisionlint", "decision lint", "system one", "lint", "linter", "openai", "openrouter", "vercel ai gateway", "litellm", "llm gateway", "liquid ai", "eden ai", "llama.cpp", "mcp", "prompt lint"],
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:json",
@@ -346,6 +346,7 @@
     "test:e2e-vsix": "node scripts/e2e-vsix.js",
     "validate": "bun scripts/validate-defects.ts",
     "docs:rules": "bun scripts/build-rule-docs.ts",
+    "docs:cutoffs": "bun scripts/build-cutoffs.ts",
     "check:jev-release": "bun scripts/check-jev-release.ts",
     "cli": "bun run build:npm && node npm/cli.js",
     "test:cli": "bun run build:npm && node scripts/e2e-cli.js",

@@ -12,15 +12,26 @@
  *   bun scripts/calibrate-reviews.ts --dry-run
  *   doppler run -- bun scripts/calibrate-reviews.ts
  *   bun scripts/calibrate-reviews.ts --report     read calibration.json, no calls
+ *   doppler run -- bun scripts/calibrate-reviews.ts --model gpt-6-luna
+ *   doppler run -- bun scripts/calibrate-reviews.ts --platform openrouter
+ *
+ * `--platform` sends to a row of `TARGETS` on its default model, and
+ * `--model` alone to the platform its spelling names. The key is read from
+ * that platform's variable. Every pair but TypeSafe on `DEFAULT_MODEL` is
+ * saved to its own file, because a probability is only true of the model
+ * and route that gave it, and a file per pair keeps a gateway's Jev
+ * comparable with TypeSafe's.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { ask, type Fetch, isFailure } from '../src/ask/client';
 import type { QuestionLiteral } from '../src/ask/literal';
+import { type Provider, providerFor, providerForTarget } from '../src/ask/provider';
 import { DEFAULT_MODEL } from '../src/ask/review';
+import { CHECKS, calibrationFile, cutoffOf, readingsOf } from '../src/docs/calibration';
+import { TARGET_IDS, targetById } from '../src/lint/targets';
 import {
 	buildRequest,
 	buildRequestReview,
-	REQUEST_REVIEWS,
 	REVIEWS,
 	type ReviewRequest,
 } from '../src/ask/reviews';
@@ -44,16 +55,31 @@ type Saved = {
 type Job = { id: string; request: ReviewRequest };
 type Reading = { id: string; p: number };
 
-// The wording defect each check is the meaning-reading version of. Others are labeled by their own code.
-const LABEL: Record<string, string> = { DEC301: 'DEC102', DEC302: 'DEC112' };
-const MODEL = DEFAULT_MODEL;
+const flag = (name: string): string | undefined => {
+	const at = process.argv.indexOf(name);
+	return at === -1 ? undefined : process.argv[at + 1];
+};
+const platform = flag('--platform');
+const target = platform === undefined ? undefined : targetById(platform);
+if (platform !== undefined && !target) {
+	console.error(`'${platform}' is not a platform. The ids are ${TARGET_IDS.join(', ')}.`);
+	process.exit(1);
+}
+const MODEL = flag('--model') ?? target?.defaultModel ?? DEFAULT_MODEL;
+const routed = target ? providerForTarget(target, MODEL) : providerFor(MODEL);
+if (typeof routed === 'string') {
+	console.error(routed);
+	process.exit(1);
+}
+const provider: Provider = routed;
 const MAX_CALLS = 400;
+const fileName = calibrationFile(provider.slot, MODEL);
 
 const load = <T>(name: string): T =>
 	JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), 'utf8'));
 const corpus = load<Entry[]>('corpus/questions.json');
 const requests = load<RequestEntry[]>('corpus/requests.json');
-const out = new URL('../fixtures/validation/calibration.json', import.meta.url);
+const out = new URL(`../fixtures/validation/${fileName}`, import.meta.url);
 const saved: Saved = existsSync(out)
 	? JSON.parse(readFileSync(out, 'utf8'))
 	: { ranOn: '', model: '', calls: 0, inputTokens: 0, probabilities: {} };
@@ -103,10 +129,14 @@ async function collect(key: string, list: Job[]): Promise<void> {
 		if (calls >= MAX_CALLS) throw new Error(`stopped at ${MAX_CALLS} calls`);
 		calls += 1;
 		const reply = await ask(
-			{ fetch: fetch as unknown as Fetch, key, wait: (ms) => new Promise((r) => setTimeout(r, ms)) },
+			{ fetch: fetch as unknown as Fetch, key, provider, wait: (ms) => new Promise((r) => setTimeout(r, ms)) },
 			job.request,
 		);
-		if (isFailure(reply)) throw new Error(`${job.id}: ${reply.kind} ${reply.detail}`);
+		// Saved before failing, so a run stopped part way keeps what it paid for.
+		if (isFailure(reply)) {
+			writeFileSync(out, `${JSON.stringify(saved, null, 1)}\n`);
+			throw new Error(`${job.id}: ${reply.kind} ${reply.detail}`);
+		}
 		saved.model = reply.model;
 		saved.inputTokens += reply.inputTokens;
 		saved.probabilities[job.id] = {
@@ -131,58 +161,23 @@ function show(code: string, bad: Reading[], good: Reading[]): void {
 }
 
 function report(): void {
-	const at = (id: string, code: string) => saved.probabilities[id]?.[code];
-	const read = (ids: string[], code: string): Reading[] =>
-		ids.flatMap((id) => {
-			const p = at(id, code);
-			return p === undefined ? [] : [{ id, p }];
-		});
-	for (const review of REVIEWS.filter((r) => r.code !== 'DEC311')) {
-		const label = LABEL[review.code] ?? review.code;
-		show(
-			review.code,
-			read(corpus.filter((e) => e.defects.includes(label)).map((e) => e.id), review.code),
-			read(corpus.filter((e) => !e.defects.length).map((e) => e.id), review.code),
-		);
+	for (const code of CHECKS) {
+		const { bad, good } = readingsOf(code, saved, corpus, requests);
+		show(code, [...bad], [...good]);
 	}
-	const pairs = requests.flatMap((entry) => {
-		const ids = Object.keys(entry.questions);
-		return Object.entries(saved.probabilities[entry.id] ?? {}).flatMap(([code, p]) => {
-			const match = /^DEC310\.(\d+)\.(\d+)$/.exec(code);
-			if (!match) return [];
-			const a = ids[Number(match[1])] as string;
-			const b = ids[Number(match[2])] as string;
-			const bad = entry.overlapping.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
-			return [{ id: `${entry.id}:${a}+${b}`, p, bad }];
-		});
-	});
-	show('DEC310', pairs.filter((x) => x.bad), pairs.filter((x) => !x.bad));
-	const stated = requests.filter((entry) => entry.state !== undefined);
-	const perQuestion = stated.flatMap((entry) =>
-		Object.keys(entry.questions).flatMap((id) => {
-			const p = at(`${entry.id}/${id}`, 'DEC311');
-			return p === undefined ? [] : [{ id: `${entry.id}/${id}`, p, bad: (entry.missing ?? []).includes(id) }];
-		}),
-	);
-	show('DEC311', perQuestion.filter((x) => x.bad), perQuestion.filter((x) => !x.bad));
-	const orders = stated.flatMap((entry) => {
-		const p = at(entry.id, 'DEC312');
-		return p === undefined ? [] : [{ id: entry.id, p, bad: Boolean(entry.injected) }];
-	});
-	show('DEC312', orders.filter((x) => x.bad), orders.filter((x) => !x.bad));
-	console.log(`\ncutoffs in code: ${[...REVIEWS.map((r) => `${r.code} ${r.cutoff}`), `DEC310 ${REQUEST_REVIEWS.DEC310.cutoff}`, `DEC312 ${REQUEST_REVIEWS.DEC312.cutoff}`].join(', ')}`);
+	console.log(`\ncutoffs in code: ${CHECKS.map((code) => `${code} ${cutoffOf(code)}`).join(', ')}`);
 }
 
 async function main(): Promise<void> {
 	if (process.argv.includes('--report')) return report();
 	const list = jobs();
 	if (process.argv.includes('--dry-run')) {
-		console.log(`Dry run: ${list.length} calls would be made. Nothing was sent.`);
+		console.log(`Dry run: ${list.length} calls to ${provider.vendor} on ${MODEL} would be made, saved to ${fileName}. Nothing was sent.`);
 		return;
 	}
-	const key = process.env.TYPESAFE_API_KEY;
+	const key = process.env[provider.envKey];
 	if (!key) {
-		console.error('TYPESAFE_API_KEY is not set. Run under `doppler run --`, or pass --dry-run.');
+		console.error(`${provider.envKey} is not set. Run under \`doppler run --\`, or pass --dry-run.`);
 		process.exit(1);
 	}
 	await collect(key, list);

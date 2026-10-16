@@ -1879,7 +1879,7 @@ describe('checking with Jev', () => {
 		});
 		const text = await cli(['--ask-plan', '.'], { 'a.ts': VAGUE });
 		expect(text.out).toMatch(
-			/--ask would send 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\./,
+			/--ask would send 1 request to TypeSafe on jev-1\.13\.0, roughly [\d,]+ input tokens\./,
 		);
 	});
 
@@ -1960,7 +1960,7 @@ describe('checking with Jev', () => {
 			'Jev answered 1 of 1 request on jev-1.13.0, 310 input tokens.',
 		);
 		expect(result.err).toMatch(
-			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.13\.0, about \d+ input tokens\. State is not sent\.\n$/,
+			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.13\.0, roughly [\d,]+ input tokens\. State is not sent\.\n$/,
 		);
 	});
 
@@ -2525,6 +2525,52 @@ describe('where --ask-platform sends', () => {
 		expect(calls(fetch)[0]?.body.model).toBe('typesafe/jev-1.13');
 		expect(result.err).toMatch(
 			/Sending 1 request to OpenRouter on typesafe\/jev-1\.13/,
+		);
+	});
+
+	it('drops the cutoff caveat only on a route measured to answer as the calibrated Jev', async () => {
+		const measured = await cli(
+			['--ask', '--ask-platform', 'openrouter', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ DEC302: { noul: 0.91 } }), {
+				OPENROUTER_API_KEY: 'or-key',
+			}),
+		);
+		expect(measured.out).toContain('(Jev put this at 0.91.)');
+		expect(measured.out).not.toContain('The cutoff was set on');
+
+		const unmeasured = await cli(
+			['--ask', '--ask-platform', 'liquid', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ DEC302: { noul: 0.91 } }), { LIQUID_API_KEY: 'lq-key' }),
+		);
+		expect(unmeasured.out).toContain(
+			'The cutoff was set on jev-1.13.0, not on',
+		);
+
+		// The calibrated id, asked in the Decisions shape, which moves Jev's answers.
+		const reshaped = await cli(
+			['--ask', '--ask-platform', 'llmgateway', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(
+				vi.fn(async () => ({
+					ok: true,
+					status: 200,
+					json: async () => ({
+						model: 'typesafe/jev-1.13.0',
+						answers: [{ type: 'predicate', name: 'DEC302', probability: 0.91 }],
+						usage: { input_tokens: 10 },
+					}),
+					text: async () => '',
+				})) as unknown as Sent,
+				{ LLM_GATEWAY_API_KEY: 'lg-key' },
+			),
+		);
+		expect(reshaped.out).toContain(
+			'The cutoff was set on jev-1.13.0 at TypeSafe, not through LLM Gateway.',
 		);
 	});
 

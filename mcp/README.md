@@ -17,7 +17,8 @@
 
 ![An agent in Claude Code linting a request through the MCP server and listing its three findings](https://raw.githubusercontent.com/nolindnaidoo/decisionlint/main/assets/demos/mcp.gif)
 
-An [MCP](https://modelcontextprotocol.io) server that lints the questions a
+Lint Jev and Luna questions from your agent. An
+[MCP](https://modelcontextprotocol.io) server that lints the questions a
 project sends to TypeSafe's Jev model or to OpenAI's Decisions API
 (`gpt-6-luna`) before they are sent, and mends the ones it can. It is the
 engine behind the [DecisionLint](https://letools.dev/tools/decisionlint) editor

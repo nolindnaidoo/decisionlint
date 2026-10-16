@@ -1,9 +1,13 @@
 {
   "name": "decisionlint-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "mcpName": "io.github.nolindnaidoo/decisionlint",
-  "description": "Lint questions for Jev, Luna and any decision-model platform, or ask the model with your key.",
+  "description": "Lint Jev and Luna decision-model questions, or ask the model to check them with your key.",
   "keywords": [
+    "jev-lint",
+    "luna-lint",
+    "jevlint",
+    "lunalint",
     "mcp",
     "modelcontextprotocol",
     "model-context-protocol",

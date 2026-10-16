@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.0.1 — 2026-10-16
+
+**OpenRouter's Jev is counted as calibrated.** A check asked of
+`typesafe/jev-1.13` on OpenRouter no longer ends its findings with "The
+cutoff was set on jev-1.13.0". Run over the whole calibration set, it
+answered within 0.009 of TypeSafe on average. Luna and Liquid's `d1` were run
+over the same set and keep Jev's cutoffs and the caveat, because those
+cutoffs still catch most defects there and the set is too small to fit
+cutoffs of their own.
+
+**Jev asked in OpenAI's shape is no longer counted as calibrated.** Through
+LLM Gateway or Vercel, Jev is sent the Decisions shape, and its answers moved
+by 0.033 on average and flipped 8 of 1114 verdicts. A finding there now says
+"The cutoff was set on jev-1.13.0 at TypeSafe, not through LLM Gateway."
+
+**The listing leads with Jev and Luna.** The Marketplace and Open VSX name
+is "DecisionLint: Jev/Luna Lint", and the description and the npm
+description open with "Lint Jev and Luna decision-model questions", where a
+search result's card has room for about forty characters. The keywords are
+cut from 44 to 29 that someone would search for. The READMEs, the GitHub
+Action, the pre-commit hook, both npm packages and the MCP registry entry
+lead with the same words.
+
+**The cutoffs are published, with how they hold up on every platform.**
+[docs/cutoffs.md](docs/cutoffs.md) lists each model-backed check's cutoff,
+how many known defects it caught and how many good questions it flagged on
+Jev, Luna and d1, and how far each platform's answers sit from the same
+model elsewhere. It is written from the saved runs. The README has a section
+on where the checks have been tested, and every rule page links the table.
+
+**The cost shown before a check no longer comes in low.** It was a third
+under what Luna billed and an eighth under d1, because it counted the
+request before it was put in the platform's shape and assumed Jev's
+characters per token for every model. It now counts the body that is sent
+and, for any model but Jev, the lowest ratio measured.
+Every surface shows it as roughly, rounded up to two figures: "roughly
+11,000 input tokens" where it said "about 10289".
+
 ## 1.0.0 — 2026-10-14
 
 **JevLint-LE is DecisionLint.** It lints the questions sent to any

@@ -1,8 +1,9 @@
 # DecisionLint
 
-Lint the questions you send to a decision model: TypeSafe's Jev, OpenAI's
-Decisions API, and every platform that serves either shape, from OpenRouter
-and Vercel AI Gateway to a llama.cpp on your own machine. DecisionLint reads
+Lint Jev and Luna questions before you send them. DecisionLint checks the
+questions you write for a decision model: TypeSafe's Jev, OpenAI's Decisions
+API (`gpt-6-luna`), and every platform that serves either shape, from
+OpenRouter and Vercel AI Gateway to a llama.cpp on your own machine. DecisionLint reads
 them out of your JSON and your code, and reports the ones written in a way
 that is measured to produce bad answers. Linting makes no API calls and needs
 no key. One optional command asks the model itself to check a file, using
@@ -160,12 +161,12 @@ covers, exactly:
   reshape fix is Jev-only.
 - **Asking Luna.** Run **Ask Luna About This File**, or pass
   `--ask-platform openai`, with an OpenAI key. The next section says how.
-- **Measured on Jev, not yet on Luna.** Every default in these rules was
-  set by measuring what the defect costs `jev-1.13.0`. Luna has not been
-  measured, so on a Luna question they are the same rules with Jev's
-  defaults, and every finding from asking Luna says its cutoff was set on
-  Jev. The request sent to Luna follows OpenAI's API reference and has not
-  yet been run against the live API. Both wait on a key.
+- **Calibrated on Jev, measured on Luna.** Every default in these rules was
+  set by measuring what the defect costs `jev-1.13.0`. The checks were run
+  on Luna through the live API on 2026-10-16. Jev's cutoffs catch most
+  defects there but miss more, so Luna keeps them, and every finding from
+  asking Luna says its cutoff was set on Jev. What the wording rules cost
+  Luna is not measured yet.
 
 ## Every platform
 
@@ -212,6 +213,30 @@ Three things follow from the table:
 unrelated projects that reimplement `/v1/systemone`; the one llama.cpp
 serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 
+## Where it has been tested
+
+Every platform below was sent real requests through its live API, and the
+model-backed checks were run over the whole calibration set on each:
+
+- TypeSafe, `jev-1.13.0`, where the cutoffs were set.
+- OpenRouter, `typesafe/jev-1.13`. It answers as TypeSafe does, so its
+  findings are treated as calibrated.
+- LLM Gateway, `jev-1.13.0`, and Vercel AI Gateway, `typesafe-ai/jev`. Both
+  are sent OpenAI's shape, which moves Jev's answers a little, so their
+  findings say the cutoff was set at TypeSafe.
+- OpenAI, `gpt-6-luna`, and Vercel AI Gateway, `openai/gpt-6-luna-decisions`,
+  which answers as OpenAI does.
+- Liquid AI, `d1`.
+
+Luna and d1 keep Jev's cutoffs. They catch most defects on both, miss more
+than on Jev, and every finding from them says where its cutoff was set.
+[docs/cutoffs.md](docs/cutoffs.md) has each cutoff, how many known
+defects it caught and how many good questions it flagged on each model, and
+how far each platform's answers sit from the same model elsewhere. It is
+written from the saved runs, so its numbers are the runs' own. The samples
+are small, so treat them as rough evidence. LiteLLM, Eden AI and llama.cpp
+have not been run yet.
+
 ## Ask a model about a file
 
 Rules `DEC301` to `DEC312` are not part of linting. They run only when you run
@@ -244,8 +269,9 @@ There is one command per platform, and each has its own key:
 
 The model each command sends is `decisionlint.ask.models`, by platform.
 The TypeSafe default is the version the checks' cutoffs were set on, and a
-finding from any other model, Luna included, says so until that model is
-measured the same way. The probe asks Jev at TypeSafe, with the TypeSafe
+finding from any other model, Luna included, says so. OpenRouter's
+`typesafe/jev-1.13` was measured to answer as that version does, so its
+findings do not. The probe asks Jev at TypeSafe, with the TypeSafe
 key and model.
 
 **For a platform you host**, a llama.cpp, vLLM, LiteLLM or Ollaya, set
@@ -262,9 +288,10 @@ your key at a host of its choosing.
 What to know before you run it:
 
 - **It uses your key and your credits.** One request per question and one more
-  per request body, about 800 input tokens each. At TypeSafe's published price
-  that is roughly three thousandths of a cent per question, and at OpenAI's
-  about a hundredth of a cent.
+  per request body, roughly 800 input tokens each on Jev and twice that on
+  Luna. At TypeSafe's published price that is a few thousandths of a cent
+  per question, and at OpenAI's one or two hundredths. The count shown before
+  sending is an estimate, rounded up, and what the platform bills can differ.
 - **Only questions are sent**: type, instructions, criteria and ids. Your
   `state` is not, unless you turn on `decisionlint.ask.sendState`. With that on,
   a state written out in the file is sent too, and two more checks run: does
@@ -389,7 +416,7 @@ Jev, and it never uses the network, unless you pass `--ask`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/decisionlint@v1.0.0
+- uses: nolindnaidoo/decisionlint@v1.0.1
   with:
     paths: src
 ```
@@ -411,7 +438,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/decisionlint
-  rev: v1.0.0
+  rev: v1.0.1
   hooks:
     - id: decisionlint
 ```

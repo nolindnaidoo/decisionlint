@@ -51,7 +51,7 @@ export type ReviewSettings = Readonly<{
 /** What a run would send, worked out before anything is sent. */
 export type ReviewPlan = Readonly<{
 	requests: number;
-	/** An estimate. See `CHARS_PER_TOKEN`. */
+	/** An estimate. See `estimateTokens`. */
 	inputTokens: number;
 	/** Questions with a part built at runtime. Jev is never shown a question with holes. */
 	unreadable: number;
@@ -107,9 +107,33 @@ const REVIEW_CODES: ReadonlyArray<RuleCode> = [
 	'DEC312',
 ];
 
-// Measured once: the calibration run's request bodies came to about 2.2
-// characters per input token. Two is used so the estimate errs high.
-const CHARS_PER_TOKEN = 2;
+// Characters of the body on the wire per input token the platform billed,
+// over each 304-call calibration run on 2026-10-16: Jev 2.2 at TypeSafe and
+// 2.47 to 2.79 through the gateways, d1 2.37, Luna 1.67. Each is rounded down
+// so the estimate errs high. A model never measured gets Luna's, the lowest.
+const CHARS_PER_TOKEN: ReadonlyMap<string, number> = new Map([['Jev', 2]]);
+const UNMEASURED_CHARS_PER_TOKEN = 1.5;
+
+/**
+ * An estimate as it is shown: rounded up to two significant figures, so five
+ * digits do not read as a measurement and the figure still errs high.
+ */
+export function roughTokens(estimate: number): string {
+	const digits = Math.floor(Math.log10(Math.max(estimate, 1))) + 1;
+	const step = 10 ** Math.max(0, digits - 2);
+	return (Math.ceil(estimate / step) * step).toLocaleString('en-US');
+}
+
+/** Input tokens for a request as `provider` sends it. */
+export function estimateTokens(
+	request: ReviewRequest,
+	provider: Provider,
+): number {
+	const chars = JSON.stringify(provider.toBody(request)).length;
+	const ratio =
+		CHARS_PER_TOKEN.get(provider.model) ?? UNMEASURED_CHARS_PER_TOKEN;
+	return chars / ratio;
+}
 
 function enabledReviews(lint: LintOptions): ReadonlySet<string> {
 	return new Set(
@@ -141,7 +165,10 @@ function rated(
 	provider: Provider,
 ): string {
 	const number = `(${asSubject(provider.model)} put this at ${probability.toFixed(2)}.)`;
-	if (isCalibrated(request.model)) return number;
+	if (isCalibrated(request.model, provider)) return number;
+	// The same id by another route differs only in how it was reached.
+	if (request.model === DEFAULT_MODEL)
+		return `${number} The cutoff was set on ${DEFAULT_MODEL} at TypeSafe, not through ${provider.vendor}.`;
 	// Another Jev is still Jev by name, so only its version tells the two apart.
 	const asked = provider.model === 'Jev' ? request.model : provider.model;
 	return `${number} The cutoff was set on ${DEFAULT_MODEL}, not on ${asked}.`;
@@ -273,13 +300,13 @@ export function planReview(
 	settings: ReviewSettings,
 ): ReviewPlan {
 	const prepared = prepare(text, settings, syntax);
-	const chars = prepared.jobs.reduce(
-		(sum, job) => sum + JSON.stringify(job.request).length,
+	const tokens = prepared.jobs.reduce(
+		(sum, job) => sum + estimateTokens(job.request, settings.provider),
 		0,
 	);
 	return {
 		requests: prepared.jobs.length,
-		inputTokens: Math.ceil(chars / CHARS_PER_TOKEN),
+		inputTokens: Math.ceil(tokens),
 		unreadable: prepared.unreadable,
 		overLimit: prepared.overLimit,
 		sendsState: prepared.sendsState,

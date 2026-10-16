@@ -1,8 +1,8 @@
 {
 	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
 	"name": "io.github.nolindnaidoo/decisionlint",
-	"title": "DecisionLint",
-	"description": "Lint questions for Jev, Luna and any decision-model platform, or ask the model with your key.",
+	"title": "DecisionLint: Jev/Luna Lint",
+	"description": "Lint Jev and Luna decision-model questions, or ask the model to check them with your key.",
 	"websiteUrl": "https://letools.dev/tools/decisionlint",
 	"icons": [
 		{
@@ -17,13 +17,13 @@
 		"url": "https://github.com/nolindnaidoo/decisionlint",
 		"source": "github"
 	},
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"packages": [
 		{
 			"registryType": "npm",
 			"registryBaseUrl": "https://registry.npmjs.org",
 			"identifier": "decisionlint-mcp",
-			"version": "1.0.0",
+			"version": "1.0.1",
 			"runtimeHint": "npx",
 			"transport": {
 				"type": "stdio"

@@ -222,7 +222,9 @@ const ASK_TOTALS_SCHEMA = Object.freeze({
 			'Questions with a part built at runtime, which the model is never shown.',
 		),
 		overLimit: integer('Requests left out for being past maxCalls.'),
-		estimatedInputTokens: integer('An estimate made before sending.'),
+		estimatedInputTokens: integer(
+			'A rough estimate made before sending, meant to err high. What the platform bills can differ.',
+		),
 		inputTokens: integer('What the vendor counted.'),
 		model: { type: 'string' },
 		vendor: {

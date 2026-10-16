@@ -607,6 +607,13 @@ family's files, copied unchanged from `regex-le`.
 - **A Jev check's cutoff is read from `fixtures/validation/calibration.json`,**
   never guessed. `reviews.test.ts` fails if a cutoff would flag a good corpus
   question. Rerun `scripts/calibrate-reviews.ts` when the model changes.
+  Another platform or model is run with `--platform` or `--model` and saved
+  beside it as `calibration-<platform>-<model>.json`. A route joins
+  `MEASURED_ROUTES` in `ask/provider.ts` only from such a file that answers
+  as `MEASURED_ON` does, and never by its spelling.
+- **A dry run of a paid script proves nothing about its sending.** It stops
+  before the first call. The provider refactor left `calibrate-reviews.ts`
+  calling `ask()` with no provider while `--dry-run` kept passing.
 - **The command line refuses where passing would mislead.** An unknown option,
   a named file of a type it does not read, a config key it does not know and
   a run that found nothing to read all exit 2. Never turn one into a warning.
@@ -647,6 +654,13 @@ family's files, copied unchanged from `regex-le`.
   are imported into `docs/rulePages.ts`, so they ship inside the bundle and
   `explain_rule` renders the same page offline. A test holds the import to
   the file.
+- **The cutoffs page is generated, never edited.** `bun run docs:cutoffs`
+  writes `docs/cutoffs.md` from every `fixtures/validation/calibration*.json`,
+  through `src/docs/calibration.ts`, which `calibrate-reviews.ts --report`
+  reads too, so a check's bad and good examples are defined once.
+  `cutoffsPage.test.ts` fails when the page is stale, when a run is kept that
+  `ROUTES` does not list, and when the README's tested section leaves a route
+  out. Run it after every calibration run or cutoff change.
 - **A good example has nothing wrong with it.** The test runs every offline
   rule over each one. An example that trips a second rule teaches the wrong
   thing.

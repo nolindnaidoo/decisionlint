@@ -1,7 +1,7 @@
 # For https://pre-commit.com. In a project's .pre-commit-config.yaml:
 #
 #   - repo: https://github.com/nolindnaidoo/decisionlint
-#     rev: v1.0.0
+#     rev: v1.0.1
 #     hooks:
 #       - id: decisionlint
 #
@@ -10,8 +10,8 @@
 # to, and a test holds the two together.
 - id: decisionlint
   name: DecisionLint
-  description: Lint the questions written for a decision model. No API key and no network calls.
-  entry: npx --yes decisionlint@1.0.0 --no-error-on-unmatched-pattern
+  description: Lint Jev and Luna decision-model questions. No API key and no network calls.
+  entry: npx --yes decisionlint@1.0.1 --no-error-on-unmatched-pattern
   language: system
   files: \.(json|jsonc|js|jsx|mjs|cjs|ts|tsx|mts|cts|py|rs|go)$
 # The id JevLint-LE shipped with, so a project that bumps `rev` without
@@ -20,6 +20,6 @@
 - id: jevlint-le
   name: DecisionLint (as jevlint-le)
   description: The same hook under the name it had before 1.0.0.
-  entry: npx --yes decisionlint@1.0.0 --no-error-on-unmatched-pattern
+  entry: npx --yes decisionlint@1.0.1 --no-error-on-unmatched-pattern
   language: system
   files: \.(json|jsonc|js|jsx|mjs|cjs|ts|tsx|mts|cts|py|rs|go)$

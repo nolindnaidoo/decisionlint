@@ -75,7 +75,7 @@ if (typeof routed === 'string') {
 }
 const provider: Provider = routed;
 const MAX_CALLS = 400;
-// LLM Gateway spells Jev `jev-1.13.0` as TypeSafe does, so the platform is in the name too.
+// LLM Gateway spells Jev exactly as TypeSafe does, so the platform is in the name too.
 const fileName =
 	provider.slot === 'typesafe' && MODEL === DEFAULT_MODEL
 		? 'calibration.json'

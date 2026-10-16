@@ -1,7 +1,7 @@
 # decisionlint
 
-Lints the questions you write for TypeSafe's Jev model and for OpenAI's
-Decisions API (`gpt-6-luna`), before they are sent. Either model answers a
+Lint Jev and Luna questions before they are sent: the questions you write
+for TypeSafe's Jev model and for OpenAI's Decisions API (`gpt-6-luna`). Either model answers a
 badly written question as confidently as a good one, so the mistake shows up
 later as wrong answers. This finds it in the code.
 

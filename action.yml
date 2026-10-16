@@ -1,12 +1,12 @@
-# Lints the Jev questions in a repository and annotates the pull request.
+# Lints the Jev and Luna questions in a repository and annotates the pull request.
 #
 #   - uses: nolindnaidoo/decisionlint@v1.0.1
 #     with:
 #       paths: src
 #
 # The runner needs Node 20 or newer, which GitHub's hosted runners have.
-name: DecisionLint
-description: Lint the questions written for TypeSafe's Jev model. No API key and no network calls.
+name: 'DecisionLint: Jev/Luna Lint'
+description: Lint Jev and Luna decision-model questions and annotate the pull request. No API key and no network calls.
 author: Nolin Naidoo
 branding:
   icon: check-circle

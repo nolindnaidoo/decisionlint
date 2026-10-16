@@ -3,6 +3,9 @@
   "version": "1.0.1",
   "description": "Lint Jev and Luna decision-model questions. TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna), OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. A command line for CI and a library for the editor, with the MCP server behind --mcp; agent hosts install decisionlint-mcp instead. No API key and no network calls.",
   "keywords": [
+    "jev-lint",
+    "luna-lint",
+    "jevlint",
     "jev",
     "typesafe",
     "system-one",

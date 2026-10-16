@@ -19,7 +19,9 @@ by 0.033 on average and flipped 8 of 1114 verdicts. A finding there now says
 is "DecisionLint: Jev/Luna Lint", and the description and the npm
 description open with "Lint Jev and Luna decision-model questions", where a
 search result's card has room for about forty characters. The keywords are
-cut from 44 to 29 that someone would search for.
+cut from 44 to 29 that someone would search for. The READMEs, the GitHub
+Action, the pre-commit hook, both npm packages and the MCP registry entry
+lead with the same words.
 
 **The cutoffs are published, with how they hold up on every platform.**
 [docs/cutoffs.md](docs/cutoffs.md) lists each model-backed check's cutoff,

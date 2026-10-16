@@ -1,8 +1,9 @@
 # DecisionLint
 
-Lint the questions you send to a decision model: TypeSafe's Jev, OpenAI's
-Decisions API, and every platform that serves either shape, from OpenRouter
-and Vercel AI Gateway to a llama.cpp on your own machine. DecisionLint reads
+Lint Jev and Luna questions before you send them. DecisionLint checks the
+questions you write for a decision model: TypeSafe's Jev, OpenAI's Decisions
+API (`gpt-6-luna`), and every platform that serves either shape, from
+OpenRouter and Vercel AI Gateway to a llama.cpp on your own machine. DecisionLint reads
 them out of your JSON and your code, and reports the ones written in a way
 that is measured to produce bad answers. Linting makes no API calls and needs
 no key. One optional command asks the model itself to check a file, using

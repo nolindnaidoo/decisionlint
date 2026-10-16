@@ -1,5 +1,23 @@
 # decisionlint
 
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint">
+    <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
+  </a>
+  <a href="https://open-vsx.org/extension/nolindnaidoo/decisionlint">
+    <img src="https://img.shields.io/open-vsx/dt/nolindnaidoo/decisionlint?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
+  </a>
+  <a href="https://www.npmjs.com/package/decisionlint-mcp">
+    <img src="https://img.shields.io/npm/v/decisionlint-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="decisionlint-mcp on npm" />
+  </a>
+  <a href="https://letools.dev/tools/decisionlint">
+    <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
+  </a>
+  <a href="https://www.npmjs.com/package/decisionlint">
+    <img src="https://img.shields.io/npm/v/decisionlint?style=for-the-badge&label=CLI&color=blue&logo=npm" alt="decisionlint on npm" />
+  </a>
+</p>
+
 Lint Jev and Luna questions before they are sent: the questions you write
 for TypeSafe's Jev model and for OpenAI's Decisions API (`gpt-6-luna`). Either model answers a
 badly written question as confidently as a good one, so the mistake shows up

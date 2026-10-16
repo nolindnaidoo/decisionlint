@@ -1,4 +1,42 @@
-# DecisionLint
+<p align="center">
+  <img src="src/assets/images/icon.png" alt="DecisionLint Logo" width="96" height="96"/>
+</p>
+<h1 align="center">DecisionLint: Jev/Luna Lint</h1>
+<p align="center">
+  <b>Lint Jev and Luna decision-model questions before you send them</b><br/>
+  <i>JSON, JavaScript, TypeScript, Python, Rust and Go, for TypeSafe, OpenAI and every platform that serves either</i>
+</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint">
+    <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
+  </a>
+  <a href="https://open-vsx.org/extension/nolindnaidoo/decisionlint">
+    <img src="https://img.shields.io/open-vsx/dt/nolindnaidoo/decisionlint?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
+  </a>
+  <a href="https://www.npmjs.com/package/decisionlint-mcp">
+    <img src="https://img.shields.io/npm/v/decisionlint-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="decisionlint-mcp on npm" />
+  </a>
+  <a href="https://www.npmjs.com/package/decisionlint">
+    <img src="https://img.shields.io/npm/v/decisionlint?style=for-the-badge&label=CLI&color=blue&logo=npm" alt="decisionlint on npm" />
+  </a>
+  <a href="https://letools.dev/tools/decisionlint">
+    <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
+  </a>
+</p>
+
+---
+
+<p align="center">
+  <img src="assets/demos/editor.gif" alt="DecisionLint in VS Code: two findings explained on hover, then two fixed with a quick fix" style="max-width: 100%; height: auto;" />
+</p>
+
+> **Useful?** A star or rating is how other developers find it —
+> [★ GitHub](https://github.com/nolindnaidoo/decisionlint) ·
+> [★ Open VSX](https://open-vsx.org/extension/nolindnaidoo/decisionlint/reviews) ·
+> [★ Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint&ssr=false#review-details)
+
+## What it does
 
 Lint Jev and Luna questions before you send them. DecisionLint checks the
 questions you write for a decision model: TypeSafe's Jev, OpenAI's Decisions
@@ -8,21 +46,6 @@ them out of your JSON and your code, and reports the ones written in a way
 that is measured to produce bad answers. Linting makes no API calls and needs
 no key. One optional command asks the model itself to check a file, using
 your own key, at whichever platform you send it to.
-
-By the author of the LE tools.
-
-![DecisionLint in VS Code: two findings explained on hover, then two fixed with a quick fix](assets/demos/editor.gif)
-
-## Install
-
-- **VS Code:** search for DecisionLint in the Extensions view, or run
-  `ext install nolindnaidoo.decisionlint`.
-- **Cursor, VSCodium and other editors that use Open VSX:** the same name,
-  `nolindnaidoo.decisionlint`.
-- **Command line:** `npx decisionlint`. Nothing to install first.
-- **MCP server, for an agent host:** `npx -y decisionlint-mcp`.
-
-## At a glance
 
 - **Lints as you type** in JSON, JavaScript, TypeScript, Python, Rust and Go.
 - **Fixes on the lightbulb** for the mechanical mistakes, and a way to silence
@@ -63,6 +86,80 @@ A request like this one looks fine and has three problems:
 | `DEC001` on `jev-latest` | The alias moves with each release, so answers can change with no change on your side |
 | `DEC004` on `team` | A message about neither team is still forced into one of them |
 | `DEC102` on `late` | Jev does not count reliably. Ask about each parcel and count in code |
+
+## Install
+
+| Where | What you get | Install |
+|---|---|---|
+| **VS Code** | Linting as you type, fixes on the lightbulb, and the Ask and Probe commands | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.decisionlint) · `ext install nolindnaidoo.decisionlint` |
+| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/nolindnaidoo/decisionlint) |
+| **A terminal or a CI step** | The same rules over a whole tree, with exit codes, SARIF and JUnit | `npx decisionlint` · [npm](https://www.npmjs.com/package/decisionlint) |
+| **Any MCP agent, via Node** | Eight tools over stdio | `npx -y decisionlint-mcp` · [npm](https://www.npmjs.com/package/decisionlint-mcp) |
+
+## Use it from an AI agent
+
+The same program is an [MCP](https://modelcontextprotocol.io) server, so an
+agent that writes Jev or OpenAI Decisions questions can lint what it wrote and
+fix it before you see it. The tool descriptions and the server's instructions
+name both vendors and all three request shapes, so an agent knows to call it
+for any of them.
+
+| Editor | How |
+|---|---|
+| **VS Code** 1.101+ | Nothing to install. The extension offers the server to the editor, which starts it when an agent calls a tool |
+| **Claude Code** | `claude mcp add decisionlint -- npx -y decisionlint-mcp` |
+| **Cursor, Windsurf, anything else** | Point it at `npx -y decisionlint-mcp` |
+
+<p align="center">
+  <img src="assets/demos/mcp.gif" alt="An agent in Claude Code linting a request through the MCP server and listing its three findings" style="max-width: 100%; height: auto;" />
+</p>
+
+It offers eight tools. `lint_text` lints a request or source code passed as
+text and `lint_paths` lints files on disk, with each finding carrying the
+edit that would mend it. `fix_text` returns the text with the safe fixes
+applied and the report of what is left, and writes nothing. `list_rules`
+lists every rule with what it means, and `explain_rule` returns a rule's own
+page, with an example that is flagged and one that is not. Those send
+nothing and need no key.
+
+The other three are the editor's **Ask** commands and **Probe**
+for an agent. `ask_model` asks Jev, or Luna with `model: gpt-6-luna`,
+to check the questions in text or in files, and returns the lint report with
+the model's findings added. `plan_ask` says what that would send, and sends
+nothing. `probe_question` sends one question with its layout varied and
+reports whether the answer held. The two that send use your key and cost
+money, and their descriptions tell an agent to call them only when you ask.
+The key is read from `TYPESAFE_API_KEY` or `OPENAI_API_KEY` in the
+environment the client started the server with, or from `.env.local` or
+`.env` in the directory it started it in, and never from a tool argument, so
+no key lands in an agent's transcript. Every tool answers as structured
+content beside the text, and none writes a file.
+
+It is listed on the MCP registry as `io.github.nolindnaidoo/decisionlint`,
+for a client that installs servers from there.
+
+<details>
+<summary><b>Configuring it by hand</b>: any host with an MCP config file</summary>
+
+Most hosts read a JSON config. Add one entry:
+
+```json
+{
+  "mcpServers": {
+    "decisionlint": { "command": "npx", "args": ["-y", "decisionlint-mcp"] }
+  }
+}
+```
+
+`-y` skips the install prompt on first run. To skip `npx` on every launch,
+install it once with `npm install -g decisionlint-mcp` and set `"command":
+"decisionlint-mcp"` instead.
+
+A project that already pins `decisionlint` for CI has the same server behind
+`npx decisionlint --mcp`. The package with no flag is the one to give a client,
+because `decisionlint` started bare is a linter that exits, not a server.
+
+</details>
 
 ## What it catches
 
@@ -311,6 +408,24 @@ Turn on `decisionlint.ask.confirm` and it first tells you how many requests it
 will make, roughly how many tokens and what that costs, and waits for a yes.
 It is off by default: running the command is the decision to send.
 
+## Probe a question
+
+Put the cursor in a question and run **DecisionLint: Probe the Jev Question at
+the Cursor**. It sends that question against the state written beside it,
+three times as written and then with the layout changed: options reversed,
+option names hidden, levels reversed, criteria removed. A report opens showing
+whether the answer moved.
+
+If the answer changes when only the order of the options changes, the
+question is not deciding it. If three identical requests disagree, the input
+is too close to call.
+
+It needs the state written out in the file, it sends that state, and it costs
+five or six requests.
+
+Nothing else in this extension uses the network. On the command line, only
+`--ask` does.
+
 ## Project settings
 
 Put a `decisionlint.json` in your project and the editor and the command line
@@ -339,10 +454,78 @@ To silence one finding, use the lightbulb: **Disable DEC004 for this line**
 or **for this file** writes the comment for you. Strict JSON has no comments,
 so there a finding is silenced with `ignore`.
 
-## Command line
+## What it will not tell you
+
+- **Whether a well-formed question is right on your data.** That needs labeled
+  examples and calls to Jev.
+- **Anything about a value it cannot see.** A question built from variables is
+  reported as unreadable and counted in the status bar. A file is never shown
+  as clean while part of it went unread.
+- **Everything about wording.** `DEC101` to `DEC112` are heuristics over
+  English text. A rule is on only where a badly written question cost answers
+  or confidence against Jev, in our runs or in someone else's, and it stays
+  on only while it is right on at least 9 of 10 of its findings on public
+  code it was not tuned against. Four that describe failure modes in
+  TypeSafe's docs, `DEC104`, `DEC107`, `DEC108` and `DEC111`, did not fail on
+  `jev-1.13.0` and are off. Switch any of them on in `decisionlint.rules`. Two
+  more were removed in 0.4.0 for being wrong every time they fired.
+- **Anything about a question that is not in English.**
+- **What a lone object lacks.** A `{ type, instructions }` outside a
+  `questions` map may be a template or half of a builder, so a missing
+  `criteria` is only reported inside a request.
+
+`DEC004` is informational because the advice behind it is conditional: add a
+fallback when the options might not cover every input. It fires on 9 of the 11
+Choice examples in TypeSafe's own docs. If your options are exhaustive, turn it
+off for that question.
+
+## Suppressing a finding
+
+In code:
+
+```ts
+// decisionlint-disable-next-line DEC004
+const side = { type: 'choice', instructions: 'Heads or tails?', criteria: { heads: null, tails: null } };
+```
+
+`decisionlint-disable-line` covers the same line and `decisionlint-disable` the whole file.
+Leave the code off to silence every rule.
+
+A comment that silences nothing is reported as `DEC010`, so one left behind
+after its finding was fixed cannot hide a new finding later.
+
+What was written for JevLint-LE still works: a `jevlint-le-disable` comment, and the `JEV` codes in a comment, in `rules` or in `ignore`, are read for ever. Every finding is written with the `DEC` code.
+
+## Fixing
+
+Some findings can be mended without a decision from you: a Noul criteria key
+written `yes` where the API takes `true`, a mistyped question type, criteria
+in the wrong shape. `npx decisionlint --fix` writes those, and the summary of
+any run says how many it would mend.
+
+In the editor, fix on save does the same:
+
+```json
+{ "editor.codeActionsOnSave": { "source.fixAll.decisionlint": "explicit" } }
+```
+
+Adding a fallback option and pinning a model change what a working request
+does, so they are never written for you. They stay on the lightbulb.
+
+JSON has no comments, so use the setting:
+
+```json
+{ "decisionlint.ignore": ["DEC004:side"] }
+```
+
+## The CLI
 
 The same linting runs outside the editor, for CI and for any editor that is
 not VS Code.
+
+<p align="center">
+  <img src="assets/demos/cli.gif" alt="The command line reporting three findings on a small request" style="max-width: 100%; height: auto;" />
+</p>
 
 ### One version for the editor and CI
 
@@ -372,8 +555,6 @@ tooltip.
 
 The **Ask** commands and the probe always run the extension's own
 code, whatever the project installs.
-
-![The command line reporting three findings on a small request](assets/demos/cli.gif)
 
 ```bash
 npx decisionlint src/                 # a directory, searched for files it reads
@@ -476,138 +657,7 @@ TYPESAFE_API_KEY=... npx decisionlint --ask src/    # send it
 - These findings are warnings or less by default, so they fail a run only
   when `--rule` raises one or `--max-warnings` is passed.
 
-## For AI agents
-
-The same program is an MCP server, so an agent that writes Jev or OpenAI
-Decisions questions can lint what it wrote and fix it before you see it. The
-tool descriptions and the server's instructions name both vendors and all
-three request shapes, so an agent knows to call it for any of them.
-
-Agents running inside VS Code get it with no setup: the extension offers the
-server to the editor, which starts it when an agent calls a tool. For any
-other client, point it at the server package:
-
-```json
-{
-  "mcpServers": {
-    "decisionlint": { "command": "npx", "args": ["-y", "decisionlint-mcp"] }
-  }
-}
-```
-
-![An agent in Claude Code linting a request through the MCP server and listing its three findings](assets/demos/mcp.gif)
-
-A project that already pins `decisionlint` for CI has the same server behind
-`npx decisionlint --mcp`. The package with no flag is the one to give a client,
-because `decisionlint` started bare is a linter that exits, not a server.
-
-It offers eight tools. `lint_text` lints a request or source code passed as
-text and `lint_paths` lints files on disk, with each finding carrying the
-edit that would mend it. `fix_text` returns the text with the safe fixes
-applied and the report of what is left, and writes nothing. `list_rules`
-lists every rule with what it means, and `explain_rule` returns a rule's own
-page, with an example that is flagged and one that is not. Those send
-nothing and need no key.
-
-The other three are the editor's **Ask** commands and **Probe**
-for an agent. `ask_model` asks Jev, or Luna with `model: gpt-6-luna`,
-to check the questions in text or in files, and returns the lint report with
-the model's findings added. `plan_ask` says what that would send, and sends
-nothing. `probe_question` sends one question with its layout varied and
-reports whether the answer held. The two that send use your key and cost
-money, and their descriptions tell an agent to call them only when you ask.
-The key is read from `TYPESAFE_API_KEY` or `OPENAI_API_KEY` in the
-environment the client started the server with, or from `.env.local` or
-`.env` in the directory it started it in, and never from a tool argument, so
-no key lands in an agent's transcript. Every tool answers as structured
-content beside the text, and none writes a file.
-
-It is listed on the MCP registry as `io.github.nolindnaidoo/decisionlint`,
-for a client that installs servers from there.
-
-## Probe a question
-
-Put the cursor in a question and run **DecisionLint: Probe the Jev Question at
-the Cursor**. It sends that question against the state written beside it,
-three times as written and then with the layout changed: options reversed,
-option names hidden, levels reversed, criteria removed. A report opens showing
-whether the answer moved.
-
-If the answer changes when only the order of the options changes, the
-question is not deciding it. If three identical requests disagree, the input
-is too close to call.
-
-It needs the state written out in the file, it sends that state, and it costs
-five or six requests.
-
-Nothing else in this extension uses the network. On the command line, only
-`--ask` does.
-
-## What it will not tell you
-
-- **Whether a well-formed question is right on your data.** That needs labeled
-  examples and calls to Jev.
-- **Anything about a value it cannot see.** A question built from variables is
-  reported as unreadable and counted in the status bar. A file is never shown
-  as clean while part of it went unread.
-- **Everything about wording.** `DEC101` to `DEC112` are heuristics over
-  English text. A rule is on only where a badly written question cost answers
-  or confidence against Jev, in our runs or in someone else's, and it stays
-  on only while it is right on at least 9 of 10 of its findings on public
-  code it was not tuned against. Four that describe failure modes in
-  TypeSafe's docs, `DEC104`, `DEC107`, `DEC108` and `DEC111`, did not fail on
-  `jev-1.13.0` and are off. Switch any of them on in `decisionlint.rules`. Two
-  more were removed in 0.4.0 for being wrong every time they fired.
-- **Anything about a question that is not in English.**
-- **What a lone object lacks.** A `{ type, instructions }` outside a
-  `questions` map may be a template or half of a builder, so a missing
-  `criteria` is only reported inside a request.
-
-`DEC004` is informational because the advice behind it is conditional: add a
-fallback when the options might not cover every input. It fires on 9 of the 11
-Choice examples in TypeSafe's own docs. If your options are exhaustive, turn it
-off for that question.
-
-## Suppressing a finding
-
-In code:
-
-```ts
-// decisionlint-disable-next-line DEC004
-const side = { type: 'choice', instructions: 'Heads or tails?', criteria: { heads: null, tails: null } };
-```
-
-`decisionlint-disable-line` covers the same line and `decisionlint-disable` the whole file.
-Leave the code off to silence every rule.
-
-A comment that silences nothing is reported as `DEC010`, so one left behind
-after its finding was fixed cannot hide a new finding later.
-
-What was written for JevLint-LE still works: a `jevlint-le-disable` comment, and the `JEV` codes in a comment, in `rules` or in `ignore`, are read for ever. Every finding is written with the `DEC` code.
-
-## Fixing
-
-Some findings can be mended without a decision from you: a Noul criteria key
-written `yes` where the API takes `true`, a mistyped question type, criteria
-in the wrong shape. `npx decisionlint --fix` writes those, and the summary of
-any run says how many it would mend.
-
-In the editor, fix on save does the same:
-
-```json
-{ "editor.codeActionsOnSave": { "source.fixAll.decisionlint": "explicit" } }
-```
-
-Adding a fallback option and pinning a model change what a working request
-does, so they are never written for you. They stay on the lightbulb.
-
-JSON has no comments, so use the setting:
-
-```json
-{ "decisionlint.ignore": ["DEC004:side"] }
-```
-
-## Keyboard shortcuts
+## Commands
 
 Every command can be given a shortcut. Open **Keyboard Shortcuts**, search for
 `DecisionLint`, and press the keys you want on any command in the list. None is
@@ -669,6 +719,38 @@ them you will not press by accident.
 | `decisionlint.maxFileSizeBytes` | `1000000` | Larger files are reported as skipped |
 | `decisionlint.notificationsLevel` | `important` | How much is said in notifications. `all` adds a summary after each command, and `silent` shows a message only when a command could not run. Findings always show in the editor |
 
+## Privacy & security
+
+- **Linting never uses the network.** The extension, the command line and the
+  MCP server lint with no key and send nothing. No telemetry is collected.
+- **Only the Ask commands, the probe, `--ask` and the two MCP tools that send
+  reach a platform**, with your key, and only when you run them. They send
+  questions, not your `state`, unless you turn on `decisionlint.ask.sendState`
+  or `--ask-send-state`. The probe sends the state written beside the question.
+- **Keys stay out of the repository.** The **Set ... API Key** commands store a
+  key in your operating system keychain. `decisionlint.ask.keys` and
+  `decisionlint.ask.endpoint` can only be set in your user settings, which are
+  left out of Settings Sync, so a repository cannot point your key at a host of
+  its choosing. The command line reads a key from its environment variable
+  only and never prints it.
+- **Untrusted workspaces cannot send.** The Ask commands are disabled there, and
+  a project's own copy of the linter is not loaded, because loading it runs
+  code from the workspace.
+- **The MCP server writes nothing**, and reads a key from the environment the
+  client started it with, or `.env.local` or `.env` in its directory, never
+  from a tool argument, so no key lands in an agent's transcript.
+
+## Documentation
+
+| What | Where |
+|---|---|
+| What the product is, and what is planned | [SPEC.md](SPEC.md) |
+| How it is built and held together: architecture, invariants, release | [AGENTS.md](AGENTS.md) |
+| Every rule, with an example that is flagged and one that is not | [docs/rules](docs/rules/README.md) |
+| Each cutoff, and what it caught on each model and platform | [docs/cutoffs.md](docs/cutoffs.md) |
+| What changed | [CHANGELOG.md](CHANGELOG.md) |
+| The tool's page, and the rest of the family | [letools.dev/tools/decisionlint](https://letools.dev/tools/decisionlint) |
+
 ## Development
 
 ```bash
@@ -684,6 +766,52 @@ bun run test:e2e-vsix      # the packaged VSIX in a clean profile
 what is planned. `samples/` is a workspace with planted mistakes, used by
 `bun run test:integration`, which drives a real VS Code.
 
+## More from the LE family
+
+Sixteen single-purpose tools for the work in front of every model. Each ships
+a Rust CLI and an MCP server. One page: **[letools.dev](https://letools.dev)**
+
+**Get it out**
+
+- **[String-LE](https://letools.dev/tools/string-le)** — Extract every string in a codebase, so a person can read them
+- **[Numbers-LE](https://letools.dev/tools/numbers-le)** — Extract every hardcoded number in a codebase, so a person can check them
+- **[Units-LE](https://letools.dev/tools/units-le)** — Extract every quantity with its unit, normalized, and refuse the ambiguous ones by name
+- **[Dates-LE](https://letools.dev/tools/dates-le)** — Extract every date and timestamp, and the exact instant each one resolves to
+- **[IDs-LE](https://letools.dev/tools/ids-le)** — Extract every UUID, ULID, NanoID, ObjectId and Snowflake, and decode the time inside
+- **[IPs-LE](https://letools.dev/tools/ips-le)** — Extract every IP address, CIDR block and MAC, normalized and classified by scope
+- **[URLs-LE](https://letools.dev/tools/urls-le)** — Extract every URL in a codebase, with its protocol and exact position
+- **[Paths-LE](https://letools.dev/tools/paths-le)** — Extract every file path in a codebase, and say whether it still points at anything
+- **[Colors-LE](https://letools.dev/tools/colors-le)** — Extract every color in a codebase, and say which ones are not in your palette
+
+**Check it**
+
+- **[Regex-LE](https://letools.dev/tools/regex-le)** — Find every regex in a codebase, and report which can be driven into catastrophic backtracking
+- **[Versions-LE](https://letools.dev/tools/versions-le)** — Find where one dependency is constrained differently across a repository's manifests
+- **[i18n-LE](https://letools.dev/tools/i18n-le)** — Identify the i18n library a project uses, then audit its catalogs by that library's rules
+- **[Scrape-LE](https://letools.dev/tools/scrape-le)** — Check whether a page is scrapeable before the scraper is written, and say when it cannot tell
+
+**Guard it**
+
+- **[Secrets-LE](https://letools.dev/tools/secrets-le)** — Find hardcoded credentials in a codebase, and never print one into the report
+- **[EnvSync-LE](https://letools.dev/tools/envsync-le)** — Compare the dotenv files in a tree, and say which keys are missing from which
+- **[Unicode-LE](https://letools.dev/tools/unicode-le)** — Find the Unicode that hides meaning — bidi controls, invisibles, homoglyphs, mixed scripts
+
+Each stands on its own: no shared crate, no published core. Where two of them
+agree, it is because the same answer was right twice.
+
+**Contact** — [nolindnaidoo.com](https://nolindnaidoo.com) · [GitHub](https://github.com/nolindnaidoo) · [LinkedIn](https://www.linkedin.com/in/nolindnaidoo/)
+
+## Also by nolindnaidoo
+
+**Rust** — pixelcoords and pixelactions are one loop: pixelcoords answers
+*where*, pixelactions *acts* there. Their own tools, their own voice — not
+part of the LE family.
+
+- **[pixelcoords](https://github.com/nolindnaidoo/pixelcoords)** — Freeze your screen, mark regions, get pixel-exact coordinates and crops
+  [pixelcoords.dev](https://pixelcoords.dev) · [crates.io](https://crates.io/crates/pixelcoords) · [docs.rs](https://docs.rs/pixelcoords)
+- **[pixelactions](https://github.com/nolindnaidoo/pixelactions)** — Consume human-verified coordinates, perform the interaction, confirm it landed
+  [pixelactions.dev](https://pixelactions.dev) · [crates.io](https://crates.io/crates/pixelactions) · [docs.rs](https://docs.rs/pixelactions)
+
 ## License
 
-MIT
+MIT © [nolindnaidoo](https://github.com/nolindnaidoo)

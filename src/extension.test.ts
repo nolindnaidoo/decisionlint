@@ -140,7 +140,7 @@ describe('configuration', () => {
 	it('lists every command and its id in the README, for binding to keys', () => {
 		const readme = readFileSync('README.md', 'utf8');
 		const section = readme.slice(
-			readme.indexOf('## Keyboard shortcuts'),
+			readme.indexOf('## Commands'),
 			readme.indexOf('## Settings'),
 		);
 		const missing = manifest.contributes.commands.filter(

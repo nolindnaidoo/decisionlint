@@ -6,8 +6,8 @@ badly written question as confidently as a good one, so the mistake shows up
 later as wrong answers. This finds it in the code.
 
 The rules and their defaults were set by measuring what each defect costs
-Jev. Luna has not been measured yet, so on a Luna question they are the same
-rules with Jev's defaults.
+Jev. Luna keeps Jev's cutoffs: they were run on Luna and catch most defects
+there, and a finding from Luna says its cutoff was set on Jev.
 
 ![The command line reporting three findings on a small request](https://raw.githubusercontent.com/nolindnaidoo/decisionlint/main/assets/demos/cli.gif)
 

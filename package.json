@@ -4,7 +4,7 @@
   "displayName": "DecisionLint",
   "description": "Lint the questions you send to a decision model, TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna) or any platform that serves one: OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. No API key and no network calls. One command asks the model itself to check a file.",
   "icon": "src/assets/images/icon.png",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "license": "MIT",
   "author": {

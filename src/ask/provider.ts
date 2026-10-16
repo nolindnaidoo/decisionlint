@@ -296,9 +296,17 @@ export function providerFor(
 	return fromTarget(target, shape, endpointFor, model);
 }
 
-/** True for the one version the cutoffs were set on. A finding from any other model, another Jev included, carries a caveat. */
-export function isCalibrated(model: string): boolean {
-	return model === MEASURED_ON;
+// Routes measured to answer as `MEASURED_ON` does at TypeSafe. OpenRouter's
+// pinned Jev differed by 0.009 on average over 1114 calibration pairs on
+// 2026-10-16, `fixtures/validation/calibration-openrouter-typesafe_jev-1.13.json`.
+const MEASURED_ROUTES: ReadonlyMap<string, string> = new Map([
+	['openrouter', 'typesafe/jev-1.13'],
+]);
+
+/** True for the version the cutoffs were set on, and for a route measured to answer as it does. A finding from any other model, another Jev included, carries a caveat. */
+export function isCalibrated(model: string, slot?: string): boolean {
+	if (model === MEASURED_ON) return true;
+	return slot !== undefined && MEASURED_ROUTES.get(slot) === model;
 }
 
 /** The model's name where it starts a sentence: "The model answered", "Jev answered". */

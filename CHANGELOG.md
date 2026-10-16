@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 — 2026-10-16
+
+**OpenRouter's Jev is counted as calibrated.** A check asked of
+`typesafe/jev-1.13` on OpenRouter no longer ends its findings with "The
+cutoff was set on jev-1.13.0". Run over the whole calibration set, it
+answered within 0.009 of TypeSafe on average. Luna and Liquid's `d1` were run
+over the same set and keep Jev's cutoffs and the caveat, because those
+cutoffs still catch most defects there and the set is too small to fit
+cutoffs of their own.
+
 ## 1.0.0 — 2026-10-14
 
 **JevLint-LE is DecisionLint.** It lints the questions sent to any

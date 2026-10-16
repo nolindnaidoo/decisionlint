@@ -244,6 +244,14 @@ describe('where a model id is sent', () => {
 		expect(isCalibrated('gpt-6-luna')).toBe(false);
 	});
 
+	it('counts a route measured to answer as the calibrated version, and only on that route', () => {
+		expect(isCalibrated('typesafe/jev-1.13', 'openrouter')).toBe(true);
+		expect(isCalibrated('typesafe/jev-1.13')).toBe(false);
+		expect(isCalibrated('typesafe/jev-1.13', 'vercel')).toBe(false);
+		expect(isCalibrated('typesafe/jev-latest', 'openrouter')).toBe(false);
+		expect(isCalibrated('gpt-6-luna', 'openai')).toBe(false);
+	});
+
 	it('rewords a message for the model that answered', () => {
 		expect(forProvider('Jev reads this as counting.', LUNA)).toBe(
 			'Luna reads this as counting.',

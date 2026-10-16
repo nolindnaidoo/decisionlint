@@ -2528,6 +2528,29 @@ describe('where --ask-platform sends', () => {
 		);
 	});
 
+	it('drops the cutoff caveat only on a route measured to answer as the calibrated Jev', async () => {
+		const measured = await cli(
+			['--ask', '--ask-platform', 'openrouter', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ DEC302: { noul: 0.91 } }), {
+				OPENROUTER_API_KEY: 'or-key',
+			}),
+		);
+		expect(measured.out).toContain('(Jev put this at 0.91.)');
+		expect(measured.out).not.toContain('The cutoff was set on');
+
+		const unmeasured = await cli(
+			['--ask', '--ask-platform', 'liquid', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ DEC302: { noul: 0.91 } }), { LIQUID_API_KEY: 'lq-key' }),
+		);
+		expect(unmeasured.out).toContain(
+			'The cutoff was set on jev-1.13.0, not on',
+		);
+	});
+
 	it('takes --ask-model as the id to send there', async () => {
 		const fetch = jevSays();
 		await cli(

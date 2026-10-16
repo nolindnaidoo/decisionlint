@@ -141,7 +141,7 @@ function rated(
 	provider: Provider,
 ): string {
 	const number = `(${asSubject(provider.model)} put this at ${probability.toFixed(2)}.)`;
-	if (isCalibrated(request.model)) return number;
+	if (isCalibrated(request.model, provider.slot)) return number;
 	// Another Jev is still Jev by name, so only its version tells the two apart.
 	const asked = provider.model === 'Jev' ? request.model : provider.model;
 	return `${number} The cutoff was set on ${DEFAULT_MODEL}, not on ${asked}.`;

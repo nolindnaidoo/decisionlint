@@ -160,12 +160,12 @@ covers, exactly:
   reshape fix is Jev-only.
 - **Asking Luna.** Run **Ask Luna About This File**, or pass
   `--ask-platform openai`, with an OpenAI key. The next section says how.
-- **Measured on Jev, not yet on Luna.** Every default in these rules was
-  set by measuring what the defect costs `jev-1.13.0`. Luna has not been
-  measured, so on a Luna question they are the same rules with Jev's
-  defaults, and every finding from asking Luna says its cutoff was set on
-  Jev. The request sent to Luna follows OpenAI's API reference and has not
-  yet been run against the live API. Both wait on a key.
+- **Calibrated on Jev, measured on Luna.** Every default in these rules was
+  set by measuring what the defect costs `jev-1.13.0`. The checks were run
+  on Luna through the live API on 2026-10-16. Jev's cutoffs catch most
+  defects there but miss more, so Luna keeps them, and every finding from
+  asking Luna says its cutoff was set on Jev. What the wording rules cost
+  Luna is not measured yet.
 
 ## Every platform
 
@@ -244,8 +244,9 @@ There is one command per platform, and each has its own key:
 
 The model each command sends is `decisionlint.ask.models`, by platform.
 The TypeSafe default is the version the checks' cutoffs were set on, and a
-finding from any other model, Luna included, says so until that model is
-measured the same way. The probe asks Jev at TypeSafe, with the TypeSafe
+finding from any other model, Luna included, says so. OpenRouter's
+`typesafe/jev-1.13` was measured to answer as that version does, so its
+findings do not. The probe asks Jev at TypeSafe, with the TypeSafe
 key and model.
 
 **For a platform you host**, a llama.cpp, vLLM, LiteLLM or Ollaya, set
@@ -389,7 +390,7 @@ Jev, and it never uses the network, unless you pass `--ask`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/decisionlint@v1.0.0
+- uses: nolindnaidoo/decisionlint@v1.0.1
   with:
     paths: src
 ```
@@ -411,7 +412,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/decisionlint
-  rev: v1.0.0
+  rev: v1.0.1
   hooks:
     - id: decisionlint
 ```

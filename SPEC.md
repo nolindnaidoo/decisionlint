@@ -1244,16 +1244,25 @@ the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
 answer. The cutoffs were set on `jev-1.13.0`, so every finding from Luna
-says "The cutoff was set on jev-1.13.0, not on Luna" until Luna is
-calibrated the same way, which needs an OpenAI key and a run of
-`calibrate-reviews.ts` against it. The probe asks Jev only: its variants are
+says "The cutoff was set on jev-1.13.0, not on Luna". Luna, Liquid's `d1`
+and Jev through OpenRouter and LLM Gateway were run through
+`calibrate-reviews.ts --platform` on 2026-10-16, each saved to its own
+`fixtures/validation/calibration-<platform>-<model>.json`. Luna and d1 keep
+Jev's cutoffs and the caveat: they flip 30 and 25 of 1114 verdicts, and a
+cutoff fitted on eight bad and twenty good questions, several landing near
+0.01, is not one to ship. OpenRouter's Jev differed from TypeSafe's by 0.009
+on average and is counted as calibrated (`isCalibrated` takes the route).
+LLM Gateway's differed by 0.033 and flipped 8, and is counted as calibrated
+only because its id is TypeSafe's. The probe asks Jev only: its variants are
 built and read in Jev's shape, and Luna's reply for a Choice or a Score is
 not read yet.
 
 **Not measured.** The wording rules' costs are measurements of `jev-1.13.0`.
 Whether Luna fails the same way is unknown, and the rule pages say "measured
 on Jev". A labelled sample of public Decisions requests and a bad-against-good
-run on Luna are the next two measurements, and both wait on a key.
+run on Luna are the next two measurements. The second waits on Choice and
+Score in the Decisions shape, which `validate-defects.ts` sends and
+`ask/provider.ts` does not yet write.
 
 ## Every provider
 

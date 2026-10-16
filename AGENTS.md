@@ -282,10 +282,17 @@ family's files, copied unchanged from `regex-le`.
   transparent background, drawn from `icon-source.svg` beside it. It is a
   placeholder the owner may replace. The installed-extension test fails if it
   does not ship.
-- **The README's only relative links are the three demo images.** `vsce
-  package` rewrites them to the repository's raw URL, which works because the
-  manifest names the repository and the repository is public. Any other
-  relative link would point at a file that does not ship.
+- **The README follows the fleet's front door**: the icon, title and badges,
+  the editor demo, What it does, Install, Use it from an AI agent with the MCP
+  demo, the tool's own sections, The CLI with its demo, Commands, Settings,
+  Privacy & security, Documentation, the LE family block copied from
+  `../colors-le/README.md`, and License. `../letools-site/DEMOS.md` says where
+  each demo sits.
+- **Every relative link in the README is to a file in the repository.** `vsce
+  package` rewrites images to the repository's raw URL and links to its blob
+  URL, which works because the manifest names the repository and the
+  repository is public. A link to a file that is not committed breaks on the
+  listing.
 - **The demos are recorded, not drawn**, to the fleet standard in
   `../letools-site/DEMOS.md`, by that repo's `bun run record:demo ../decisionlint
   <editor|cli|mcp>`. Each surface is `assets/demos/<surface>.mp4`, the

@@ -10,6 +10,12 @@ over the same set and keep Jev's cutoffs and the caveat, because those
 cutoffs still catch most defects there and the set is too small to fit
 cutoffs of their own.
 
+**The cost shown before a check no longer comes in low.** It was a third
+under what Luna billed and an eighth under d1, because it counted the
+request before it was put in the platform's shape and assumed Jev's
+characters per token for every model. It now counts the body that is sent
+and, for any model but Jev, the lowest ratio measured.
+
 ## 1.0.0 — 2026-10-14
 
 **JevLint-LE is DecisionLint.** It lints the questions sent to any

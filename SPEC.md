@@ -626,9 +626,12 @@ tokens and the cost, whether the state is included, and what it is holding
 back, and waits for a yes. It is off by default, by the owner's decision:
 running the command is the decision to send, and a dialog on every run was in
 the way. The count shown is the
-count sent: both come from the same plan. The estimate uses two characters
-per token, a little under the 2.2 measured on the calibration run, so it
-errs high.
+count sent: both come from the same plan. The estimate counts the body as
+the platform is sent it, and divides by two characters per token for Jev,
+under the 2.2 to 2.79 measured at TypeSafe and through the gateways, and by
+1.5 for every other model, under Luna's 1.67, the lowest measured. So it
+errs high. `ask/estimate.test.ts` fails if it comes in under what a
+platform billed for the calibration set.
 
 **After an edit** the findings are removed. They were about text that has
 changed.

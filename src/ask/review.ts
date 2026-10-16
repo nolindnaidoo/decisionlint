@@ -51,7 +51,7 @@ export type ReviewSettings = Readonly<{
 /** What a run would send, worked out before anything is sent. */
 export type ReviewPlan = Readonly<{
 	requests: number;
-	/** An estimate. See `CHARS_PER_TOKEN`. */
+	/** An estimate. See `estimateTokens`. */
 	inputTokens: number;
 	/** Questions with a part built at runtime. Jev is never shown a question with holes. */
 	unreadable: number;
@@ -107,9 +107,23 @@ const REVIEW_CODES: ReadonlyArray<RuleCode> = [
 	'DEC312',
 ];
 
-// Measured once: the calibration run's request bodies came to about 2.2
-// characters per input token. Two is used so the estimate errs high.
-const CHARS_PER_TOKEN = 2;
+// Characters of the body on the wire per input token the platform billed,
+// over each 304-call calibration run on 2026-10-16: Jev 2.2 at TypeSafe and
+// 2.47 to 2.79 through the gateways, d1 2.37, Luna 1.67. Each is rounded down
+// so the estimate errs high. A model never measured gets Luna's, the lowest.
+const CHARS_PER_TOKEN: ReadonlyMap<string, number> = new Map([['Jev', 2]]);
+const UNMEASURED_CHARS_PER_TOKEN = 1.5;
+
+/** Input tokens for a request as `provider` sends it. */
+export function estimateTokens(
+	request: ReviewRequest,
+	provider: Provider,
+): number {
+	const chars = JSON.stringify(provider.toBody(request)).length;
+	const ratio =
+		CHARS_PER_TOKEN.get(provider.model) ?? UNMEASURED_CHARS_PER_TOKEN;
+	return chars / ratio;
+}
 
 function enabledReviews(lint: LintOptions): ReadonlySet<string> {
 	return new Set(
@@ -273,13 +287,13 @@ export function planReview(
 	settings: ReviewSettings,
 ): ReviewPlan {
 	const prepared = prepare(text, settings, syntax);
-	const chars = prepared.jobs.reduce(
-		(sum, job) => sum + JSON.stringify(job.request).length,
+	const tokens = prepared.jobs.reduce(
+		(sum, job) => sum + estimateTokens(job.request, settings.provider),
 		0,
 	);
 	return {
 		requests: prepared.jobs.length,
-		inputTokens: Math.ceil(chars / CHARS_PER_TOKEN),
+		inputTokens: Math.ceil(tokens),
 		unreadable: prepared.unreadable,
 		overLimit: prepared.overLimit,
 		sendsState: prepared.sendsState,

@@ -16,7 +16,7 @@ by 0.033 on average and flipped 8 of 1114 verdicts. A finding there now says
 "The cutoff was set on jev-1.13.0 at TypeSafe, not through LLM Gateway."
 
 **The listing leads with Jev and Luna.** The Marketplace and Open VSX name
-is "DecisionLint: Jev & Luna Linter", and the description and the npm
+is "DecisionLint: Jev/Luna", and the description and the npm
 description open with "Lint Jev and Luna decision-model questions", where a
 search result's card has room for about forty characters. The keywords are
 cut from 44 to 29 that someone would search for.

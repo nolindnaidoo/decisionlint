@@ -245,11 +245,24 @@ describe('where a model id is sent', () => {
 	});
 
 	it('counts a route measured to answer as the calibrated version, and only on that route', () => {
-		expect(isCalibrated('typesafe/jev-1.13', 'openrouter')).toBe(true);
+		expect(isCalibrated('typesafe/jev-1.13', { slot: 'openrouter' })).toBe(
+			true,
+		);
 		expect(isCalibrated('typesafe/jev-1.13')).toBe(false);
-		expect(isCalibrated('typesafe/jev-1.13', 'vercel')).toBe(false);
-		expect(isCalibrated('typesafe/jev-latest', 'openrouter')).toBe(false);
-		expect(isCalibrated('gpt-6-luna', 'openai')).toBe(false);
+		expect(isCalibrated('typesafe/jev-1.13', { slot: 'vercel' })).toBe(false);
+		expect(isCalibrated('typesafe/jev-latest', { slot: 'openrouter' })).toBe(
+			false,
+		);
+		expect(isCalibrated('gpt-6-luna', { slot: 'openai' })).toBe(false);
+	});
+
+	it('does not count the calibrated version as calibrated when it is asked in the Decisions shape', () => {
+		expect(
+			isCalibrated(MEASURED_ON, { slot: 'llmgateway', shape: 'openai' }),
+		).toBe(false);
+		expect(
+			isCalibrated(MEASURED_ON, { slot: 'endpoint', shape: 'typesafe' }),
+		).toBe(true);
 	});
 
 	it('rewords a message for the model that answered', () => {

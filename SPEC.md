@@ -1255,8 +1255,10 @@ Jev's cutoffs and the caveat: they flip 30 and 25 of 1114 verdicts, and a
 cutoff fitted on eight bad and twenty good questions, several landing near
 0.01, is not one to ship. OpenRouter's Jev differed from TypeSafe's by 0.009
 on average and is counted as calibrated (`isCalibrated` takes the route).
-LLM Gateway's differed by 0.033 and flipped 8, and is counted as calibrated
-only because its id is TypeSafe's. The probe asks Jev only: its variants are
+Jev in the Decisions shape, through LLM Gateway or Vercel, differed by 0.033
+and flipped 8, and the two gateways were 0.010 from each other, so the shape
+moves Jev's answers. A Jev check sent in that shape carries the caveat, even
+under TypeSafe's id. Luna through Vercel answered as Luna at OpenAI did. The probe asks Jev only: its variants are
 built and read in Jev's shape, and Luna's reply for a Choice or a Score is
 not read yet.
 

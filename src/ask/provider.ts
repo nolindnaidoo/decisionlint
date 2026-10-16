@@ -303,9 +303,19 @@ const MEASURED_ROUTES: ReadonlyMap<string, string> = new Map([
 	['openrouter', 'typesafe/jev-1.13'],
 ]);
 
-/** True for the version the cutoffs were set on, and for a route measured to answer as it does. A finding from any other model, another Jev included, carries a caveat. */
-export function isCalibrated(model: string, slot?: string): boolean {
-	if (model === MEASURED_ON) return true;
+type Asked = Readonly<{ slot?: string; shape?: Shape }>;
+
+/**
+ * True for the version the cutoffs were set on, asked in TypeSafe's shape,
+ * and for a route measured to answer as it does. Jev asked in the Decisions
+ * shape through Vercel and LLM Gateway was 0.033 from TypeSafe on average
+ * and flipped 8 of 1114 verdicts, and the two gateways were 0.010 from each
+ * other, so the shape moves the answers, not the gateway or the id. A
+ * finding from any other model, another Jev included, carries a caveat.
+ */
+export function isCalibrated(model: string, asked: Asked = {}): boolean {
+	const { slot, shape = 'typesafe' } = asked;
+	if (model === MEASURED_ON && shape === 'typesafe') return true;
 	return slot !== undefined && MEASURED_ROUTES.get(slot) === model;
 }
 

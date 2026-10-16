@@ -2549,6 +2549,29 @@ describe('where --ask-platform sends', () => {
 		expect(unmeasured.out).toContain(
 			'The cutoff was set on jev-1.13.0, not on',
 		);
+
+		// The calibrated id, asked in the Decisions shape, which moves Jev's answers.
+		const reshaped = await cli(
+			['--ask', '--ask-platform', 'llmgateway', '--format', 'compact', 'q.ts'],
+			{ 'q.ts': VAGUE },
+			'',
+			world(
+				vi.fn(async () => ({
+					ok: true,
+					status: 200,
+					json: async () => ({
+						model: 'typesafe/jev-1.13.0',
+						answers: [{ type: 'predicate', name: 'DEC302', probability: 0.91 }],
+						usage: { input_tokens: 10 },
+					}),
+					text: async () => '',
+				})) as unknown as Sent,
+				{ LLM_GATEWAY_API_KEY: 'lg-key' },
+			),
+		);
+		expect(reshaped.out).toContain(
+			'The cutoff was set on jev-1.13.0 at TypeSafe, not through LLM Gateway.',
+		);
 	});
 
 	it('takes --ask-model as the id to send there', async () => {

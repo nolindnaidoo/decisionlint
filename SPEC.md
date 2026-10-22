@@ -843,6 +843,8 @@ identical requests for identical text, and a test compares them.
 | Model | `--ask-model`, default the pinned calibration model |
 | Failure | A rejected key, a rejected request, a busy or failing service after three tries, a reply that is not a Jev reply, no answer in 30 seconds, or an interrupt stops the sending. What was found is printed, the reason and the count answered of the count planned go to standard error, and the exit is 2 |
 | Output | Jev findings join each file's findings. `totals.ask` is present only when asked for |
+| Standard input | `--stdin-filename` with `--ask` checks the piped text |
+| Quiet | `--quiet` prints errors only, and every model-backed check defaults below that, so `--quiet --ask` pays for its requests and prints a finding only where `--rule` raised one. The help says so |
 
 Not built: the model and state settings in `decisionlint.json`, so a team's
 editors and its CI can still ask different models. A price in the plan line,

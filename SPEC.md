@@ -1,10 +1,12 @@
 # DecisionLint — specification
 
 **Status: released. The current version and its date are the top heading of
-[CHANGELOG.md](CHANGELOG.md); 0.1.0 shipped on 2026-10-04 and 0.2.0 on
-2026-10-05.** The exact rules, the wording rules, the four sources, the VS Code
-shell and their tests exist and pass. Everything under an "Extended release"
-heading is intent and none of it is built.
+[CHANGELOG.md](CHANGELOG.md); the first release, 0.1.0, shipped on
+2026-10-04.** The exact rules, the wording rules, the readers, the model-backed
+checks, the command line, the MCP server and the VS Code shell exist, with
+their tests, and pass. Nothing under an "Extended release" heading is built:
+each item there is intent that waits on a request, or is decided against and
+says so.
 
 A VS Code extension by the author of the LE family, standalone since 1.0.0, category **Check**, that finds the
 questions a project sends to TypeSafe's Jev
@@ -247,8 +249,9 @@ Scores sent with no levels.
   bound would be an invented threshold.
 - **YAML request bodies.** They need a YAML parser, and no real usage has been
   seen.
-- **Localization, the Rust CLI, the MCP server and the npm package.** See
-  Extended release 2.
+- **Localization and the Rust CLI.** Both decided against, under Extended
+  release 2. The MCP server and the npm package were on that list in the
+  first draft and shipped in 0.1.0, the server's registry listing in 0.6.0.
 
 ## Wording rules
 
@@ -829,13 +832,13 @@ install.
 
 ### Asking from the command line
 
-Built, in 0.2.0. `--ask` runs the Jev-backed checks after linting, through
-`jev/review.ts`, the same code the editor's command runs. The two send
+Built, in 0.2.0. `--ask` runs the model-backed checks after linting, through
+`src/ask/review.ts`, the same code the editor's command runs. The two send
 identical requests for identical text, and a test compares them.
 
 | | Behaviour |
 |---|---|
-| Key | `TYPESAFE_API_KEY` in the environment, and nowhere else. `--ask` without it exits 2 before a file is read |
+| Key | The variable the platform names, in the environment and nowhere else: `TYPESAFE_API_KEY` by default, `OPENAI_API_KEY` for Luna, the target row's `envKey` for the rest, and none for a host the user runs. `--ask` without it exits 2 before a file is read |
 | Consent | The flag. No setting in `decisionlint.json` turns it on, which stands in for workspace trust |
 | Plan | `--ask-plan` prints what would be sent and sends nothing. Under `--ask` the same count goes to standard error before the first request |
 | Limit | `--ask-max-calls`, default 25, for the whole run and not per file as in the editor. A run that needed more exits 2 |
@@ -1108,9 +1111,14 @@ the answer held at "damaged" through every variant with confidence between
 
 ## Roadmap
 
-Status: on hold since 2026-10-04, by the owner's decision. The site listing
-and the 0.1.0 release are done. Nothing else below is started, and each item
-waits on a go-ahead.
+Status: refreshed 2026-10-23, at 1.0.1. Done since this list was written:
+the site listing, the command line and its npm package, the MCP server and
+its registry listing, OpenAI's Decisions API and every provider, each under
+its own heading in this document. Decided against: a Rust port of the
+command line, under "Publishing", and localization, under "Extended release
+2". The rest, more languages, output for other editors and reading across
+files, waits on a request. Reading across files has an issue, #63, to count
+what it would recover before it is built.
 
 ### More languages
 
@@ -1159,9 +1167,8 @@ loops.
 
 ### The LE Tools site
 
-Done on 2026-10-04, in `letools-site`. This is the one roadmap item that is
-not on hold. The site carries this tool and allows a tool that differs from
-the other sixteen.
+Done on 2026-10-04, in `letools-site`. The site carries this tool and allows
+a tool that differs from the other sixteen.
 
 - **A featured section ahead of the other extensions**, with this tool in it,
   and the tool also listed among the rest in its right place.
@@ -1178,8 +1185,10 @@ the other sixteen.
 
 ### Publishing
 
-Released as 0.1.0 on 2026-10-04 and as 0.2.0 on 2026-10-05, from the
-`Release` workflow: the VS Code Marketplace, Open VSX and npm. The repository is public.
+Released from the `Release` workflow since 0.1.0 on 2026-10-04, each
+surface its own opt-in: the VS Code Marketplace, Open VSX and npm. The
+current version is the top heading of [CHANGELOG.md](CHANGELOG.md). The
+repository is public.
 
 On Open VSX it is published under the `nolindnaidoo` namespace, which is the
 manifest's publisher. The rest of the family is under `OffensiveEdge` there
@@ -1187,9 +1196,10 @@ until they are moved, so this tool sits apart from them on that registry for
 now. The owner claimed the `nolindnaidoo` namespace on 2026-10-04 and Open VSX
 granted it, so the listing is verified. The family is to follow it there.
 
-Not planned for now: a Rust port of the command line, which every sibling
-has. The TypeScript one lints thousands of files in seconds, and a port would
-be every reader and rule kept in agreement twice.
+Decided against: a Rust port of the command line, which every sibling has.
+The TypeScript one lints thousands of files in seconds, and a port would be
+every reader and rule kept in agreement twice. AGENTS.md's "Not done" points
+here.
 
 The MCP registry listing, `io.github.nolindnaidoo/decisionlint`, is in
 `server.json` and goes out with the npm job of the Release workflow from
@@ -1276,7 +1286,7 @@ Score in the Decisions shape, which `validate-defects.ts` sends and
 Status: built on 2026-10-14 as 0.9.0, all four phases. One thing is
 outstanding: the reading of OpenAI's Go SDK was added from the vendor's
 guide and has not yet had the run over public Go code that every other
-reader change had. The research behind it is
+reader change had, issue #45. The research behind it is
 `docs/research/reports/Decision model API providers.md`, with the notes
 beside it, and every claim below that is not already in the code comes from
 there.
@@ -1406,9 +1416,13 @@ version is finished in one pull request with its changelog dated.
   is not the vendor's. They go in when read from the vendor.
 - **JAY.** Nothing by that name exists in any source searched. Built when
   someone supplies a URL or a model id.
-- **Calibration of the checks on any model but `jev-1.13.0`.** Reaching a
-  platform is not the same as having measured it. A finding from any other
-  model keeps saying where the cutoff was set.
+- **Cutoffs of their own for any model but `jev-1.13.0`.** Reaching a
+  platform is not the same as having measured it. In 1.0.1 the calibration
+  set was run through the platforms, and `docs/cutoffs.md` has the numbers:
+  OpenRouter's Jev answered within 0.009 of TypeSafe and is counted as
+  calibrated, while Luna and Liquid's `d1` keep Jev's cutoffs, and a finding
+  there keeps saying where the cutoff was set, because the set is too small
+  to fit cutoffs of their own. Issue #47 grows it.
 
 ## Extended release 1: request-level rules
 
@@ -1424,12 +1438,14 @@ More sources: the Vercel AI SDK's `experimental_evaluate`.
 ## Extended release 2: surfaces
 
 - **Question inventory.** A tree view of every question in the workspace with
-  type, model and findings.
-- **Rust CLI** in `crate/`, following the family pattern: the lint ported, an
-  ignore-aware tree walk, and a shared fixture corpus with a parity check
-  against the extension. The command line in `src/cli/` already gives CI an
-  exit code, so this is about the family pattern and not a missing feature.
-- **Localization** into the family's 12 locales.
+  type, model and findings. Not built and not scheduled: issue #64.
+- **Rust CLI.** Decided against, under "Publishing" above. It would have been
+  `crate/`, following the family pattern: the lint ported, an ignore-aware
+  tree walk, and a shared fixture corpus with a parity check against the
+  extension. The command line in `src/cli/` already gives CI an exit code,
+  so the port was about the family pattern and not a missing feature.
+- **Localization** into the family's 12 locales. Decided against, as
+  AGENTS.md's "Not done" records.
 
 ## Verification
 
@@ -1488,8 +1504,13 @@ Each is fixed, and each test was seen to fail before its fix.
 
 ## Guarding against drift
 
-- **Vendor facts live in `src/lint/limits.ts`** with the source URL and the
-  date read. Rules import from it and hold no vendor number of their own.
+- **Vendor facts live in `src/lint/limits.ts` and `src/lint/targets.ts`**
+  with the page read and the date. Rules import from them and hold no vendor
+  number of their own.
+- **A Jev release is noticed within a week.** The `Jev release` workflow runs
+  `bun run check:jev-release` every Monday and fails when `jev-latest` has
+  moved off `KNOWN_VERSION`, or when the models page no longer says where it
+  points. No other platform has such a watch.
 - **Rule tables and the registry must agree.** `src/lint/rules.test.ts` fails
   when the code, name or default severity in this document or the README
   differs from `src/lint/rules.ts`.
@@ -1498,9 +1519,17 @@ Each is fixed, and each test was seen to fail before its fix.
 
 ## Risks
 
-- **R1. Vendor change.** Jev is three weeks old and closed. Limits, field
-  names and failure modes can change in any release. The jaggedness page is
-  written per model version, so wording rules will need a version dimension.
+- **R1. Vendor change.** Jev shipped on 2026-09-15 and is closed, and by
+  2026-10-14 at least fifteen hosted decision APIs stood beside it, under
+  "Every provider". Limits, field names and failure modes can change in any
+  release of any of them. The jaggedness page is written per model version,
+  so wording rules will need a version dimension. Revised 2026-10-23: what
+  holds this now is the vendor numbers in `lint/limits.ts` and
+  `lint/targets.ts` with the date read, `KNOWN_VERSION` and `MEASURED_ON`
+  kept as two facts in AGENTS.md's invariants so a release is told apart
+  from a measurement, and the weekly check under "Guarding against drift"
+  that fails when `jev-latest` moves. Issue #65 is the runbook for that day.
+  Only Jev is watched.
 - **R2. Vendor ships validation.** TypeSafe could add question validation to
   the API or SDK. The SDK already throws on a Choice given an array.
 - **R3. Name.** Decided 2026-10-04: `jevlint-le`, in the LE family. "Jev" is
@@ -1518,6 +1547,14 @@ Each is fixed, and each test was seen to fail before its fix.
   Answered 2026-10-08: yes. OpenAI's Decisions API is read and checked from
   0.5.0, under "OpenAI's Decisions API" below.
 - **Q3.** What false-positive rate lets a wording rule ship on by default?
+  Answered 2026-10-08, in 0.4.0: a rule that is on by default and not exact
+  must be right on at least 9 of 10 of its firings on a public sample
+  labelled before it ran, counting a firing on a borderline label as right,
+  under "How a default is earned" above. A rule that fails goes off, and one
+  that fails twice is removed. The README says the same to users under "What
+  it will not tell you", and AGENTS.md adds the rule for reading a run
+  against Jev: proven at two or more answers lost, advisory at 0.10 less
+  sure, otherwise off.
 
 ## Sources
 

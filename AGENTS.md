@@ -357,7 +357,10 @@ family's files, copied unchanged from `regex-le`.
   between.** `scripts/draw-public-sample.ts` writes the question text outside
   this repo and leaves out everything an earlier sample used. The labels are
   committed on their own before `scripts/score-public-sample.ts` is run, so
-  the history shows they came first.
+  the history shows they came first. When the drawn file is gone,
+  `scripts/refetch-public-sample.ts` rebuilds it from the labels, keeping
+  each question whose file still hashes the same and counting the rest as
+  missing.
 - **Every experiment must mean what its rule means.** `validation.test.ts`
   fails if a rule does not flag an experiment's bad question or flags its
   fixed one.

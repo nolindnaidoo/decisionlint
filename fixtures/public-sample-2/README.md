@@ -30,6 +30,14 @@ twelve are not in English and one is not a question.
 The labels were committed on their own, before the commit that added the
 scoring, so the order can be checked in the history.
 
+Two codes were added on 2026-10-23, for rules that did not exist when the
+sample was labelled: `DEC011`, a description that only repeats its name, and
+`DEC012`, instructions that do not say what is being asked. The 278
+questions whose text could be fetched again were read for both from the
+text alone, before either rule was run over them, and those labels were
+also committed on their own. The nine read questions whose files had
+changed or gone carry no label for the two codes.
+
 ## What it showed
 
 `scripts/score-public-sample.ts` ran every wording rule over the 287
@@ -89,3 +97,70 @@ Rule by rule:
   and "most common", not as rates.
 
 No rule was changed because of this sample. The first one that is spends it.
+
+## After the changes
+
+The same labels, scored again on 2026-10-23 with the rules as they stand at
+1.0.1. 0.4.0 changed `DEC102`, `DEC110` and `DEC112` and added `DEC011` and
+`DEC012` with sample 3's labels in view, and no sample those five rules were
+not tuned against had scored them since. This one had not been used to
+change a rule, so this run is a measurement.
+
+The question text from the draw was gone. `scripts/refetch-public-sample.ts`
+fetched the files again by repository and path and kept each question whose
+instructions still hash to a label: 278 of the 287 that were read. Four files
+had changed or gone, taking nine questions with them, none of which carried
+a clear label.
+
+45 of the 278 had a clear defect. 31 of those had one only `DEC011` or
+`DEC012` looks for, and 26 had nothing else wrong.
+
+| | Default-on rules | Every wording rule |
+|---|---|---|
+| Clear defects under those rules | 50 | 52 |
+| Caught | 34 | 35 |
+| Findings | 39 | 40 |
+| On a borderline label | 3 | 3 |
+| Findings that were wrong | 2 | 2 |
+
+| Rule | Default at 1.0.1 | Clear defects | Caught | Fired | Borderline | Wrong |
+|---|---|---|---|---|---|---|
+| DEC011 description-repeats-name | on | 3 | 3 | 3 | 0 | 0 |
+| DEC012 terse-instructions | on | 29 | 21 | 21 | 0 | 0 |
+| DEC101 double-negative | on | 0 | 0 | 0 | 0 | 0 |
+| DEC102 arithmetic | on | 6 | 2 | 3 | 1 | 0 |
+| DEC103 date-comparison | on | 1 | 0 | 0 | 0 | 0 |
+| DEC104 compound | off | 2 | 1 | 1 | 0 | 0 |
+| DEC105 generation | on | 0 | 0 | 0 | 0 | 0 |
+| DEC107 negated-noul | off | 0 | 0 | 0 | 0 | 0 |
+| DEC108 inverted-criteria | off | 0 | 0 | 0 | 0 | 0 |
+| DEC110 degree-levels | on | 10 | 7 | 9 | 1 | 1 |
+| DEC111 numeric-encoding | off | 0 | 0 | 0 | 0 | 0 |
+| DEC112 undefined-boundary | on | 1 | 1 | 3 | 1 | 1 |
+
+### What the second run showed
+
+- **`DEC011` and `DEC012` were right every time they fired.** `DEC012`
+  caught 21 of 29. Six of its misses open with a question word and are left
+  alone by design: "How urgent?", "How deep?", "how bad", "Which
+  department?", "Which worker?", "What kind?". The other two are three
+  words, "Check the reason." and "it is true".
+- **`DEC102` caught 2 of 6 and was wrong on none.** "Runs 40 minutes or
+  longer", a miss on the first run, is caught since 0.4.0. Still missed:
+  "most of the nice-to-have technologies", "more HP off them than off me",
+  prices within "ordinary variation", and "under five seconds to live",
+  which sits in the guidance after the question, where the wording rules do
+  not read.
+- **`DEC110` fired 9 times: 7 caught, 1 on a borderline label, 1 wrong by
+  the labels.** The borderline is "How urgent?" with Routine, Soon, Now. The
+  wrong one is "How severe is this issue?" with low, medium, high, critical,
+  which the 2026-10-05 labels did not mark for `DEC110`, though it is the
+  shape the rule describes. The labels were written first and stand. 8 of 9
+  is under 9 of 10 by one firing. The three missed are two ten-level scales
+  from None to Extreme and "almost none, some, a lot, as much as possible".
+- **`DEC112` fired 3 times: 1 caught, 1 on a borderline label, 1 wrong.** The
+  wrong one is "is the consequence cheap to undo", where the question goes
+  on to say what cheap means. 2 of 3 is under 9 of 10.
+- **The labels are one reader's**, and the second reader, for `DEC011` and
+  `DEC012`, is not the first. The counts are small, so read them as "every
+  time" and "most", not as rates.

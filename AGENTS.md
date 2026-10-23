@@ -352,7 +352,9 @@ family's files, copied unchanged from `regex-le`.
   another, and move the defaults with the result.
 - **A sample is spent once a rule is fixed against it.** Draw a new one for
   the next measurement. `fixtures/public-sample/` is spent.
-  `fixtures/public-sample-2/` is not: no rule has been changed because of it.
+  `fixtures/public-sample-2/` is spent since 2026-10-23, when `DEC110` and
+  `DEC112` went off because of it. `fixtures/public-sample-3/` was in view
+  when 0.4.0 was tuned. The next measurement needs a fourth draw.
 - **A sample is drawn and scored by script, and labelled by hand in
   between.** `scripts/draw-public-sample.ts` writes the question text outside
   this repo and leaves out everything an earlier sample used. The labels are

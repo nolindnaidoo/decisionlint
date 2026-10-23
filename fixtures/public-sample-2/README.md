@@ -2,8 +2,9 @@
 
 300 questions drawn at random from public code on 2026-10-05, each read and
 labelled by hand for every wording defect before any rule was run over it.
-The first sample was spent when rules were fixed against it. This one has not
-been used to change a rule, so its numbers are a measurement.
+The first sample was spent when rules were fixed against it. This one was not
+used to change a rule until 2026-10-23, so both runs below are measurements.
+It is spent since: two rules went off because of the second run.
 
 ## How it was drawn
 
@@ -96,7 +97,8 @@ Rule by rule:
   borderlines. The counts above are small, so read them as "about a quarter"
   and "most common", not as rates.
 
-No rule was changed because of this sample. The first one that is spends it.
+No rule was changed because of this run. The second run, below, changed two
+defaults and spent the sample.
 
 ## After the changes
 
@@ -164,3 +166,7 @@ a clear label.
 - **The labels are one reader's**, and the second reader, for `DEC011` and
   `DEC012`, is not the first. The counts are small, so read them as "every
   time" and "most", not as rates.
+
+Read against the gate, two defaults moved in 1.1.0: `DEC110` and `DEC112`
+are off. Both are proven to cost answers, so a passing run on the next
+sample puts either back on. This spends the sample.

@@ -1372,13 +1372,13 @@ describe('the MCP server', () => {
 			answered: 1,
 			inputTokens: 310,
 		});
-		// Beside the offline finding the wording rule already made on "large".
+		// Alone: DEC112, the offline rule for "large", is off by default since 1.1.0.
 		const findings = checked.files[0].findings as {
 			code: string;
 			message: string;
 			fix: unknown;
 		}[];
-		expect(findings.map((f) => f.code)).toEqual(['DEC302', 'DEC112']);
+		expect(findings.map((f) => f.code)).toEqual(['DEC302']);
 		const fromModel = findings.find((f) => f.code === 'DEC302');
 		expect(fromModel?.message).toContain('0.91');
 		expect(fromModel?.fix).toBe(null);

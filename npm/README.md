@@ -120,7 +120,7 @@ extension reads the same file, so the editor and CI agree.
 
 ```json
 {
-  "rules": { "DEC004": "error", "DEC112": "off" },
+  "rules": { "DEC004": "error", "DEC110": "warning" },
   "ignore": ["DEC004:department"],
   "exclude": ["fixtures", "**/*.generated.ts"]
 }

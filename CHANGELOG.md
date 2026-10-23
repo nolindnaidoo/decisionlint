@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.1.0 — 2026-10-23
+
+Measured, and two rules go off for it. The second public sample, unspent
+since 2026-10-05, scored the rules 0.4.0 changed and added, on questions
+none of them was tuned against. The tables are in
+`fixtures/public-sample-2/README.md`.
+
+- **`DEC110 degree-levels` and `DEC112 undefined-boundary` are off.** Both
+  are proven to cost answers, and both fell under the gate a wording rule
+  stays on by: right on at least 9 of 10 of its findings on public code it
+  was not tuned against. `DEC110` was right on 8 of 9, the one wrong by the
+  labels being "low, medium, high, critical", which the labels had not
+  marked. `DEC112` was right on 2 of 3. Either comes back with
+  `{ "rules": { "DEC110": "warning" } }` in `decisionlint.json`, and a
+  passing run on the next sample puts it back on by default.
+- **`DEC011 description-repeats-name` and `DEC012 terse-instructions` hold.**
+  278 questions were labelled for them by hand on 2026-10-23, before either
+  ran. Right on every firing: 3 of 3 and 21 of 29 caught.
+- **A lost sample can be rebuilt.** `scripts/refetch-public-sample.ts`
+  fetches a sample's files again and keeps each question whose instructions
+  still hash to a label. The scorer counts the rest as missing instead of
+  stopping.
+- The GitHub Action and the pre-commit hook pin 1.1.0.
+
 ## 1.0.1 — 2026-10-16
 
 **OpenRouter's Jev is counted as calibrated.** A check asked of

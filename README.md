@@ -191,9 +191,9 @@ the mistakes that can be read from the text.
 | DEC105 | generation | warning | The question asks for a value or for text to be written |
 | DEC107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
 | DEC108 | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
-| DEC110 | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
+| DEC110 | degree-levels | off | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
 | DEC111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
-| DEC112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
+| DEC112 | undefined-boundary | off | A Noul with no criteria turns on a word such as large, often or enough |
 | DEC301 | model-counting | warning | Jev reads the question as needing counting or arithmetic |
 | DEC302 | model-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
 | DEC303 | model-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |
@@ -433,7 +433,7 @@ both read it, so what you see while writing is what CI reports.
 
 ```json
 {
-  "rules": { "DEC004": "error", "DEC112": "off" },
+  "rules": { "DEC004": "error", "DEC110": "warning" },
   "fallbackOptions": ["other", "none", "unsure"],
   "ignore": ["DEC004:department"],
   "exclude": ["fixtures", "**/*.generated.ts"]
@@ -467,8 +467,10 @@ so there a finding is silenced with `ignore`.
   on only while it is right on at least 9 of 10 of its findings on public
   code it was not tuned against. Four that describe failure modes in
   TypeSafe's docs, `DEC104`, `DEC107`, `DEC108` and `DEC111`, did not fail on
-  `jev-1.13.0` and are off. Switch any of them on in `decisionlint.rules`. Two
-  more were removed in 0.4.0 for being wrong every time they fired.
+  `jev-1.13.0` and are off. `DEC110` and `DEC112` cost answers but fell under
+  9 of 10 on the second public sample, at 8 of 9 and 2 of 3, and are off
+  since 1.1.0. Switch any of them on in `decisionlint.rules`. Two more were
+  removed in 0.4.0 for being wrong every time they fired.
 - **Anything about a question that is not in English.**
 - **What a lone object lacks.** A `{ type, instructions }` outside a
   `questions` map may be a template or half of a builder, so a missing
@@ -597,7 +599,7 @@ Jev, and it never uses the network, unless you pass `--ask`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/decisionlint@v1.0.1
+- uses: nolindnaidoo/decisionlint@v1.1.0
   with:
     paths: src
 ```
@@ -619,7 +621,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/decisionlint
-  rev: v1.0.1
+  rev: v1.1.0
   hooks:
     - id: decisionlint
 ```

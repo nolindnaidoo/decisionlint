@@ -270,9 +270,9 @@ or its primitives guide.
 | DEC105 | generation | warning | The question asks for a value or for text to be written |
 | DEC107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
 | DEC108 | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
-| DEC110 | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
+| DEC110 | degree-levels | off | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
 | DEC111 | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
-| DEC112 | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
+| DEC112 | undefined-boundary | off | A Noul with no criteria turns on a word such as large, often or enough |
 
 A rule that is `off` still runs when switched on in `decisionlint.rules`.
 
@@ -411,7 +411,9 @@ costs is arithmetic on dates.
 `DEC008`, `DEC102`, `DEC110`, `DEC112`. Measured to cost confidence: `DEC101`,
 `DEC012`. Measured to cost nothing on sensible names, and kept as `info` for
 the names that say nothing: `DEC011`. Everything else on by default is an
-exact rule about what the API accepts, plus `DEC105`.
+exact rule about what the API accepts, plus `DEC105`. `DEC110` and `DEC112`
+are proven to cost and off all the same since 1.1.0: they fell under the
+second gate on public sample 2, under "What public sample 2 showed at 1.0.1".
 
 `DEC111` was left out of the harder run by mistake and run on its own
 afterwards, 24 calls, with the result in `results-encoding.json`. It compared
@@ -560,6 +562,43 @@ checks on questions their author did not write. Read by hand:
 No cutoff moved. `DEC303` fires on one Choice in six and stays `info`, as
 the first sample already said. `DEC309` to `DEC312` are still unmeasured
 on real code.
+
+### What public sample 2 showed at 1.0.1
+
+`fixtures/public-sample-2/` was the unspent sample: labelled on 2026-10-05
+and never used to change a rule. On 2026-10-23 it was labelled for `DEC011`
+and `DEC012`, which did not exist when it was drawn, and scored with the
+rules as 1.0.1 ships them, the first measurement of the 0.4.0 changes on
+questions they were not tuned against. The drawn text was gone, so
+`scripts/refetch-public-sample.ts` fetched the files again and kept the 278
+of the 287 read questions whose instructions still hash to a label.
+
+| | Default-on rules at 1.0.1 |
+|---|---|
+| Clear defects under those rules | 50 |
+| Caught | 34 |
+| Findings | 39 |
+| On a borderline label | 3 |
+| Findings that were wrong | 2 |
+
+What changed because of it:
+
+- `DEC110 degree-levels` off. Right on 8 of 9 firings, under 9 of 10 by
+  one. The one wrong by the labels is "low, medium, high, critical", which
+  the 2026-10-05 labels did not mark though it is the shape the rule
+  describes. The labels came first and stand. The cost it measures is
+  unchanged, so a passing run on the next sample puts it back on.
+- `DEC112 undefined-boundary` off. Right on 2 of 3 firings. The wrong one is
+  "is the consequence cheap to undo", where the next sentence says what
+  cheap means.
+- `DEC011` and `DEC012` hold: 3 of 3 and 21 of 21 firings right, 21 of 29
+  `DEC012` cases caught. The misses open with a question word, which the
+  rule leaves alone by design, or run to three words.
+- `DEC102` caught 2 of 6 with none wrong. "40 minutes or longer", a miss on
+  the first run, is caught since 0.4.0.
+
+The sample is spent. The next measurement needs a fourth draw, and the pool
+of unused public Jev code was already running down at the third.
 
 ### Not built
 

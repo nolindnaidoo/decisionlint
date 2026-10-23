@@ -120,7 +120,9 @@
   "id": "a",
   "type": "choice",
   "hash": "2d711642b726b044",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -270,7 +272,9 @@
   "id": null,
   "type": "score",
   "hash": "6476c1c910a0e1f0",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -340,7 +344,9 @@
   "id": "urgent",
   "type": "noul",
   "hash": "0317f7739baa41b5",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -360,7 +366,9 @@
   "id": "choice",
   "type": "choice",
   "hash": "8ce33c6c86e991f7",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -370,7 +378,9 @@
   "id": null,
   "type": "noul",
   "hash": "14b4035526671323",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -629,7 +639,8 @@
   "type": "score",
   "hash": "6cdfd271da635d49",
   "defects": [
-   "DEC110"
+   "DEC110",
+   "DEC012"
   ],
   "borderline": [],
   "skipped": false
@@ -660,7 +671,9 @@
   "id": "urgency",
   "type": "score",
   "hash": "648f8fc1734a8b6f",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [
    "DEC110"
   ],
@@ -846,7 +859,9 @@
   "id": "department",
   "type": "choice",
   "hash": "da243390037d65b4",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -966,7 +981,9 @@
   "id": "q0",
   "type": "noul",
   "hash": "ecde693842a989f4",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1010,7 +1027,9 @@
   "id": "q",
   "type": "noul",
   "hash": "1e170500f0eb98ff",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1115,7 +1134,9 @@
   "type": "choice",
   "hash": "0263f357f2261f9a",
   "defects": [],
-  "borderline": [],
+  "borderline": [
+   "DEC011"
+  ],
   "skipped": false
  },
  {
@@ -1155,7 +1176,8 @@
   "type": "score",
   "hash": "acd3e23146b16c09",
   "defects": [
-   "DEC110"
+   "DEC110",
+   "DEC012"
   ],
   "borderline": [],
   "skipped": false
@@ -1288,7 +1310,9 @@
   "id": null,
   "type": "choice",
   "hash": "88ab0ae7b1af8c0e",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1331,7 +1355,8 @@
   "type": "score",
   "hash": "cadb74af34bae328",
   "defects": [
-   "DEC110"
+   "DEC110",
+   "DEC012"
   ],
   "borderline": [],
   "skipped": false
@@ -1384,7 +1409,9 @@
   "id": "is_bot",
   "type": "noul",
   "hash": "138891bf39648650",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1404,7 +1431,9 @@
   "id": "connection",
   "type": "noul",
   "hash": "a9890d7c25aab292",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1444,8 +1473,12 @@
   "id": "rule",
   "type": "choice",
   "hash": "088081079ee0a44d",
-  "defects": [],
-  "borderline": [],
+  "defects": [
+   "DEC012"
+  ],
+  "borderline": [
+   "DEC011"
+  ],
   "skipped": false
  },
  {
@@ -1484,7 +1517,9 @@
   "id": null,
   "type": "noul",
   "hash": "251a2c8f0df2ac54",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1495,7 +1530,8 @@
   "type": "score",
   "hash": "18b5c86df23c3cff",
   "defects": [
-   "DEC110"
+   "DEC110",
+   "DEC012"
   ],
   "borderline": [],
   "skipped": false
@@ -1517,7 +1553,8 @@
   "type": "score",
   "hash": "a0e51ae985240a99",
   "defects": [
-   "DEC110"
+   "DEC110",
+   "DEC012"
   ],
   "borderline": [],
   "skipped": false
@@ -1528,7 +1565,9 @@
   "id": "intencion",
   "type": "choice",
   "hash": "a4949e2c96de2668",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1592,7 +1631,9 @@
   "id": null,
   "type": "choice",
   "hash": "8910469034b5cce7",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1644,7 +1685,9 @@
   "id": "ambiguo",
   "type": "noul",
   "hash": "493989d327b019db",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1900,7 +1943,9 @@
   "id": "q",
   "type": "noul",
   "hash": "de7d1b721a1e0632",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1982,7 +2027,9 @@
   "id": null,
   "type": "noul",
   "hash": "0a8ca2729f788f0b",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -1992,7 +2039,9 @@
   "id": "q_blue",
   "type": "noul",
   "hash": "da8b910edfc6e5c8",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -2177,7 +2226,9 @@
   "type": "noul",
   "hash": "36a9e7f1c95b82ff",
   "defects": [],
-  "borderline": [],
+  "borderline": [
+   "DEC012"
+  ],
   "skipped": false
  },
  {
@@ -2267,7 +2318,9 @@
   "type": "noul",
   "hash": "e2305275188609d2",
   "defects": [],
-  "borderline": [],
+  "borderline": [
+   "DEC011"
+  ],
   "skipped": false
  },
  {
@@ -2462,7 +2515,10 @@
   "id": null,
   "type": "choice",
   "hash": "71aaea0dce185f2f",
-  "defects": [],
+  "defects": [
+   "DEC012",
+   "DEC011"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -2532,7 +2588,9 @@
   "id": "q",
   "type": "choice",
   "hash": "50a830a6b47b4634",
-  "defects": [],
+  "defects": [
+   "DEC011"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -2624,7 +2682,9 @@
   "id": "category",
   "type": "choice",
   "hash": "8e137016db311aa8",
-  "defects": [],
+  "defects": [
+   "DEC011"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -2645,7 +2705,9 @@
   "type": "choice",
   "hash": "2912e8bf048ef703",
   "defects": [],
-  "borderline": [],
+  "borderline": [
+   "DEC011"
+  ],
   "skipped": false
  },
  {
@@ -2766,7 +2828,9 @@
   "id": null,
   "type": "noul",
   "hash": "a6fc5c63a56e0ba6",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -3000,7 +3064,9 @@
   "id": null,
   "type": "choice",
   "hash": "5d8a995a6fa7cf7c",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },
@@ -3060,7 +3126,9 @@
   "id": null,
   "type": "noul",
   "hash": "f57f358c04ffae6c",
-  "defects": [],
+  "defects": [
+   "DEC012"
+  ],
   "borderline": [],
   "skipped": false
  },

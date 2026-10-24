@@ -4277,8 +4277,10 @@
   ]
  },
  {
-  "id": "good-c3",
-  "defects": [],
+  "id": "jev307-17",
+  "defects": [
+   "DEC307"
+  ],
   "question": {
    "type": "choice",
    "instructions": "Which lane does the swimmer ask for?",
@@ -4584,6 +4586,24 @@
     "not_stated": "No preference is given"
    }
   }
+ },
+ {
+  "id": "good-c21",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which room does the booking ask for?",
+   "criteria": {
+    "hall": "The main hall",
+    "studio": "The small studio",
+    "garden": "The outdoor space",
+    "not_stated": "No room is named"
+   }
+  },
+  "siblings": [
+   "date_given",
+   "deposit_paid"
+  ]
  },
  {
   "id": "good-r1",

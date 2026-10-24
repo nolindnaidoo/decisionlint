@@ -43,5 +43,5 @@ Each cell is two counts at the shipped cutoff: the examples known to have the de
 
 ## Notes
 
-- 17 of the 276 corpus questions were added after the TypeSafe run and have not been sent there, so the TypeSafe column counts the rest. The OpenRouter column answers as TypeSafe does and covers all of them.
+- 126 of the 385 corpus questions were added after the TypeSafe run and have not been sent there, so the TypeSafe column counts the rest. The OpenRouter column answers as TypeSafe does and covers all of them.
 - DEC302 flags a good example through OpenRouter, where findings are counted as calibrated: `good-p7` at 0.79, against a cutoff of 0.7.

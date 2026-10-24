@@ -1,25 +1,27 @@
 {
   "DEC101 double-negative": {
     "caught": "10 of 10",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [],
     "falseFirings": []
   },
   "DEC102 arithmetic": {
-    "caught": "14 of 14",
-    "firedOnGood": "0 of 119",
-    "missed": [],
+    "caught": "15 of 16",
+    "firedOnGood": "0 of 159",
+    "missed": [
+      "jev102-15"
+    ],
     "falseFirings": []
   },
   "DEC103 date-comparison": {
     "caught": "10 of 10",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [],
     "falseFirings": []
   },
   "DEC104 compound": {
     "caught": "6 of 10",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [
       "jev104-2",
       "jev104-4",
@@ -30,19 +32,19 @@
   },
   "DEC105 generation": {
     "caught": "11 of 11",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [],
     "falseFirings": []
   },
   "DEC107 negated-noul": {
     "caught": "9 of 9",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [],
     "falseFirings": []
   },
   "DEC108 inverted-criteria": {
     "caught": "6 of 9",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [
       "jev108-4",
       "jev108-5",
@@ -52,22 +54,29 @@
   },
   "DEC110 degree-levels": {
     "caught": "16 of 16",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [],
     "falseFirings": []
   },
   "DEC111 numeric-encoding": {
     "caught": "6 of 7",
-    "firedOnGood": "0 of 119",
+    "firedOnGood": "0 of 159",
     "missed": [
       "jev111-4"
     ],
     "falseFirings": []
   },
   "DEC112 undefined-boundary": {
-    "caught": "5 of 5",
-    "firedOnGood": "0 of 119",
-    "missed": [],
+    "caught": "10 of 16",
+    "firedOnGood": "0 of 159",
+    "missed": [
+      "jev112-6",
+      "jev112-7",
+      "jev112-12",
+      "jev112-14",
+      "jev112-15",
+      "jev112-16"
+    ],
     "falseFirings": []
   }
 }

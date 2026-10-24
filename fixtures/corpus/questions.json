@@ -3247,5 +3247,1662 @@
    "type": "noul",
    "instructions": "Did the run use an expensive model?"
   }
+ },
+ {
+  "id": "jev303-9",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What is the hiker reporting?",
+   "criteria": {
+    "fallen_tree": "A tree across the path",
+    "blocked_path": "Something blocking the path",
+    "washout": "The path washed away",
+    "other": "Anything else"
+   }
+  }
+ },
+ {
+  "id": "jev303-10",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Why is the member writing?",
+   "criteria": {
+    "billing": "A question about a payment",
+    "overcharge": "They were charged too much",
+    "timetable": "A question about class times",
+    "other": "Something else"
+   }
+  }
+ },
+ {
+  "id": "jev303-11",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the tenant report?",
+   "criteria": {
+    "leak": "Water coming in",
+    "damp": "Wet walls or ceilings",
+    "heating": "No heat or hot water",
+    "other": "Anything else"
+   }
+  }
+ },
+ {
+  "id": "jev303-12",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How did the parcel arrive?",
+   "criteria": {
+    "late": "After the promised day",
+    "delayed": "Later than promised",
+    "damaged": "The box was crushed",
+    "other": "Something else"
+   }
+  }
+ },
+ {
+  "id": "jev303-13",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What kind of talk is proposed?",
+   "criteria": {
+    "tutorial": "Teaches a skill step by step",
+    "workshop": "Hands-on teaching of a skill",
+    "keynote": "A talk for the whole conference",
+    "other": "None of these"
+   }
+  }
+ },
+ {
+  "id": "jev303-14",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What is the caller asking the library for?",
+   "criteria": {
+    "renewal": "To keep a book longer",
+    "extension": "More time before a book is due",
+    "reservation": "To hold a book for them",
+    "other": "Anything else"
+   }
+  }
+ },
+ {
+  "id": "jev303-15",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What is the garden post about?",
+   "criteria": {
+    "pests": "Insects or slugs eating the plants",
+    "slugs": "Slugs on the plants",
+    "watering": "How much to water",
+    "other": "Something else"
+   }
+  }
+ },
+ {
+  "id": "jev303-16",
+  "defects": [
+   "DEC303"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the diner complain about?",
+   "criteria": {
+    "cold_food": "The food was cold",
+    "temperature": "The food was not at the right temperature",
+    "wait": "The wait for a table",
+    "other": "Anything else"
+   }
+  }
+ },
+ {
+  "id": "jev304-9",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How full is the car park?",
+   "criteria": [
+    "Mostly empty",
+    "About half full",
+    "Half the spaces taken",
+    "No spaces left"
+   ]
+  }
+ },
+ {
+  "id": "jev304-10",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How well did the cake turn out?",
+   "criteria": [
+    "Burnt or raw",
+    "Edible but dry",
+    "Good",
+    "Perfectly baked",
+    "Came out just right"
+   ]
+  }
+ },
+ {
+  "id": "jev304-11",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How far has the planting got?",
+   "criteria": [
+    "Nothing in the ground yet",
+    "Seeds sown",
+    "Seeds planted",
+    "Seedlings up"
+   ]
+  }
+ },
+ {
+  "id": "jev304-12",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How busy was the cafe?",
+   "criteria": [
+    "Empty",
+    "A few tables taken",
+    "Some tables taken",
+    "Every table taken"
+   ]
+  }
+ },
+ {
+  "id": "jev304-13",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How well does the hire car run?",
+   "criteria": [
+    "Will not start",
+    "Starts but shows a warning light",
+    "Runs with a fault showing",
+    "Runs with no faults"
+   ]
+  }
+ },
+ {
+  "id": "jev304-14",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How sure is the tenant about where the leak comes from?",
+   "criteria": [
+    "No idea",
+    "A guess",
+    "A hunch",
+    "Saw where it comes from"
+   ]
+  }
+ },
+ {
+  "id": "jev304-15",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How complete is the library return?",
+   "criteria": [
+    "Nothing returned",
+    "Some books returned",
+    "Part of the loan returned",
+    "Everything returned"
+   ]
+  }
+ },
+ {
+  "id": "jev304-16",
+  "defects": [
+   "DEC304"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How ready is the talk?",
+   "criteria": [
+    "No slides yet",
+    "An outline only",
+    "A draft of the slides",
+    "Slides drafted",
+    "Rehearsed and timed"
+   ]
+  }
+ },
+ {
+  "id": "jev305-9",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Which lane should the swimmer use?",
+   "criteria": {
+    "slow": "For the fastest swimmers",
+    "fast": "For those taking it easy",
+    "medium": "For everyone else"
+   }
+  }
+ },
+ {
+  "id": "jev305-10",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the gardener want to do with the plant?",
+   "criteria": {
+    "keep": "Dig it up and throw it away",
+    "remove": "Leave it where it is",
+    "move": "Replant it somewhere else"
+   }
+  }
+ },
+ {
+  "id": "jev305-11",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How was the parcel left?",
+   "criteria": {
+    "handed_over": "Left on the doorstep",
+    "doorstep": "Given to the person at the door",
+    "neighbour": "Left with a neighbour"
+   }
+  }
+ },
+ {
+  "id": "jev305-12",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Which loan period does the reader want?",
+   "criteria": {
+    "short": "The longest the library allows",
+    "long": "A few days only",
+    "standard": "The usual three weeks"
+   }
+  }
+ },
+ {
+  "id": "jev305-13",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Was the class full?",
+   "criteria": {
+    "full": "Spaces were left",
+    "spaces": "Every place was taken",
+    "cancelled": "It did not run"
+   }
+  }
+ },
+ {
+  "id": "jev305-14",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Which meal is the review about?",
+   "criteria": {
+    "breakfast": "The evening meal",
+    "dinner": "The morning meal",
+    "lunch": "The midday meal"
+   }
+  }
+ },
+ {
+  "id": "jev305-15",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What was the weather in the report?",
+   "criteria": {
+    "dry": "Rain all day",
+    "wet": "No rain at all",
+    "mixed": "Some of each"
+   }
+  }
+ },
+ {
+  "id": "jev305-16",
+  "defects": [
+   "DEC305"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What did the mechanic find?",
+   "criteria": {
+    "worn": "The part is new",
+    "new": "The part is worn out",
+    "missing": "The part is not there"
+   }
+  }
+ },
+ {
+  "id": "jev306-9",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the tenant ask for a repair?",
+   "criteria": {
+    "true": "The message was sent in the morning.",
+    "false": "The message was sent in the afternoon or evening."
+   }
+  }
+ },
+ {
+  "id": "jev306-10",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the hiker's route named?",
+   "criteria": {
+    "true": "The hiker went alone.",
+    "false": "The hiker went in a group."
+   }
+  }
+ },
+ {
+  "id": "jev306-11",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the diner complain about?",
+   "criteria": {
+    "food": "The reviewer is a regular",
+    "service": "The reviewer is a first-time visitor",
+    "other": "It is not said how often they come"
+   }
+  }
+ },
+ {
+  "id": "jev306-12",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How urgent is the repair?",
+   "criteria": [
+    "The caller gave a first name only",
+    "The caller gave a full name",
+    "The caller gave a name and a membership number"
+   ]
+  }
+ },
+ {
+  "id": "jev306-13",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the claim include photos?",
+   "criteria": {
+    "true": "The claimant writes in full sentences.",
+    "false": "The claimant writes in notes."
+   }
+  }
+ },
+ {
+  "id": "jev306-14",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Which track fits this talk?",
+   "criteria": {
+    "tooling": "The abstract is short",
+    "people": "The abstract is long",
+    "other": "The abstract has no stated length"
+   }
+  }
+ },
+ {
+  "id": "jev306-15",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How thirsty is the plant?",
+   "criteria": [
+    "The pot is on a windowsill",
+    "The pot is on the floor",
+    "The pot is outside"
+   ]
+  }
+ },
+ {
+  "id": "jev306-16",
+  "defects": [
+   "DEC306"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Did the swimmer book a lane?",
+   "criteria": {
+    "true": "The swimmer is a member.",
+    "false": "The swimmer paid on the day."
+   }
+  }
+ },
+ {
+  "id": "jev307-9",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How wet is the trail?",
+   "criteria": {
+    "dry": "Dust underfoot",
+    "muddy": "Mud in places",
+    "flooded": "Water across the path"
+   }
+  }
+ },
+ {
+  "id": "jev307-10",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How much of the loan is overdue?",
+   "criteria": {
+    "none": "Nothing overdue",
+    "some": "A few books overdue",
+    "all": "Every book overdue"
+   }
+  }
+ },
+ {
+  "id": "jev307-11",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How noisy are the neighbours?",
+   "criteria": {
+    "quiet": "Rarely heard",
+    "audible": "Heard most evenings",
+    "loud": "Heard through closed doors every night"
+   }
+  }
+ },
+ {
+  "id": "jev307-12",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How fresh is the bread?",
+   "criteria": {
+    "fresh": "Baked today",
+    "day_old": "Baked yesterday",
+    "stale": "Hard to the touch"
+   }
+  }
+ },
+ {
+  "id": "jev307-13",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How full is the class?",
+   "criteria": {
+    "empty": "Nobody has booked",
+    "filling": "Some places taken",
+    "full": "No places left"
+   }
+  }
+ },
+ {
+  "id": "jev307-14",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How far did the swimmer get?",
+   "criteria": {
+    "one_length": "One length",
+    "half": "Half the distance",
+    "whole": "The whole distance"
+   }
+  }
+ },
+ {
+  "id": "jev307-15",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How much of the claim is supported?",
+   "criteria": {
+    "none": "No receipts or photos",
+    "partly": "Some receipts or photos",
+    "fully": "Receipts and photos for everything"
+   }
+  }
+ },
+ {
+  "id": "jev307-16",
+  "defects": [
+   "DEC307"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "How much has the cat eaten?",
+   "criteria": {
+    "nothing": "Nothing at all",
+    "a_little": "A few mouthfuls",
+    "normal": "Its usual amount"
+   }
+  }
+ },
+ {
+  "id": "jev308-9",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "Which lane did the swimmer use?",
+   "criteria": [
+    "The slow lane",
+    "The fast lane",
+    "The family lane"
+   ]
+  }
+ },
+ {
+  "id": "jev308-10",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "What is the garden post about?",
+   "criteria": [
+    "Pests",
+    "Watering",
+    "Pruning"
+   ]
+  }
+ },
+ {
+  "id": "jev308-11",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "Who is the parcel for?",
+   "criteria": [
+    "The householder",
+    "A neighbour",
+    "A business"
+   ]
+  }
+ },
+ {
+  "id": "jev308-12",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "What does the claim concern?",
+   "criteria": [
+    "A phone",
+    "A bicycle",
+    "A laptop"
+   ]
+  }
+ },
+ {
+  "id": "jev308-13",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "What kind of book is on loan?",
+   "criteria": [
+    "A novel",
+    "A cookbook",
+    "A travel guide"
+   ]
+  }
+ },
+ {
+  "id": "jev308-14",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "Which room needs painting?",
+   "criteria": [
+    "The kitchen",
+    "The hall",
+    "A bedroom"
+   ]
+  }
+ },
+ {
+  "id": "jev308-15",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "Where did the hiker start?",
+   "criteria": [
+    "The north car park",
+    "The village",
+    "The station"
+   ]
+  }
+ },
+ {
+  "id": "jev308-16",
+  "defects": [
+   "DEC308"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "Which instrument does the pupil learn?",
+   "criteria": [
+    "Piano",
+    "Violin",
+    "Drums"
+   ]
+  }
+ },
+ {
+  "id": "jev309-9",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "If `species` is cat, is the cat kept indoors?"
+  },
+  "siblings": [
+   "species",
+   "age_band"
+  ]
+ },
+ {
+  "id": "jev309-10",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Given the team chosen in `team`, is the ticket already with them?"
+  },
+  "siblings": [
+   "team",
+   "language"
+  ]
+ },
+ {
+  "id": "jev309-11",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "For the meal picked in `meal`, which course is complained about?",
+   "criteria": {
+    "starter": "The first course",
+    "main": "The main course",
+    "dessert": "The sweet course",
+    "none": "No course is named"
+   }
+  },
+  "siblings": [
+   "meal",
+   "tone"
+  ]
+ },
+ {
+  "id": "jev309-12",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the deadline found by `has_deadline` name a weekday?"
+  },
+  "siblings": [
+   "has_deadline",
+   "job_type"
+  ]
+ },
+ {
+  "id": "jev309-13",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "score",
+   "instructions": "How well does the route in `trail_name` match the distance the hiker reports?",
+   "criteria": [
+    "Not at all",
+    "Roughly",
+    "Exactly"
+   ]
+  },
+  "siblings": [
+   "trail_name",
+   "turned_back"
+  ]
+ },
+ {
+  "id": "jev309-14",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "When `wants_refund` is true, does the diner give an order number?"
+  },
+  "siblings": [
+   "wants_refund",
+   "mood"
+  ]
+ },
+ {
+  "id": "jev309-15",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Using the lane from `lane`, was the swimmer in the right lane for their speed?"
+  },
+  "siblings": [
+   "lane",
+   "booked"
+  ]
+ },
+ {
+  "id": "jev309-16",
+  "defects": [
+   "DEC309"
+  ],
+  "question": {
+   "type": "choice",
+   "instructions": "Given the outcome in `outcome`, which follow-up applies?",
+   "criteria": {
+    "call_back": "Someone should ring the customer",
+    "invoice": "Send the bill",
+    "none": "Nothing further"
+   }
+  },
+  "siblings": [
+   "outcome",
+   "parts_ordered"
+  ]
+ },
+ {
+  "id": "jev102-15",
+  "defects": [
+   "DEC102"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Are there more cats than dogs on the waiting list?"
+  }
+ },
+ {
+  "id": "jev102-16",
+  "defects": [
+   "DEC102"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the total of the three invoices come to more than the deposit?"
+  }
+ },
+ {
+  "id": "jev112-6",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the queue at the cafe long?"
+  }
+ },
+ {
+  "id": "jev112-7",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the gym get busy?"
+  }
+ },
+ {
+  "id": "jev112-8",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the repair expensive?"
+  }
+ },
+ {
+  "id": "jev112-9",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the hiker stop often?"
+  }
+ },
+ {
+  "id": "jev112-10",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the garden big?"
+  }
+ },
+ {
+  "id": "jev112-11",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the talk too long?"
+  }
+ },
+ {
+  "id": "jev112-12",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the parcel heavy?"
+  }
+ },
+ {
+  "id": "jev112-13",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the library quiet enough?"
+  }
+ },
+ {
+  "id": "jev112-14",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Does the tenant pay a lot of rent?"
+  }
+ },
+ {
+  "id": "jev112-15",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the class popular?"
+  }
+ },
+ {
+  "id": "jev112-16",
+  "defects": [
+   "DEC112"
+  ],
+  "question": {
+   "type": "noul",
+   "instructions": "Is the bread fresh?"
+  }
+ },
+ {
+  "id": "good-c1",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which part of the bike does the customer mention?",
+   "criteria": {
+    "wheels": "Rims, spokes or tyres",
+    "brakes": "Pads, cables or levers",
+    "gears": "Chain, cassette or shifters",
+    "other": "Another part, or none is named"
+   }
+  },
+  "siblings": [
+   "has_deadline",
+   "mood"
+  ]
+ },
+ {
+  "id": "good-c2",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the reader want from the library?",
+   "criteria": {
+    "borrow": "To take a book out",
+    "return": "To bring a book back",
+    "join": "To become a member",
+    "other": "Something else"
+   }
+  },
+  "siblings": [
+   "is_member",
+   "tone"
+  ]
+ },
+ {
+  "id": "good-c3",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which lane does the swimmer ask for?",
+   "criteria": {
+    "slow": "The slow lane",
+    "medium": "The medium lane",
+    "fast": "The fast lane",
+    "not_stated": "No lane is named"
+   }
+  },
+  "siblings": [
+   "booked",
+   "time_of_day"
+  ]
+ },
+ {
+  "id": "good-c4",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What is the garden post asking about?",
+   "criteria": {
+    "planting": "What or when to plant",
+    "pests": "Insects, slugs or disease",
+    "watering": "How much or how often to water",
+    "other": "Something else"
+   }
+  },
+  "siblings": [
+   "has_photo",
+   "season"
+  ]
+ },
+ {
+  "id": "good-c5",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What did the claimant lose?",
+   "criteria": {
+    "phone": "A mobile phone",
+    "bicycle": "A bicycle",
+    "luggage": "A bag or suitcase",
+    "other": "Another item"
+   }
+  },
+  "siblings": [
+   "has_receipt",
+   "abroad"
+  ]
+ },
+ {
+  "id": "good-c6",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which course is the diner writing about?",
+   "criteria": {
+    "starter": "The first course",
+    "main": "The main course",
+    "dessert": "The sweet course",
+    "drinks": "Drinks only",
+    "not_stated": "No course is named"
+   }
+  },
+  "siblings": [
+   "wants_refund",
+   "mood"
+  ]
+ },
+ {
+  "id": "good-c7",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "How did the parcel reach the customer?",
+   "criteria": {
+    "handed_over": "Given to someone at the door",
+    "safe_place": "Left in a place the customer chose",
+    "neighbour": "Left with a neighbour",
+    "not_delivered": "It has not arrived"
+   }
+  },
+  "siblings": [
+   "damaged",
+   "signed_for"
+  ]
+ },
+ {
+  "id": "good-c8",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What is the tenant asking the landlord for?",
+   "criteria": {
+    "repair": "Something to be fixed",
+    "visit": "Someone to come and look",
+    "money": "A refund or a rent change",
+    "other": "Anything else"
+   }
+  },
+  "siblings": [
+   "urgent",
+   "tone"
+  ]
+ },
+ {
+  "id": "good-c9",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which instrument does the pupil learn?",
+   "criteria": {
+    "piano": "Piano or keyboard",
+    "strings": "Violin, viola or cello",
+    "drums": "Drums or percussion",
+    "other": "Another instrument"
+   }
+  },
+  "siblings": [
+   "beginner",
+   "has_own_instrument"
+  ]
+ },
+ {
+  "id": "good-c10",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Who should the cafe message go to?",
+   "criteria": {
+    "kitchen": "An order or an allergy",
+    "front_of_house": "A booking or a seating question",
+    "manager": "A complaint or a compliment",
+    "other": "None of these"
+   }
+  },
+  "siblings": [
+   "is_complaint",
+   "language"
+  ]
+ },
+ {
+  "id": "good-c11",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What kind of hire does the customer want?",
+   "criteria": {
+    "car": "A car",
+    "van": "A van",
+    "bike": "A bicycle",
+    "not_stated": "The vehicle is not named"
+   }
+  },
+  "siblings": [
+   "has_licence",
+   "dates_given"
+  ]
+ },
+ {
+  "id": "good-c12",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which topic is the podcast episode on?",
+   "criteria": {
+    "interview": "A conversation with a guest",
+    "news": "Recent events",
+    "listener_questions": "Answers to listener messages",
+    "other": "Something else"
+   }
+  },
+  "siblings": [
+   "has_guest",
+   "sponsor_read"
+  ]
+ },
+ {
+  "id": "good-c13",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Where on the trail was the problem?",
+   "criteria": {
+    "start": "Near the car park",
+    "middle": "Along the way",
+    "summit": "At or near the top",
+    "not_stated": "The report does not say"
+   }
+  },
+  "siblings": [
+   "trail_name",
+   "turned_back"
+  ]
+ },
+ {
+  "id": "good-c14",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the school trip form ask for?",
+   "criteria": {
+    "consent": "A parent's signature",
+    "payment": "Money for the trip",
+    "medical": "Health or dietary details",
+    "other": "Something else"
+   }
+  },
+  "siblings": [
+   "signed",
+   "paid"
+  ]
+ },
+ {
+  "id": "good-c15",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the dry cleaner's note say about the coat?",
+   "criteria": {
+    "ready": "It can be collected",
+    "delayed": "It needs more time",
+    "problem": "A stain or damage was found",
+    "other": "Something else"
+   }
+  },
+  "siblings": [
+   "has_ticket_number",
+   "paid"
+  ]
+ },
+ {
+  "id": "good-c16",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "Which service does the gym member ask about?",
+   "criteria": {
+    "classes": "A timetabled class",
+    "personal_training": "One-to-one sessions",
+    "pool": "Swimming",
+    "other": "Anything else"
+   }
+  },
+  "siblings": [
+   "is_member",
+   "cancelling"
+  ]
+ },
+ {
+  "id": "good-c17",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What is the vet's note mainly about?",
+   "criteria": {
+    "vaccination": "A jab or booster",
+    "injury": "A wound, limp or break",
+    "diet": "Food or weight",
+    "other": "Something else"
+   }
+  }
+ },
+ {
+  "id": "good-c18",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the conference attendee ask for?",
+   "criteria": {
+    "ticket": "Buying or changing a ticket",
+    "schedule": "When or where a talk is",
+    "access": "Step-free access or other needs",
+    "other": "Something else"
+   }
+  }
+ },
+ {
+  "id": "good-c19",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "What does the bakery order ask for?",
+   "criteria": {
+    "bread": "Loaves or rolls",
+    "cake": "A cake or pastries",
+    "sandwiches": "Filled rolls or sandwiches",
+    "other": "Something else"
+   }
+  }
+ },
+ {
+  "id": "good-c20",
+  "defects": [],
+  "question": {
+   "type": "choice",
+   "instructions": "How does the customer want to be contacted?",
+   "criteria": {
+    "phone": "By telephone",
+    "email": "By email",
+    "post": "By letter",
+    "not_stated": "No preference is given"
+   }
+  }
+ },
+ {
+  "id": "good-r1",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the trail did the hiker complete?",
+   "criteria": [
+    "Turned back near the start",
+    "Reached about halfway",
+    "Reached the top"
+   ]
+  },
+  "siblings": [
+   "trail_name",
+   "weather"
+  ]
+ },
+ {
+  "id": "good-r2",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How well does the swimmer manage the distance?",
+   "criteria": [
+    "Stops after one length",
+    "Rests between lengths",
+    "Swims the distance without stopping"
+   ]
+  },
+  "siblings": [
+   "lane",
+   "booked"
+  ]
+ },
+ {
+  "id": "good-r3",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How far has the garden project got?",
+   "criteria": [
+    "Nothing planted yet",
+    "Beds dug and seeds sown",
+    "Plants established and growing"
+   ]
+  },
+  "siblings": [
+   "has_photo",
+   "season"
+  ]
+ },
+ {
+  "id": "good-r4",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the claim is backed by evidence?",
+   "criteria": [
+    "No receipts or photos",
+    "Some receipts or photos",
+    "Receipts and photos for every item"
+   ]
+  },
+  "siblings": [
+   "has_receipt",
+   "abroad"
+  ]
+ },
+ {
+  "id": "good-r5",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How ready is the hire car to go out?",
+   "criteria": [
+    "Needs repair first",
+    "Needs cleaning or fuel only",
+    "Ready to hand over"
+   ]
+  },
+  "siblings": [
+   "has_licence",
+   "dates_given"
+  ]
+ },
+ {
+  "id": "good-r6",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the order did the bakery fill?",
+   "criteria": [
+    "Nothing was ready",
+    "Part of the order was ready",
+    "The whole order was ready"
+   ]
+  },
+  "siblings": [
+   "paid",
+   "collection_day"
+  ]
+ },
+ {
+  "id": "good-r7",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How far has the pupil got with the piece?",
+   "criteria": [
+    "Cannot play it through",
+    "Plays it through with stops",
+    "Plays it through from memory"
+   ]
+  },
+  "siblings": [
+   "beginner",
+   "has_own_instrument"
+  ]
+ },
+ {
+  "id": "good-r8",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the loan has the reader returned?",
+   "criteria": [
+    "Nothing",
+    "Some of the books",
+    "Every book"
+   ]
+  },
+  "siblings": [
+   "is_member",
+   "overdue"
+  ]
+ },
+ {
+  "id": "good-r9",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How well attended was the class?",
+   "criteria": [
+    "Nobody came",
+    "A few places were taken",
+    "Every place was taken"
+   ]
+  },
+  "siblings": [
+   "cancelled",
+   "instructor_named"
+  ]
+ },
+ {
+  "id": "good-r10",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much does the tenant say about the fault?",
+   "criteria": [
+    "Only that something is wrong",
+    "What is wrong and where",
+    "What is wrong, where, and when it started"
+   ]
+  },
+  "siblings": [
+   "urgent",
+   "tone"
+  ]
+ },
+ {
+  "id": "good-r11",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How far through the episode is the guest introduced?",
+   "criteria": [
+    "In the opening minute",
+    "Partway through",
+    "Near the end"
+   ]
+  },
+  "siblings": [
+   "has_guest",
+   "sponsor_read"
+  ]
+ },
+ {
+  "id": "good-r12",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the form has the parent completed?",
+   "criteria": [
+    "Nothing filled in",
+    "Some sections filled in",
+    "Every section filled in and signed"
+   ]
+  },
+  "siblings": [
+   "signed",
+   "paid"
+  ]
+ },
+ {
+  "id": "good-r13",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How closely does the parcel match the order?",
+   "criteria": [
+    "Nothing that was ordered",
+    "Some of what was ordered",
+    "Everything that was ordered"
+   ]
+  },
+  "siblings": [
+   "damaged",
+   "signed_for"
+  ]
+ },
+ {
+  "id": "good-r14",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How well does the vet's note explain the treatment?",
+   "criteria": [
+    "No treatment is described",
+    "The treatment is named but not explained",
+    "The treatment and the reason for it are explained"
+   ]
+  },
+  "siblings": [
+   "species",
+   "age_band"
+  ]
+ },
+ {
+  "id": "good-r15",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the cafe order was wrong?",
+   "criteria": [
+    "Nothing was wrong",
+    "One item was wrong",
+    "Most of the order was wrong"
+   ]
+  },
+  "siblings": [
+   "is_complaint",
+   "language"
+  ]
+ },
+ {
+  "id": "good-r16",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How settled is the booking for the talk?",
+   "criteria": [
+    "Proposed only",
+    "Accepted, with no slot yet",
+    "Accepted with a slot and a room"
+   ]
+  }
+ },
+ {
+  "id": "good-r17",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the dry cleaning is ready?",
+   "criteria": [
+    "None of it",
+    "Some items",
+    "Everything"
+   ]
+  }
+ },
+ {
+  "id": "good-r18",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How clear is the tenant about when the leak started?",
+   "criteria": [
+    "No idea when",
+    "Roughly when",
+    "The exact day"
+   ]
+  }
+ },
+ {
+  "id": "good-r19",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How far has the repair of the gate got?",
+   "criteria": [
+    "Not started",
+    "Taken apart",
+    "Rehung and tested"
+   ]
+  }
+ },
+ {
+  "id": "good-r20",
+  "defects": [],
+  "question": {
+   "type": "score",
+   "instructions": "How much of the menu did the diner recognise?",
+   "criteria": [
+    "None of the dishes",
+    "Some of the dishes",
+    "Every dish"
+   ]
+  }
  }
 ]

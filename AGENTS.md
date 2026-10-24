@@ -360,10 +360,14 @@ is a copy again.
   the next measurement. `fixtures/public-sample/` is spent.
   `fixtures/public-sample-2/` is spent since 2026-10-23, when `DEC110` and
   `DEC112` went off because of it. `fixtures/public-sample-3/` was in view
-  when 0.4.0 was tuned. The next measurement needs a fourth draw.
+  when 0.4.0 was tuned. `fixtures/public-sample-4/`, drawn 2026-10-24 with
+  OpenAI callers in the pool for the first time, is unspent: it measured
+  `DEC012` and nothing was changed because of it.
 - **A sample is drawn and scored by script, and labelled by hand in
   between.** `scripts/draw-public-sample.ts` writes the question text outside
-  this repo and leaves out everything an earlier sample used. The labels are
+  this repo, to `../decisionlint-samples/`, a directory beside it that is not
+  a repository and is kept, since sample 2's text was lost once. It leaves
+  out everything an earlier sample used. The labels are
   committed on their own before `scripts/score-public-sample.ts` is run, so
   the history shows they came first. When the drawn file is gone,
   `scripts/refetch-public-sample.ts` rebuilds it from the labels, keeping

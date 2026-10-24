@@ -26,6 +26,13 @@ none of them was tuned against. The tables are in
   with `levels` and no `instructions` is not a question; a `model` in the
   project's own type is a request's only beside `questions`, `input` or
   `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
+- **Public sample 4 measures `DEC012`.** 300 questions drawn on 2026-10-24
+  from 3,000 public files, with OpenAI's Decisions API callers in the pool
+  for the first time, 86 of the 300, labelled by hand before any rule ran.
+  `DEC012` caught 33 of 47 with 0 wrong in 35 firings. `DEC110` was right 7
+  of 7 and `DEC112` 1 of 1, both still off. Nothing changed because of it,
+  so the sample is unspent. `scripts/draw-public-sample.ts` now searches
+  OpenAI callers too and records each question's shape.
 - **A lost sample can be rebuilt.** `scripts/refetch-public-sample.ts`
   fetches a sample's files again and keeps each question whose instructions
   still hash to a label. The scorer counts the rest as missing instead of

@@ -597,8 +597,39 @@ What changed because of it:
 - `DEC102` caught 2 of 6 with none wrong. "40 minutes or longer", a miss on
   the first run, is caught since 0.4.0.
 
-The sample is spent. The next measurement needs a fourth draw, and the pool
-of unused public Jev code was already running down at the third.
+The sample is spent. The fourth draw is under "What public sample 4 showed".
+
+### What public sample 4 showed
+
+`fixtures/public-sample-4/` is 300 questions drawn on 2026-10-24 from 3,000
+public files no earlier sample had used, with OpenAI's Decisions API callers
+in the pool for the first time: 86 of the 300 are in OpenAI's shape, 206 in
+TypeSafe's and 8 in the Vercel AI SDK's. Every wording rule was labelled by
+hand before any ran, `DEC110` and `DEC112` included although both are off.
+279 were read; 56 had a clear defect, 47 of them instructions that do not
+say what is asked.
+
+| | Default-on rules | Every wording rule |
+|---|---|---|
+| Clear defects under those rules | 51 | 70 |
+| Caught | 34 | 42 |
+| Findings | 38 | 47 |
+| Findings that were wrong | 2 | 3 |
+
+- `DEC012 terse-instructions`, measured for the first time on labels it was
+  not tuned against: 33 of 47 caught, 35 firings, 0 wrong. The misses are
+  two-word questions that open with a question word, which it leaves alone
+  on purpose, and three or more words that say nothing.
+- `DEC110`, off, 7 of 7 right, 10 missed: eight are Scores in OpenAI's shape
+  whose levels have labels and no descriptions, which the rule never reads,
+  issue #73. `DEC112`, off, 1 of 1.
+- Three findings are wrong by the labels and right by the rules' own words,
+  cases the labeller did not mark: `DEC011` on "bo": "Bo", `DEC101` on "is
+  NOT inappropriate", and `DEC104`, off, on "feel helpful and would not
+  interrupt". The labels stand, as sample 2's did for `DEC110`.
+
+No default moved. Whether `DEC101` on 0 of 1, or `DEC110` on 7 of 7, moves
+one is a decision that spends the sample, and it is unspent.
 
 ### Not built
 

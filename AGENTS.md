@@ -819,6 +819,7 @@ difference matters when the family changes one.
 | `.github/dependabot.yml` | Cut down: no `cargo` entry |
 | `.github/workflows/jev-release.yml`, `scripts/check-jev-release.ts` | This repo's own. The family declares no vendor's model version |
 | `.github/workflows/release-shim.yml`, `shim/`, `scripts/e2e-shims.js` | This repo's own: the bridges to the names 1.0.0 left behind |
+| `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` | This repo's own: the family has none. The first two point here for every rule and restate none; the third is Contributor Covenant 2.1 unchanged but for the contact. Private vulnerability reporting is on in the repository settings, and SECURITY.md links its form |
 | `.github/ISSUE_TEMPLATE/*.yml`, `.github/PULL_REQUEST_TEMPLATE.md` | This repo's own: the family has none. The two finding forms ask for the question as written, its language and the rule code; `src/issue-forms.test.ts` holds the rule dropdown to `RULE_CODES`, the language dropdowns to `EXTENSIONS`, and every label a form applies to the ones the repository has, since GitHub applies a label it lacks silently |
 
 - **`letools-site`'s fleet check names this repo and does not compare it.** It

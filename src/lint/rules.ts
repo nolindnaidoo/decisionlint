@@ -219,7 +219,10 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		// right, against 12 of 12 for described levels. The largest cost measured
 		// on any wording rule here. Also the most common real defect in public
 		// code, 15 clear cases across two samples, right on every firing.
-		severity: 'warning',
+		// Off since 1.1.0: on public sample 2 at 1.0.1, right on 8 of 9 firings,
+		// under 9 of 10 by one. The one wrong by the labels was low, medium,
+		// high, critical. A passing run on the next sample puts it back on.
+		severity: 'off',
 		docs: DOCS.scoreLevels,
 	},
 	DEC111: {
@@ -236,7 +239,9 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		meaning:
 			'A Noul with no criteria turns on a word such as large, often or enough',
 		// Measured: 4 of 6 right, against 6 of 6 once criteria drew the line.
-		severity: 'info',
+		// Off since 1.1.0: on public sample 2 at 1.0.1, right on 2 of 3 firings.
+		// The wrong one was "cheap", with its line drawn in the next sentence.
+		severity: 'off',
 		docs: `${DOCS.jaggedness}#literal-reading`,
 	},
 	DEC301: {

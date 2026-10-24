@@ -323,16 +323,23 @@ describe('defaults', () => {
 		expect(lintText(text).findings).toEqual([]);
 	});
 
-	it('keeps degree levels on, the most common defect in public code', () => {
+	it('ships degree levels off since 1.1.0, under the gate on public sample 2', () => {
+		// Right on 8 of 9 firings there, one under 9 of 10. Still the most common
+		// real defect in public code, so it stays a rule and is a flag away.
 		const text = JSON.stringify({
 			questions: { f: score(['Poor', 'Fair', 'Good']) },
 		});
-		expect(lintText(text).findings.map((finding) => finding.code)).toEqual([
-			'DEC110',
-		]);
+		expect(lintText(text).findings).toEqual([]);
+		expect(
+			lintText(text, {
+				...DEFAULT_OPTIONS,
+				rules: { DEC110: 'warning' },
+			}).findings.map((finding) => finding.code),
+		).toEqual(['DEC110']);
 	});
 
-	it('keeps the measured ones on', () => {
+	it('keeps the measured ones on, and undefined-boundary off since 1.1.0', () => {
+		// DEC112 was right on 2 of 3 firings on public sample 2.
 		const text = JSON.stringify({
 			questions: {
 				a: noul('Is the invoice not unpaid?'),
@@ -342,6 +349,12 @@ describe('defaults', () => {
 		});
 		expect(
 			lintText(text).findings.map((f) => `${f.code} ${f.severity}`),
+		).toEqual(['DEC101 info', 'DEC102 warning']);
+		expect(
+			lintText(text, {
+				...DEFAULT_OPTIONS,
+				rules: { DEC112: 'info' },
+			}).findings.map((f) => `${f.code} ${f.severity}`),
 		).toEqual(['DEC101 info', 'DEC102 warning', 'DEC112 info']);
 	});
 });

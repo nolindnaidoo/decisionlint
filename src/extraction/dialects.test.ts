@@ -180,7 +180,15 @@ const result = await decide({
 			['team', 'choice', 'vercel'],
 			['sev', 'score', 'vercel'],
 		]);
-		expect(codes(text)).toEqual(['DEC012', 'DEC004', 'DEC011', 'DEC110']);
+		expect(codes(text)).toEqual(['DEC012', 'DEC004', 'DEC011']);
+		// The levels reached DEC110 too; it is off by default since 1.1.0.
+		expect(
+			lintText(
+				text,
+				{ ...DEFAULT_OPTIONS, rules: { DEC110: 'warning' } },
+				'js',
+			).findings.map((f) => f.code),
+		).toEqual(['DEC012', 'DEC004', 'DEC011', 'DEC110']);
 	});
 
 	it('says "the model", since the SDK routes to either vendor', () => {

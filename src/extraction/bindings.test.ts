@@ -171,8 +171,12 @@ describe('text with runtime parts', () => {
 			'const q = { questions: { a: { type: "noul", instructions: `Is the order large? @{RULE}` } } };',
 		);
 		const plain = `const q = { questions: { a: { type: "noul", instructions: "Is the order large?" } } };`;
-		expect(codes(plain)).toContain('DEC112');
-		expect(codes(slotted)).toEqual(['DEC000']);
+		// DEC112 is off by default since 1.1.0, so it is asked for here.
+		const on = { ...DEFAULT_OPTIONS, rules: { DEC112: 'warning' as const } };
+		const with112 = (text: string) =>
+			lintText(text, on, 'js').findings.map((finding) => finding.code);
+		expect(with112(plain)).toContain('DEC112');
+		expect(with112(slotted)).toEqual(['DEC000']);
 	});
 
 	it('leaves a sum of two names alone', () => {

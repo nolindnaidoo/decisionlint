@@ -51,11 +51,18 @@ const rows = WORDING.map((code) => ({
 }));
 const byCode = new Map(rows.map((row) => [row.code as string, row]));
 
+// A drawn file rebuilt by `refetch-public-sample.ts` lacks the questions whose
+// files have changed since the draw. Those are counted and left out. Text for
+// none of them means the wrong file.
 let read = 0;
+let noText = 0;
 for (const label of labels) {
 	if (label.skipped) continue;
 	const question = text.get(label.hash);
-	if (!question) throw new Error(`no text for ${label.hash}: wrong drawn file?`);
+	if (!question) {
+		noText += 1;
+		continue;
+	}
 	read += 1;
 	const request = JSON.stringify({
 		questions: { [question.id ?? 'q']: { type: question.type, instructions: question.instructions, ...(question.criteria === undefined ? {} : { criteria: question.criteria }) } },
@@ -80,10 +87,12 @@ for (const label of labels) {
 const on = rows.filter((row) => row.onByDefault);
 const sum = (list: typeof rows, pick: (row: (typeof rows)[number]) => number) =>
 	list.reduce((all, row) => all + pick(row), 0);
+if (read === 0) throw new Error(`no text for any question in ${sampleDir}: wrong drawn file?`);
 console.log(JSON.stringify({
 	questionsRead: read,
-	skipped: labels.length - read,
-	withClearDefect: labels.filter((label) => !label.skipped && label.defects.length).length,
+	skipped: labels.filter((label) => label.skipped).length,
+	noText,
+	withClearDefect: labels.filter((label) => !label.skipped && label.defects.length && text.has(label.hash)).length,
 	defaultOn: { defects: sum(on, (r) => r.defects), caught: sum(on, (r) => r.caught), findings: sum(on, (r) => r.fired), wrong: sum(on, (r) => r.wrong) },
 	allRules: { defects: sum(rows, (r) => r.defects), caught: sum(rows, (r) => r.caught), findings: sum(rows, (r) => r.fired), wrong: sum(rows, (r) => r.wrong) },
 	rules: rows,

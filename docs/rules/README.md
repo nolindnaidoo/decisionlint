@@ -26,9 +26,9 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 | [DEC105](DEC105.md) | generation | warning | The question asks for a value or for text to be written |
 | [DEC107](DEC107.md) | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
 | [DEC108](DEC108.md) | inverted-criteria | off | A Noul's 'true' criterion describes the negative case |
-| [DEC110](DEC110.md) | degree-levels | warning | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
+| [DEC110](DEC110.md) | degree-levels | off | Score levels are degree words, bare labels, or one word turned up and down. Nothing for Jev to match the state against |
 | [DEC111](DEC111.md) | numeric-encoding | off | The question refers to a value by hex or RGB encoding |
-| [DEC112](DEC112.md) | undefined-boundary | info | A Noul with no criteria turns on a word such as large, often or enough |
+| [DEC112](DEC112.md) | undefined-boundary | off | A Noul with no criteria turns on a word such as large, often or enough |
 | [DEC301](DEC301.md) | model-counting | warning | Jev reads the question as needing counting or arithmetic |
 | [DEC302](DEC302.md) | model-undefined-boundary | info | Jev reads a Noul as turning on a matter of degree with no stated line |
 | [DEC303](DEC303.md) | model-overlapping-options | info | Jev reads two options of a Choice as covering the same cases |

@@ -1,6 +1,7 @@
+import { type CheckCode, CUTOFFS } from '../ask/cutoffs';
 import type { QuestionLiteral } from '../ask/literal';
 import { DEFAULT_MODEL } from '../ask/review';
-import { REQUEST_REVIEWS, REVIEWS } from '../ask/reviews';
+import { REVIEWS } from '../ask/reviews';
 
 /**
  * What a calibration run saved, and how its numbers are read. The script
@@ -57,21 +58,77 @@ export const CHECKS: ReadonlyArray<string> = [
 	'DEC312',
 ].sort();
 
-/** The probability at or above which a check reports. */
-export function cutoffOf(code: string): number {
-	const review = REVIEWS.find((each) => each.code === code);
-	if (review) return review.cutoff;
-	const whole = (
-		REQUEST_REVIEWS as Readonly<Record<string, { cutoff: number }>>
-	)[code];
-	if (whole) return whole.cutoff;
-	throw new Error(`no cutoff for ${code}`);
+/** The probability at or above which a check reports on a model family, or undefined where it is not asked. */
+export function cutoffOf(code: string, family = 'jev'): number | undefined {
+	if (!CHECKS.includes(code)) throw new Error(`no check ${code}`);
+	return CUTOFFS[family]?.[code as CheckCode];
 }
 
 /** The cutoff a saved key is judged by: a DEC310 pair is saved as `DEC310.i.j`. */
-export function cutoffOfKey(key: string): number | undefined {
+export function cutoffOfKey(key: string, family = 'jev'): number | undefined {
 	const code = key.split('.')[0] ?? key;
-	return CHECKS.includes(code) ? cutoffOf(code) : undefined;
+	return CHECKS.includes(code) ? cutoffOf(code, family) : undefined;
+}
+
+/** The set a cutoff is fit on: at least this many examples with the defect, and without. */
+export const FIT_SIZE = Object.freeze({ bad: 16, good: 40 });
+/** The share of the examples with the defect a cutoff must catch, the floor Jev's have been held to since the first run. */
+export const FIT_CATCH = 0.6;
+
+export type Fit = Readonly<{
+	/** The cutoff the rule fits, or undefined where none does. */
+	cutoff: number | undefined;
+	/** The highest good example, which every fit sits above. */
+	top: Reading | undefined;
+	/** The lowest hundredth above it, which catches the most defects any fit can. */
+	lowest: number;
+	/** The defects caught at the cutoff, or at `lowest` where there is none, and how many must be. */
+	caught: number;
+	needed: number;
+}>;
+
+const hundredths = (p: number) => Math.round(p * 100) / 100;
+
+/**
+ * The cutoff a run fits for one check, by the rule fixed on 2026-10-24 for
+ * any model but Jev, whose cutoffs were set by hand before it. A cutoff is a
+ * hundredth from 0.01 to 0.99 that flags none of the good examples and
+ * catches at least six in ten of the bad ones. Where one exists it sits
+ * halfway between the highest good example and the lowest bad one above it,
+ * to the nearest hundredth, so an example on either side has to cross half
+ * the gap to move it, unless the midpoint catches too few, when it is the
+ * lowest hundredth above the good examples. With fewer examples than
+ * `FIT_SIZE` nothing is fit, and where no hundredth that spares the good
+ * examples catches enough bad ones, the check has no cutoff and is not asked
+ * of that model.
+ */
+export function fitCutoff(readings: Readings): Fit {
+	const needed = Math.ceil(readings.bad.length * FIT_CATCH);
+	const top = [...readings.good].sort((a, b) => b.p - a.p)[0];
+	const caught = (cutoff: number) =>
+		readings.bad.filter((each) => each.p >= cutoff).length;
+	const lowest = top ? (Math.floor(top.p * 100 + 1e-9) + 1) / 100 : 0.01;
+	const none = {
+		cutoff: undefined,
+		top,
+		lowest,
+		caught: caught(lowest),
+		needed,
+	};
+	if (
+		!top ||
+		readings.bad.length < FIT_SIZE.bad ||
+		readings.good.length < FIT_SIZE.good ||
+		lowest > 0.99 ||
+		caught(lowest) < needed
+	)
+		return none;
+	const low = Math.min(
+		...readings.bad.map((each) => each.p).filter((p) => p > top.p),
+	);
+	const mid = hundredths((top.p + low) / 2);
+	const cutoff = mid > top.p && caught(mid) >= needed ? mid : lowest;
+	return { cutoff, top, lowest, caught: caught(cutoff), needed };
 }
 
 /** What a run said about the examples known to have the defect, and about those known not to. */
@@ -148,6 +205,7 @@ export function readingsOf(
 export function compareRuns(
 	run: Saved,
 	reference: Saved,
+	family = 'jev',
 ): Readonly<{ pairs: number; meanDifference: number; flipped: number }> {
 	let pairs = 0;
 	let total = 0;
@@ -158,7 +216,7 @@ export function compareRuns(
 			if (q === undefined) continue;
 			pairs += 1;
 			total += Math.abs(p - q);
-			const cutoff = cutoffOfKey(key);
+			const cutoff = cutoffOfKey(key, family);
 			if (cutoff !== undefined && p >= cutoff !== q >= cutoff) flipped += 1;
 		}
 	}

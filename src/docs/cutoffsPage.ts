@@ -1,3 +1,4 @@
+import { familyOf } from '../ask/cutoffs';
 import { isCalibrated, providerForTarget } from '../ask/provider';
 import { DEFAULT_MODEL } from '../ask/review';
 import { RULES } from '../lint/rules';
@@ -9,6 +10,7 @@ import {
 	calibrationFile,
 	compareRuns,
 	cutoffOf,
+	fitCutoff,
 	type Readings,
 	type RequestEntry,
 	readingsOf,
@@ -34,7 +36,7 @@ export const ROUTES: ReadonlyArray<Route> = [
 
 // The runs each check's row is given for: Jev where it was calibrated, Jev on
 // the route that answers as it does and has the whole corpus, and the two
-// other models.
+// models with cutoffs of their own, each judged by its family's cutoffs.
 const COLUMNS: ReadonlyArray<Readonly<{ route: Route; heading: string }>> = [
 	{
 		route: { slot: 'typesafe', model: DEFAULT_MODEL },
@@ -88,7 +90,9 @@ function routesTable(data: CalibrationData): string[] {
 		const { target, provider } = described(route);
 		const saved = runOf(data, route);
 		const reference = referenceOf(route);
-		const compared = reference && compareRuns(saved, runOf(data, reference));
+		const compared =
+			reference &&
+			compareRuns(saved, runOf(data, reference), familyOf(route.model));
 		const against = reference
 			? `${compared?.meanDifference.toFixed(3)} from ${described(reference).target.name}, ${compared?.flipped} of ${compared?.pairs} flipped`
 			: 'first measured here';
@@ -115,30 +119,62 @@ function routesTable(data: CalibrationData): string[] {
 const caught = (readings: Readings, cutoff: number) =>
 	`${readings.bad.filter((each) => each.p >= cutoff).length}/${readings.bad.length}, ${readings.good.filter((each) => each.p >= cutoff).length}/${readings.good.length}`;
 
+function cell(code: string, data: CalibrationData, route: Route): string {
+	const cutoff = cutoffOf(code, familyOf(route.model));
+	if (cutoff === undefined) return 'not asked';
+	const readings = readingsOf(
+		code,
+		runOf(data, route),
+		data.corpus,
+		data.requests,
+	);
+	return `${cutoff}: ${caught(readings, cutoff)}`;
+}
+
 function cutoffsTable(data: CalibrationData): string[] {
 	const rows = CHECKS.map((code) => {
-		const cutoff = cutoffOf(code);
-		const cells = COLUMNS.map(({ route }) =>
-			caught(
-				readingsOf(code, runOf(data, route), data.corpus, data.requests),
-				cutoff,
-			),
-		);
-		return `| [${code}](rules/${code}.md) | ${RULES[code as RuleCode].name} | ${cutoff} | ${cells.join(' | ')} |`;
+		const cells = COLUMNS.map(({ route }) => cell(code, data, route));
+		return `| [${code}](rules/${code}.md) | ${RULES[code as RuleCode].name} | ${cells.join(' | ')} |`;
 	});
 	return [
 		'## The cutoffs',
 		'',
-		'Each cell is two counts at the shipped cutoff: the examples known to have the defect that were caught, and the examples known to be fine that were flagged anyway. "7/8, 0/20" means 7 of 8 caught and none of 20 flagged.',
+		'Each cell is the cutoff the model is judged by and two counts at it: the examples known to have the defect that were caught, and the examples known to be fine that were flagged anyway. "0.75: 7/8, 0/20" means a cutoff of 0.75 caught 7 of 8 and flagged none of 20. "not asked" means no cutoff fit on that model, and the notes say what stood in the way.',
 		'',
-		`| Check | Name | Cutoff | ${COLUMNS.map((column) => column.heading).join(' | ')} |`,
-		`|---|---|---|${COLUMNS.map(() => '---').join('|')}|`,
+		`| Check | Name | ${COLUMNS.map((column) => column.heading).join(' | ')} |`,
+		`|---|---|${COLUMNS.map(() => '---').join('|')}|`,
 		...rows,
 		'',
 	];
 }
 
-// What the counts above leave out, and where a cutoff flags a good example on a route counted as calibrated.
+// Why a check is not asked of a model: the good example every cutoff would have to clear, and what the lowest one above it catches.
+function unfit(
+	code: string,
+	data: CalibrationData,
+	column: (typeof COLUMNS)[number],
+): string | undefined {
+	const family = familyOf(column.route.model);
+	if (family === 'jev' || cutoffOf(code, family) !== undefined)
+		return undefined;
+	const readings = readingsOf(
+		code,
+		runOf(data, column.route),
+		data.corpus,
+		data.requests,
+	);
+	const found = fitCutoff(readings);
+	const top = found.top
+		? `\`${found.top.id}\` at ${found.top.p.toFixed(2)}`
+		: 'none';
+	const above =
+		found.lowest > 0.99
+			? 'no cutoff sits above it'
+			: `the lowest cutoff above it, ${found.lowest.toFixed(2)}, catches ${found.caught} of the ${readings.bad.length} examples with the defect, where a cutoff needs ${found.needed}`;
+	return `- ${code} is not asked of ${column.heading}. The highest good example is ${top}, and ${above}.`;
+}
+
+// What the counts above leave out, why a check is not asked of a model, and where a cutoff flags a good example on a route counted as calibrated.
 function notes(data: CalibrationData): string[] {
 	const base = runOf(data, { slot: 'typesafe', model: DEFAULT_MODEL });
 	const unsent = data.corpus.filter(
@@ -149,12 +185,18 @@ function notes(data: CalibrationData): string[] {
 		lines.push(
 			`- ${unsent} of the ${data.corpus.length} corpus questions were added after the TypeSafe run and have not been sent there, so the TypeSafe column counts the rest. The OpenRouter column answers as TypeSafe does and covers all of them.`,
 		);
+	for (const column of COLUMNS)
+		for (const code of CHECKS) {
+			const line = unfit(code, data, column);
+			if (line) lines.push(line);
+		}
 	for (const route of ROUTES) {
 		const { target, provider } = described(route);
 		if (!isCalibrated(route.model, provider)) continue;
 		const saved = runOf(data, route);
 		for (const code of CHECKS) {
-			const cutoff = cutoffOf(code);
+			const cutoff = cutoffOf(code, familyOf(route.model));
+			if (cutoff === undefined) continue;
 			const flagged = readingsOf(
 				code,
 				saved,
@@ -180,9 +222,9 @@ export function renderCutoffsPage(data: CalibrationData): string {
 		'',
 		'# Cutoffs and where they were measured',
 		'',
-		'A model-backed check asks the model a yes-or-no question about one of your questions and reports when the probability of yes reaches a cutoff. Every cutoff was set on Jev at TypeSafe, on `' +
+		"A model-backed check asks the model a yes-or-no question about one of your questions and reports when the probability of yes reaches a cutoff. Jev's cutoffs were set by hand on `" +
 			DEFAULT_MODEL +
-			'`. The same cutoffs are used on every other model and platform, and this page shows how they hold up there.',
+			"` at TypeSafe, and a route measured to answer as that run does uses them. Luna's and Liquid d1's were fit on their own runs over the whole set on 2026-10-24, by one rule: a cutoff is a hundredth that flags none of the good examples and catches at least six in ten of the bad ones, and it sits halfway between the highest good example and the lowest bad one above it. Where no such cutoff exists the check is not asked of that model, and the notes name the example in the way. Every other model and route is judged by its family's cutoffs, or Jev's, and its findings say so.",
 		'',
 		'A cutoff is fit on at least 16 examples with the defect and 40 without, per check and per model, a size fixed on 2026-10-24 before the set was grown to it: none of 40 flagged bounds the false-flag rate at about 1 in 14 with 95% confidence, and 16 place the catch count in steps of about 6 points. Where a cell has fewer, read the counts as rough evidence rather than accuracy rates. A different model version can answer differently, so these numbers are true of the versions named here.',
 		'',

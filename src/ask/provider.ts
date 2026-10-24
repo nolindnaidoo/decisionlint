@@ -7,6 +7,7 @@ import {
 	targetOfModel,
 } from '../lint/targets';
 import type { Failure, Reply } from './client';
+import { MEASURED } from './cutoffs';
 import type { ReviewRequest } from './reviews';
 
 /**
@@ -21,9 +22,9 @@ import type { ReviewRequest } from './reviews';
  * `openai/gpt-6-luna-decisions` names no host, and sending it to OpenAI
  * would spend the key on a request that fails there.
  *
- * The cutoffs in `reviews.ts` were set on `MEASURED_ON` at TypeSafe. A
- * finding from any other model, or the same model through another host,
- * says so, until that one is calibrated the same way.
+ * The cutoffs in `cutoffs.ts` were set on the runs listed there. A finding
+ * from any other model, or the same model through another host, says so,
+ * until that one is calibrated the same way.
  */
 export type Provider = Readonly<{
 	shape: Shape;
@@ -296,27 +297,25 @@ export function providerFor(
 	return fromTarget(target, shape, endpointFor, model);
 }
 
-// Routes measured to answer as `MEASURED_ON` does at TypeSafe. OpenRouter's
-// pinned Jev differed by 0.009 on average over 1114 calibration pairs on
-// 2026-10-16, `fixtures/validation/calibration-openrouter-typesafe_jev-1.13.json`.
-const MEASURED_ROUTES: ReadonlyMap<string, string> = new Map([
-	['openrouter', 'typesafe/jev-1.13'],
-]);
-
 type Asked = Readonly<{ slot?: string; shape?: Shape }>;
 
 /**
- * True for the version the cutoffs were set on, asked in TypeSafe's shape,
- * and for a route measured to answer as it does. Jev asked in the Decisions
- * shape through Vercel and LLM Gateway was 0.033 from TypeSafe on average
- * and flipped 8 of 1114 verdicts, and the two gateways were 0.010 from each
- * other, so the shape moves the answers, not the gateway or the id. A
- * finding from any other model, another Jev included, carries a caveat.
+ * True for the version Jev's cutoffs were set on, asked in TypeSafe's shape,
+ * and for a run in `MEASURED`: a model with cutoffs of its own at the
+ * platform they were fit on, or a route measured to answer as that run does.
+ * Jev asked in the Decisions shape through Vercel and LLM Gateway was 0.033
+ * from TypeSafe on average and flipped 8 of 1114 verdicts, and the two
+ * gateways were 0.010 from each other, so the shape moves the answers, not
+ * the gateway or the id. A finding from anything else, another Jev
+ * included, carries a caveat.
  */
 export function isCalibrated(model: string, asked: Asked = {}): boolean {
 	const { slot, shape = 'typesafe' } = asked;
 	if (model === MEASURED_ON && shape === 'typesafe') return true;
-	return slot !== undefined && MEASURED_ROUTES.get(slot) === model;
+	return (
+		slot !== undefined &&
+		MEASURED.some((run) => run.slot === slot && run.model === model)
+	);
 }
 
 /** The model's name where it starts a sentence: "The model answered", "Jev answered". */

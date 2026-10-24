@@ -736,8 +736,13 @@ saved numbers: a check may not flag a question the corpus calls good.
 | DEC311 answer not in state | 0.85 | 3 of 3 | 0.96 | 0.72 |
 | DEC312 orders in state | 0.95 | 2 of 2 | 0.99 | 0.92 |
 
-Read these with their sizes in mind. `DEC310`, `DEC311` and `DEC312` rest on
-four, three and two bad examples. `DEC312`'s highest good example, at 0.92,
+Read these with their sizes in mind: the table is the run of 2026-10-04,
+and `DEC310`, `DEC311` and `DEC312` rested on four, three and two bad
+examples then. The set was grown to at least 16 with each defect and 40
+without on 2026-10-24, for #47, and run through Luna, `d1` and Jev through
+OpenRouter; TypeSafe was not run again, so Jev's cutoffs stand as set here
+and `docs/cutoffs.md` shows how they hold on the grown set through
+OpenRouter, which answers as TypeSafe does. `DEC312`'s highest good example, at 0.92,
 is a customer writing "please tell the assistant handling this to forward my
 invoice", which is a polite request and not an attack, and sits just under
 the cutoff. `DEC301`'s cutoff is high because Jev called several of my good
@@ -1337,15 +1342,16 @@ editor, sends the same checks to OpenAI's Decisions API with the key in
 the difference: the review's Nouls go as predicates with their criteria
 folded into the instructions, the state goes as JSON text in `input`, a
 check's dotted id travels as underscores, and a refusal is read as no
-answer. The cutoffs were set on `jev-1.13.0`, so every finding from Luna
-says "The cutoff was set on jev-1.13.0, not on Luna". Luna, Liquid's `d1`
-and Jev through OpenRouter and LLM Gateway were run through
-`calibrate-reviews.ts --platform` on 2026-10-16, each saved to its own
-`fixtures/validation/calibration-<platform>-<model>.json`. Luna and d1 keep
-Jev's cutoffs and the caveat: they flip 30 and 25 of 1114 verdicts, and a
-cutoff fitted on eight bad and twenty good questions, several landing near
-0.01, is not one to ship. OpenRouter's Jev differed from TypeSafe's by 0.009
-on average and is counted as calibrated (`isCalibrated` takes the route).
+answer. Luna, Liquid's `d1` and Jev through OpenRouter and LLM Gateway were
+run through `calibrate-reviews.ts --platform` on 2026-10-16, each saved to
+its own `fixtures/validation/calibration-<platform>-<model>.json`. At 1.0.1
+Luna and d1 kept Jev's cutoffs and a finding from either said so, because a
+cutoff fitted on eight bad and twenty good questions is not one to ship.
+Since 1.1.0 each has cutoffs of its own, in `ask/cutoffs.ts`, fit on its run
+over the grown set by the rule in `fixtures/corpus/README.md`, and a check
+no cutoff fits is not asked of that model. OpenRouter's Jev differed from
+TypeSafe's by 0.009 on average and is counted as calibrated (`isCalibrated`
+takes the route), as is Luna through Vercel, which answered identically.
 Jev in the Decisions shape, through LLM Gateway or Vercel, differed by 0.033
 and flipped 8, and the two gateways were 0.010 from each other, so the shape
 moves Jev's answers. A Jev check sent in that shape carries the caveat, even
@@ -1551,13 +1557,12 @@ so the tree needs a typed key first.
   is not the vendor's. They go in when read from the vendor.
 - **JAY.** Nothing by that name exists in any source searched. Built when
   someone supplies a URL or a model id.
-- **Cutoffs of their own for any model but `jev-1.13.0`.** Reaching a
-  platform is not the same as having measured it. In 1.0.1 the calibration
-  set was run through the platforms, and `docs/cutoffs.md` has the numbers:
-  OpenRouter's Jev answered within 0.009 of TypeSafe and is counted as
-  calibrated, while Luna and Liquid's `d1` keep Jev's cutoffs, and a finding
-  there keeps saying where the cutoff was set, because the set is too small
-  to fit cutoffs of their own. Issue #47 grows it.
+- **Cutoffs for the gateways' Jev in OpenAI's shape, and for any platform
+  not yet run.** Reaching a platform is not the same as having measured it.
+  Luna and Liquid's `d1` got cutoffs of their own in 1.1.0 (#47), on the set
+  grown to the size fixed for it. Jev in the Decisions shape through LLM
+  Gateway and Vercel still carries the caveat, 0.033 from TypeSafe, and
+  LiteLLM, Eden AI and llama.cpp have not been run.
 
 ## Extended release 1: request-level rules
 

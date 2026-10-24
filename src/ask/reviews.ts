@@ -1,7 +1,7 @@
-import type { RuleCode } from '../types';
+import { type CheckCode, CUTOFFS, type Cutoffs } from './cutoffs';
 import type { QuestionLiteral } from './literal';
 
-export type ReviewCode = Extract<RuleCode, `DEC3${string}`>;
+export type ReviewCode = CheckCode;
 
 /** What surrounds a question in its request, for the checks that need more than the question. */
 export type ReviewContext = Readonly<{
@@ -18,8 +18,6 @@ type Review = Readonly<{
 	instructions: string;
 	yes: string;
 	no: string;
-	/** At or above this probability of yes, the defect is reported. Set from `fixtures/validation/calibration.json`. */
-	cutoff: number;
 	message: string;
 	/**
 	 * For a check about a list, the question asked of each entry to find which
@@ -74,7 +72,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Does answering `question.instructions` need items to be counted, numbers to be compared, or arithmetic to be done?',
 		yes: 'The answer depends on a count, a sum, a difference or a comparison of quantities.',
 		no: 'The answer depends on what the content says or means, with no counting or arithmetic.',
-		cutoff: 0.96,
 		message:
 			'Jev reads this as needing counting or arithmetic, which it does not do reliably. Ask one question per item and do the arithmetic in code.',
 	},
@@ -85,7 +82,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Does `question` turn on a matter of degree, such as how large, how often, how good or how soon, without saying where yes ends and no begins?',
 		yes: 'The answer depends on a degree, and neither the instructions nor the criteria state the line.',
 		no: 'The question is about something being present or absent, or it states the line.',
-		cutoff: 0.7,
 		message:
 			"Jev reads this as turning on a matter of degree with no stated line. Say where yes ends and no begins, in the instructions or in 'true' and 'false' criteria.",
 	},
@@ -96,7 +92,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Could a single input reasonably fit two of the options in `question.criteria` at the same time? Do not count a catch-all option such as other or none.',
 		yes: 'Two of the options cover some of the same cases.',
 		no: 'Each case fits at most one option, apart from a catch-all.',
-		cutoff: 0.75,
 		message:
 			'Jev reads two of these options as covering the same cases, so the probability is split between them. Merge them or redraw the line between them.',
 		locate: (_index, name) =>
@@ -109,7 +104,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Do two of the levels in `question.criteria` describe the same situation in different words?',
 		yes: 'Two levels describe the same situation.',
 		no: 'Every level describes a different situation.',
-		cutoff: 0.6,
 		message:
 			'Jev reads two of these levels as the same situation, so it cannot place an input between them. Describe what separates each level from the next.',
 		locate: (index) =>
@@ -122,7 +116,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'In `question.criteria`, does any option have a name that says one thing while its description says another?',
 		yes: 'At least one option is named for one thing and described as a different thing.',
 		no: 'Every option is described as what its name says, or is not described.',
-		cutoff: 0.7,
 		message:
 			'Jev reads an option here as named for one thing and described as another. It weighs both, so the answer can follow the name against the description. Make the name and the description agree.',
 		locate: (_index, name) =>
@@ -135,7 +128,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Do the criteria in `question.criteria` decide something other than what `question.instructions` asks?',
 		yes: 'The criteria turn on a property the instructions never ask about.',
 		no: 'The criteria are about the same thing the instructions ask.',
-		cutoff: 0.7,
 		message:
 			'Jev reads the criteria as deciding something the instructions do not ask about. Rewrite one of them so both are about the same thing.',
 	},
@@ -146,7 +138,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Are the options in `question.criteria` steps on a single scale, running from less of something to more of it?',
 		yes: 'The options are ordered amounts or degrees of one thing.',
 		no: 'The options are different kinds of thing with no order between them.',
-		cutoff: 0.8,
 		message:
 			'Jev reads these options as steps on one scale. A Choice treats them as unrelated, so an input between two steps has nowhere to go. A Score would place it between them.',
 	},
@@ -157,7 +148,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Are the levels in `question.criteria` different kinds of thing, with no order from less to more between them?',
 		yes: 'The levels are separate categories that cannot be put in order.',
 		no: 'The levels run in order from less of something to more of it.',
-		cutoff: 0.6,
 		message:
 			'Jev reads these levels as unordered categories. A Score returns a position between levels, which means nothing for categories. A Choice would pick one.',
 	},
@@ -168,7 +158,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Does answering `question.instructions` need the answer to one of the questions named in `other_questions`?',
 		yes: 'The question builds on the result of another question in the list.',
 		no: 'The question can be answered from the material alone.',
-		cutoff: 0.8,
 		message:
 			'Jev reads this question as needing the answer to another question in the same request. Questions in one request are answered independently, so it will not have that answer. Send it in a second request with the first answer in the state.',
 	},
@@ -179,7 +168,6 @@ export const REVIEWS: ReadonlyArray<Review> = Object.freeze([
 			'Is what `question.instructions` asks about missing from `state`?',
 		yes: 'The state does not hold the thing the question is about.',
 		no: 'The state holds what the question asks about.',
-		cutoff: 0.85,
 		message:
 			'Jev reads the state in this file as not holding what the question asks about. It will still answer. Put the missing material in the state, or add a way to answer that it is not there.',
 	},
@@ -264,11 +252,22 @@ function culprits(code: string, answers: Answers): ReadonlyArray<number> {
 	return ranked.slice(0, 2).map(([id]) => Number(id.slice(code.length + 1)));
 }
 
-/** The checks whose probability of yes reached their cutoff. */
-export function readAnswers(answers: Answers): ReadonlyArray<ReviewFinding> {
+const JEV = CUTOFFS.jev as Cutoffs;
+
+/** The checks whose probability of yes reached their cutoff on the model that answered. */
+export function readAnswers(
+	answers: Answers,
+	cutoffs: Cutoffs = JEV,
+): ReadonlyArray<ReviewFinding> {
 	return REVIEWS.flatMap((review) => {
 		const probability = answers[review.code]?.noul;
-		if (probability === undefined || probability < review.cutoff) return [];
+		const cutoff = cutoffs[review.code];
+		if (
+			probability === undefined ||
+			cutoff === undefined ||
+			probability < cutoff
+		)
+			return [];
 		return [
 			{
 				code: review.code,
@@ -283,12 +282,10 @@ export function readAnswers(answers: Answers): ReadonlyArray<ReviewFinding> {
 /** The two checks that read a whole request: every pair of questions, and the state. */
 export const REQUEST_REVIEWS = Object.freeze({
 	DEC310: {
-		cutoff: 0.15,
 		message: (other: string) =>
 			`Jev reads this question and '${other}' as asking for the same judgment. Each costs tokens and they can disagree. Keep one, or say in each what makes it different.`,
 	},
 	DEC312: {
-		cutoff: 0.95,
 		message:
 			'Jev reads part of the state in this file as giving orders to whoever reads it. Jev does not treat state as hostile, so text like that can move an answer. Check where the state comes from, and say in the criteria what should count.',
 	},
@@ -372,18 +369,22 @@ export function buildRequestReview(
 export function readRequestAnswers(
 	ids: ReadonlyArray<string>,
 	answers: Answers,
+	cutoffs: Cutoffs = JEV,
 ): ReadonlyArray<RequestFinding> {
+	const pairCutoff = cutoffs.DEC310;
 	const pairs = Object.entries(answers).flatMap(([id, answer]) => {
 		const match = /^DEC310\.(\d+)\.(\d+)$/.exec(id);
 		const probability = answer.noul ?? 0;
-		if (!match || probability < REQUEST_REVIEWS.DEC310.cutoff) return [];
+		if (!match || pairCutoff === undefined || probability < pairCutoff)
+			return [];
 		const first = ids[Number(match[1])];
 		const second = ids[Number(match[2])];
 		if (first === undefined || second === undefined) return [];
 		return [{ code: 'DEC310' as const, first, second, probability }];
 	});
 	const injected = answers.DEC312?.noul ?? 0;
-	return injected >= REQUEST_REVIEWS.DEC312.cutoff
+	const stateCutoff = cutoffs.DEC312;
+	return stateCutoff !== undefined && injected >= stateCutoff
 		? [...pairs, { code: 'DEC312' as const, probability: injected }]
 		: pairs;
 }

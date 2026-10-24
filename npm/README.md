@@ -24,8 +24,9 @@ badly written question as confidently as a good one, so the mistake shows up
 later as wrong answers. This finds it in the code.
 
 The rules and their defaults were set by measuring what each defect costs
-Jev. Luna keeps Jev's cutoffs: they were run on Luna and catch most defects
-there, and a finding from Luna says its cutoff was set on Jev.
+Jev. The model-backed checks have cutoffs of their own on Luna, fit on
+Luna's answers over the same set, and a check no cutoff fits there is not
+asked of Luna.
 
 ![The command line reporting three findings on a small request](https://raw.githubusercontent.com/nolindnaidoo/decisionlint/main/assets/demos/cli.gif)
 
@@ -91,8 +92,9 @@ TYPESAFE_API_KEY=... npx decisionlint --ask src/    # send it
   `LIQUID_API_KEY`. Without it, `--ask-model` with a platform's spelling,
   `~typesafe/jev-latest` for OpenRouter, sends there, and a bare id goes to
   its vendor. The key is read from that variable and from nowhere else, and
-  is never printed. Each finding from any model but `jev-1.13.0` says that
-  its cutoff was set on Jev.
+  is never printed. Jev, Luna and Liquid's `d1` each have cutoffs of their
+  own at their own platform; a finding from any other model or route says
+  where its cutoff was set.
 - `--ask-endpoint`, or `DECISIONLINT_ASK_ENDPOINT`, sends to a platform you
   host, with `--ask-shape` where the path does not say which shape it takes.
   A spelling that names no host is refused without it, with nothing sent.

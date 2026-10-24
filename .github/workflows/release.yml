@@ -12,6 +12,11 @@
 # the MCP server in one. The MCP registry listing follows it in a job of its
 # own, because the listing points at the version npm has just been given and
 # npm takes minutes to serve it.
+#
+# Every run records the version as a GitHub Release, with its changelog
+# section as the notes and the VSIX attached, whatever the opt-ins say. The
+# registries are the opt-ins; the record is not, so a run that publishes
+# nowhere still leaves the version on the Releases page, and the tag with it.
 name: Release
 
 on:
@@ -31,7 +36,8 @@ on:
         default: false
 
 # Publishing needs no write access to the repo itself; the registry tokens do
-# all the privileged work and come from secrets.
+# all the privileged work and come from secrets. The one job that writes, the
+# tag and the GitHub Release, raises its own permission and holds no token.
 permissions:
   contents: read
 
@@ -41,23 +47,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Every publish job is opt-in, so selecting none would otherwise run nothing
-  # and report the workflow as successful — a green run that published nothing.
+  # Selecting no publish target is a run that only records the version. It
+  # still has to be a version with finished notes.
   preflight:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require at least one publish target
-        env:
-          MARKETPLACE: ${{ inputs.marketplace }}
-          OPENVSX: ${{ inputs.openvsx }}
-          NPM: ${{ inputs.npm }}
-        run: |
-          if [ "$MARKETPLACE" != "true" ] && [ "$OPENVSX" != "true" ] && [ "$NPM" != "true" ]; then
-            echo "::error::No publish target selected."
-            exit 1
-          fi
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # A version cannot be republished, so its changelog entry has to be
@@ -72,10 +67,10 @@ jobs:
           fi
 
   release:
-    # The VSIX registries only. npm is a separate job because it holds
-    # `id-token: write` to sign its provenance, and that permission should not
-    # be held by a job handling registry PATs.
-    if: inputs.marketplace || inputs.openvsx
+    # Builds and gates the VSIX on every run, since the GitHub Release attaches
+    # it, and publishes it to the registries that were opted in. npm is a
+    # separate job because it holds `id-token: write` to sign its provenance,
+    # and that permission should not be held by a job handling registry PATs.
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -138,6 +133,16 @@ jobs:
       - name: Installed-VSIX end-to-end
         run: xvfb-run -a bun run test:e2e-vsix
 
+      # Handed to the `github` job, which attaches this exact file to the
+      # GitHub Release. A second build there would not be byte-identical.
+      - name: Keep the VSIX for the GitHub Release
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vsix
+          path: ${{ steps.vsix.outputs.path }}
+          if-no-files-found: error
+          retention-days: 7
+
       # Secrets go through the environment: both tools read these names, and
       # argv is readable from the runner's process table.
       - name: Publish to VS Code Marketplace
@@ -151,6 +156,49 @@ jobs:
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: bunx ovsx publish "${{ steps.vsix.outputs.path }}"
+
+  # The record of the version: a GitHub Release named for it, with its
+  # changelog section as the notes and the VSIX the registries were given
+  # attached. It waits for no opt-in, so a run that publishes nowhere still
+  # leaves the version on the Releases page. The tag is made here too, at this
+  # commit, when it does not exist yet. `contents: write` is held by this job
+  # alone: it handles no registry credential.
+  github:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: vsix
+          path: release
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists. A version is released once."
+            exit 1
+          fi
+          # A tag already on the remote has to point at this commit, or the
+          # Release would describe one commit and attach another's build.
+          if git fetch --no-tags origin "refs/tags/$tag:refs/tags/$tag" 2>/dev/null; then
+            tagged=$(git rev-parse "$tag^{commit}")
+            if [ "$tagged" != "$GITHUB_SHA" ]; then
+              echo "::error::$tag points at $tagged, not at $GITHUB_SHA."
+              exit 1
+            fi
+          fi
+          scripts/changelog-section.sh "$version" > "$RUNNER_TEMP/notes.md"
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$version" --notes-file "$RUNNER_TEMP/notes.md" release/*.vsix
+          echo "Released $tag with $(ls release/*.vsix)"
 
   # The command line and MCP server on npm, for CI and for every host that is
   # not VS Code. Published with the NPM_TOKEN secret, the same token the rest

@@ -22,6 +22,12 @@ export type ObjectNode = Readonly<{
 	 * written under it is still a question. Only the Python reader fills this.
 	 */
 	loose?: ReadonlyArray<Node>;
+	/**
+	 * True for a struct literal with a field the API does not have: a type the
+	 * project defines, whose other fields mean what the project says. Only the
+	 * reader Rust and Go share sets this.
+	 */
+	own?: boolean;
 }>;
 
 export type ArrayNode = Readonly<{

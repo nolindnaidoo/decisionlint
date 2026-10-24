@@ -182,8 +182,41 @@ var q = map[string]any{"questions": map[string]any{"a": map[string]any{"type": "
 			'a type definition',
 			'type Noul struct { Instructions string; Criteria map[string]string }',
 		],
+		[
+			// Public code: flowcraft's answer carries `Levels` of probabilities and a `Kind` ending in Score.
+			"an answer of the project's own type carrying levels",
+			'return inference.DecisionAnswer{Name: answer.Name, Kind: inference.DecisionAnswerScore, Score: &score, Confidence: &confidence, Levels: levels}, nil',
+		],
 	])('reads no question from %s', (_name, text) => {
 		expect(go(text)).toEqual([]);
+	});
+
+	it("reads a positional literal of the project's own type as unreadable, not as a list", () => {
+		// Public code: godwit's `[]ChoiceOption{{"billing", "money"}}` drew a shape
+		// finding on every question, for entries that "must be an object, not an array".
+		const choices = `qs := []Question{{Name: "topic", Instructions: "Which team takes it?", Type: Choice, Choices: []ChoiceOption{{"billing", "Charges"}, {"support", "Help"}}}}`;
+		expect(go(choices)).toEqual(['- choice']);
+		expect(codes(choices, 'go')).toEqual(['DEC000']);
+		const levels = `qs := []Question{{Name: "tone", Instructions: "How angry is the customer?", Type: Score, Levels: []Level{{"calm", ""}, {"annoyed", ""}, {"furious", ""}}}}`;
+		expect(codes(levels, 'go')).toEqual(['DEC000']);
+	});
+
+	it("reads a model from the project's own type only beside what a request carries", () => {
+		// Public code: go-choir's pricing table drew DEC001 and DEC013 on rows that price the aliases.
+		const table = `var prices = []Price{
+	{Provider: "typesafe", Model: "jev-1.14", InputPerMillion: 0.042, OutputPerMillion: 0},
+	{Provider: "typesafe", Model: "jev-latest", InputPerMillion: 0.042, OutputPerMillion: 0},
+}`;
+		expect(codes(table, 'go')).toEqual([]);
+		expect(
+			codes(
+				`req := Request{Model: "jev-latest", Questions: qs, Trace: true}`,
+				'go',
+			),
+		).toEqual(['DEC001']);
+		expect(codes(`cfg := Config{Model: "jev-latest"}`, 'go')).toEqual([
+			'DEC001',
+		]);
 	});
 
 	it('says nothing about a struct whose type is in its own name', () => {

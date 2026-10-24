@@ -378,17 +378,25 @@ export function createReader(
 				const entry =
 					fields.length > 0 &&
 					fields.every((prop) => ENTRY_FIELDS.has(prop.key));
-				const ownShape =
-					(typeUnseen && !entry) ||
-					fields.some((prop) => !WIRE_FIELDS.has(prop.key));
+				const own = fields.some((prop) => !WIRE_FIELDS.has(prop.key));
+				const ownShape = (typeUnseen && !entry) || own;
+				// In the project's own type, `levels` or `choices` alone do not make
+				// a question: an answer carries levels of probabilities and a `Kind`
+				// ending in Score. Only `instructions` says the struct asks something.
+				const asked = !own || props.some((prop) => prop.key === 'instructions');
 				const node: Node = listed
 					? { kind: 'array', items, partial, span }
 					: {
 							kind: 'object',
-							props: type ? [type, ...props] : props,
+							props: asked
+								? type
+									? [type, ...props]
+									: props
+								: props.filter((prop) => prop.key !== 'type'),
 							partial: partial || ownShape,
 							span,
 							loose,
+							...(own ? { own } : {}),
 						};
 				if (prefix?.custom && !type) custom.add(node);
 				return { node, next: i + 1 };
@@ -397,7 +405,17 @@ export function createReader(
 			if (!entry) return undefined;
 			if (entry.prop) props.push(entry.prop);
 			if (entry.loose) loose.push(entry.loose);
-			if (entry.item) items.push(entry.item);
+			// `[]ChoiceOption{{"billing", "Charges"}}`: a positional literal of a
+			// type the project defines is a struct whose field names are not
+			// written, not a list. Read as a list, it drew a shape finding on
+			// every such question in public code.
+			const positional =
+				prefix?.kind === 'list' &&
+				prefix.custom &&
+				entry.item?.kind === 'array' &&
+				isPunct(tokens[i], '{');
+			if (entry.item)
+				items.push(positional ? unreadable(i, entry.next) : entry.item);
 			partial ||= entry.partial;
 			i = isPunct(tokens[entry.next], ',') ? entry.next + 1 : entry.next;
 			if (i === entry.next && !isPunct(tokens[i], '}')) return undefined;

@@ -533,7 +533,13 @@ function collectOxlint(node: ObjectNode, sink: Sink): void {
 	});
 }
 
+// What a request carries beside its model, in either shape.
+const REQUEST_FIELDS: ReadonlyArray<string> = ['questions', 'input', 'state'];
+
 function collectModel(node: ObjectNode, sink: Sink): void {
+	// In the project's own type a model is a request's only beside what a
+	// request carries. A pricing table names every alias and asks it nothing.
+	if (node.own && !REQUEST_FIELDS.some((field) => prop(node, field))) return;
 	const model = modelOf(node);
 	if (model) sink.models.push(model);
 }

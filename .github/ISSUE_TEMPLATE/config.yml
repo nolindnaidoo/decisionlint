@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: The rule pages
+    url: https://github.com/nolindnaidoo/decisionlint/blob/main/docs/rules/README.md
+    about: One page per rule, with what it catches, an example, how to fix it and how to silence it.
+  - name: The cutoffs, and where they were measured
+    url: https://github.com/nolindnaidoo/decisionlint/blob/main/docs/cutoffs.md
+    about: Each model-backed check's cutoff on each model, and what it caught and flagged on the calibration set.

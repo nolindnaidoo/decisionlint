@@ -26,6 +26,16 @@ none of them was tuned against. The tables are in
   with `levels` and no `instructions` is not a question; a `model` in the
   project's own type is a request's only beside `questions`, `input` or
   `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
+- **Issue forms and a pull request template.** Five forms under
+  `.github/ISSUE_TEMPLATE/`: a finding that was wrong, a question that was
+  missed, anything else, a platform to add and a language to read. The two
+  about findings ask for what every such report needs, the question as
+  written, its language and the rule code, and open with the `bug` and area
+  labels applied. The platform form asks for the platform's own page behind
+  each number, since nothing enters `lint/targets.ts` from a survey. The
+  pull request template lists what a reviewer would otherwise ask for first.
+  `src/issue-forms.test.ts` holds the rule and language dropdowns to the
+  registry and the readers.
 - **Luna and Liquid's `d1` have cutoffs of their own.** The calibration
   set was grown to the size fixed for it first, at least 16 examples with
   each defect and 40 without per check, then run through Luna, `d1` and Jev

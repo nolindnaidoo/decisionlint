@@ -1,0 +1,95 @@
+name: A finding that was wrong
+description: A rule fired on a question that is right as written.
+title: "DEC___: "
+labels: ["bug", "area:rules"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. A wrong finding is the report this project most wants, and the three things below are what every one needs: the question as written, the language it was written in, and the rule code. The rule's page is linked from the finding and listed at [docs/rules](https://github.com/nolindnaidoo/decisionlint/blob/main/docs/rules/README.md).
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Rule code
+      description: The code at the start of the finding.
+      options:
+        - DEC000
+        - DEC001
+        - DEC002
+        - DEC003
+        - DEC004
+        - DEC005
+        - DEC006
+        - DEC007
+        - DEC008
+        - DEC009
+        - DEC010
+        - DEC011
+        - DEC012
+        - DEC013
+        - DEC014
+        - DEC101
+        - DEC102
+        - DEC103
+        - DEC104
+        - DEC105
+        - DEC107
+        - DEC108
+        - DEC110
+        - DEC111
+        - DEC112
+        - DEC301
+        - DEC302
+        - DEC303
+        - DEC304
+        - DEC305
+        - DEC306
+        - DEC307
+        - DEC308
+        - DEC309
+        - DEC310
+        - DEC311
+        - DEC312
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language the question is written in
+      options:
+        - JSON
+        - JavaScript
+        - TypeScript
+        - Python
+        - Rust
+        - Go
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: The question as written
+      description: Paste the question exactly as it is in the file, with its request around it if that matters. A rewording can hide the cause.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: What the finding said
+      description: The message as shown, with the number if it was a model-backed check.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why the question is right
+      description: What the rule read wrongly. For a wording rule, the word or pattern it fired on; for a model-backed check, what the model misread.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: DecisionLint version
+      description: From the extension's details page, `npx decisionlint --version`, or the server's `version` field.
+      placeholder: "1.1.0"

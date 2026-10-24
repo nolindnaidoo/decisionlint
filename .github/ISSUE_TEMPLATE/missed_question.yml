@@ -1,0 +1,64 @@
+name: A question that was missed
+description: The reader did not find a question, or no rule caught a defect in one.
+title: "Missed: "
+labels: ["bug", "area:reader"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most misses are a question with a part built at runtime, which the reader refuses rather than guesses and reports as `DEC000`. Say how the question is built, and paste it as written.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What was missed
+      options:
+        - The reader did not find the question at all
+        - The question was found, and a rule did not fire on a defect in it
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language the question is written in
+      options:
+        - JSON
+        - JavaScript
+        - TypeScript
+        - Python
+        - Rust
+        - Go
+    validations:
+      required: true
+  - type: dropdown
+    id: built
+    attributes:
+      label: How the question is built
+      description: The shape the reader has to see through.
+      options:
+        - Written out in place, in the request
+        - Under a name bound once and used in the request
+        - Returned by a function or helper the file defines
+        - Built by an SDK call or constructor
+        - Part of it is a template, a format call or a joined string
+        - It has a spread, a computed key or a method
+        - Something else, described below
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: The code as written
+      description: The question and whatever builds it, enough to run the tool on.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: rule
+    attributes:
+      label: The rule that should have fired, if one
+      description: A code such as `DEC004`, or the defect in words if no rule names it.
+  - type: input
+    id: version
+    attributes:
+      label: DecisionLint version
+      placeholder: "1.1.0"

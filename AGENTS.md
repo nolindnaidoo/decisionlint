@@ -642,7 +642,10 @@ is a copy again.
   Another platform or model is run with `--platform` or `--model` and saved
   beside it as `calibration-<platform>-<model>.json`. A route joins
   `MEASURED_ROUTES` in `ask/provider.ts` only from such a file that answers
-  as `MEASURED_ON` does, and never by its spelling.
+  as `MEASURED_ON` does, and never by its spelling. A cutoff is fit on at
+  least 16 examples with the defect and 40 without, per check and per model,
+  a size fixed on 2026-10-24 before the set was grown to it;
+  `fixtures/corpus/README.md` says why.
 - **A dry run of a paid script proves nothing about its sending.** It stops
   before the first call. The provider refactor left `calibrate-reviews.ts`
   calling `ask()` with no provider while `--dry-run` kept passing.

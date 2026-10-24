@@ -4,7 +4,7 @@
 
 A model-backed check asks the model a yes-or-no question about one of your questions and reports when the probability of yes reaches a cutoff. Every cutoff was set on Jev at TypeSafe, on `jev-1.13.0`. The same cutoffs are used on every other model and platform, and this page shows how they hold up there.
 
-The samples are small, about eight examples with the defect and twenty without per check, so read the counts as rough evidence rather than accuracy rates. A different model version can answer differently, so these numbers are true of the versions named here.
+A cutoff is fit on at least 16 examples with the defect and 40 without, per check and per model, a size fixed on 2026-10-24 before the set was grown to it: none of 40 flagged bounds the false-flag rate at about 1 in 14 with 95% confidence, and 16 place the catch count in steps of about 6 points. Where a cell has fewer, read the counts as rough evidence rather than accuracy rates. A different model version can answer differently, so these numbers are true of the versions named here.
 
 ## Where the checks have been run
 
@@ -43,5 +43,5 @@ Each cell is two counts at the shipped cutoff: the examples known to have the de
 
 ## Notes
 
-- 17 of the 276 corpus questions were added after the TypeSafe run and have not been sent there, so the TypeSafe column counts the rest. The OpenRouter column answers as TypeSafe does and covers all of them.
+- 126 of the 385 corpus questions were added after the TypeSafe run and have not been sent there, so the TypeSafe column counts the rest. The OpenRouter column answers as TypeSafe does and covers all of them.
 - DEC302 flags a good example through OpenRouter, where findings are counted as calibrated: `good-p7` at 0.79, against a cutoff of 0.7.

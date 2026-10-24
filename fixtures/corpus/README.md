@@ -24,6 +24,27 @@ it, score it, record the number, and only then change a rule.
 When a rule is wrong on a real question, add that question here in your own
 words with the right label, then fix the rule.
 
+## How big the set has to be for a cutoff
+
+Fixed on 2026-10-24, before any example was added for it: a model-backed
+check's cutoff is fit on at least 16 examples with the defect and 40 without,
+per check and per model. A cutoff that flags none of 40 good examples is
+wrong on at most about 1 in 14 of them with 95% confidence, by the rule of
+three, and 16 bad examples place the catch count in steps of about 6 points.
+Fewer than that and a cutoff is one outlier away from moving, which is why
+Luna and Liquid's `d1` kept Jev's cutoffs at 1.0.1. A set grown until the
+numbers look right would be tuned, not measured, so the size comes first and
+the examples after.
+
+On that date the checks stood at, with the defect and without: `DEC301`
+14 and 119, `DEC302` 5 and 79, `DEC306` 8 and 50, each of `DEC303`,
+`DEC304`, `DEC305`, `DEC307` and `DEC308` 8 and 20, `DEC309` 8 and 9,
+`DEC310` 4 pairs and 24, `DEC311` 3 and 9, `DEC312` 2 and 6. The good
+examples are shared: a clean question counts for every check that applies to
+it, so growing the set means clean Choices with three or more described
+options, clean Scores, clean questions with siblings, and requests with a
+state.
+
 ## scores.json
 
 Generated. Per rule: how many bad questions it caught, how many good ones it

@@ -289,11 +289,14 @@ describe('cutoffs against the saved calibration', () => {
 			const good = corpus
 				.filter((entry) => !entry.defects.length)
 				.map((entry) => entry.id);
+			// Only the bad examples the run was sent: the cutoffs page counts the
+			// rest as unsent, and a run catches nothing it never saw.
 			const bad = corpus
 				.filter((entry) =>
 					entry.defects.includes(LABEL[review.code] ?? review.code),
 				)
-				.map((entry) => entry.id);
+				.map((entry) => entry.id)
+				.filter((id) => at(id) !== undefined);
 			expect(flagged(good)).toEqual([]);
 			expect(flagged(bad).length).toBeGreaterThanOrEqual(
 				Math.ceil(bad.length * 0.6),

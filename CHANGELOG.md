@@ -26,6 +26,12 @@ none of them was tuned against. The tables are in
   with `levels` and no `instructions` is not a question; a `model` in the
   project's own type is a request's only beside `questions`, `input` or
   `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
+- **`CONTRIBUTING.md`, `SECURITY.md` and a code of conduct.** The first
+  says how to set up, run the gates and get a change in, and points at
+  AGENTS.md for every rule rather than repeating one. The second says what
+  reaches the network and when, what happens to a key on each surface, and
+  how to report privately through GitHub, which is turned on. The third is
+  the Contributor Covenant 2.1.
 - **Issue forms and a pull request template.** Five forms under
   `.github/ISSUE_TEMPLATE/`: a finding that was wrong, a question that was
   missed, anything else, a platform to add and a language to read. The two

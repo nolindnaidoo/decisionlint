@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — 2026-10-23
+## 1.1.0 — 2026-10-24
 
 Measured, and two rules go off for it. The second public sample, unspent
 since 2026-10-05, scored the rules 0.4.0 changed and added, on questions
@@ -18,30 +18,6 @@ none of them was tuned against. The tables are in
 - **`DEC011 description-repeats-name` and `DEC012 terse-instructions` hold.**
   278 questions were labelled for them by hand on 2026-10-23, before either
   ran. Right on every firing: 3 of 3 and 21 of 29 caught.
-- **OpenAI's Go SDK had its run over public Go code.** 637 files from 447
-  repositories that name the SDK, the model or the endpoint, 184 questions,
-  every finding read. Twelve were wrong, from three things the project's own
-  type does not say, all fixed: a positional literal such as
-  `[]ChoiceOption{{"billing", "Charges"}}` is a struct, not a list; a struct
-  with `levels` and no `instructions` is not a question; a `model` in the
-  project's own type is a request's only beside `questions`, `input` or
-  `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
-- **`CONTRIBUTING.md`, `SECURITY.md` and a code of conduct.** The first
-  says how to set up, run the gates and get a change in, and points at
-  AGENTS.md for every rule rather than repeating one. The second says what
-  reaches the network and when, what happens to a key on each surface, and
-  how to report privately through GitHub, which is turned on. The third is
-  the Contributor Covenant 2.1.
-- **Issue forms and a pull request template.** Five forms under
-  `.github/ISSUE_TEMPLATE/`: a finding that was wrong, a question that was
-  missed, anything else, a platform to add and a language to read. The two
-  about findings ask for what every such report needs, the question as
-  written, its language and the rule code, and open with the `bug` and area
-  labels applied. The platform form asks for the platform's own page behind
-  each number, since nothing enters `lint/targets.ts` from a survey. The
-  pull request template lists what a reviewer would otherwise ask for first.
-  `src/issue-forms.test.ts` holds the rule and language dropdowns to the
-  registry and the readers.
 - **Luna and Liquid's `d1` have cutoffs of their own.** The calibration
   set was grown to the size fixed for it first, at least 16 examples with
   each defect and 40 without per check, then run through Luna, `d1` and Jev
@@ -58,6 +34,23 @@ none of them was tuned against. The tables are in
   label moved: `good-c3`, a Choice of slow, medium and fast lanes, is the
   ordered-options defect by `DEC307`'s own definition and all three models
   said so, so it is `jev307-17` now and `good-c21` takes its place.
+- **`DEC001`'s fix pins to Jev 1.14.0.** TypeSafe moved `jev-latest` and
+  `jev-preview` to `jev-1.14.0`, "available from October 14, 2026", and the
+  weekly release check caught it on 2026-10-24. The fix now writes
+  `jev-1.14.0`, or `typesafe/jev-1.14` for OpenRouter's alias, which
+  OpenRouter's guide lists. The rules and the cutoffs are still measured on
+  `jev-1.13.0`, so a request pinned to 1.14.0 gets `DEC013 newer-model`, an
+  `info` that says exactly that, until #65 measures the new release. The
+  limits the rules check were read again the same day and are unchanged:
+  255 options, two to ten levels.
+- **OpenAI's Go SDK had its run over public Go code.** 637 files from 447
+  repositories that name the SDK, the model or the endpoint, 184 questions,
+  every finding read. Twelve were wrong, from three things the project's own
+  type does not say, all fixed: a positional literal such as
+  `[]ChoiceOption{{"billing", "Charges"}}` is a struct, not a list; a struct
+  with `levels` and no `instructions` is not a question; a `model` in the
+  project's own type is a request's only beside `questions`, `input` or
+  `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
 - **Public sample 4 measures `DEC012`.** 300 questions drawn on 2026-10-24
   from 3,000 public files, with OpenAI's Decisions API callers in the pool
   for the first time, 86 of the 300, labelled by hand before any rule ran.
@@ -74,6 +67,25 @@ none of them was tuned against. The tables are in
   the notes and the VSIX attached, and the tag when none exists, whether or
   not a registry was opted in. The eleven earlier tags have none;
   `scripts/backfill-releases.sh` makes them from the changelog by hand.
+- **`CONTRIBUTING.md`, `SECURITY.md` and a code of conduct.** The first
+  says how to set up, run the gates and get a change in, and points at
+  AGENTS.md for every rule rather than repeating one. The second says what
+  reaches the network and when, what happens to a key on each surface, and
+  how to report privately through GitHub, which is turned on. The third is
+  the Contributor Covenant 2.1.
+- **Issue forms and a pull request template.** Five forms under
+  `.github/ISSUE_TEMPLATE/`: a finding that was wrong, a question that was
+  missed, anything else, a platform to add and a language to read. The two
+  about findings ask for what every such report needs, the question as
+  written, its language and the rule code, and open with the `bug` and area
+  labels applied. The platform form asks for the platform's own page behind
+  each number, since nothing enters `lint/targets.ts` from a survey. The
+  pull request template lists what a reviewer would otherwise ask for first.
+  `src/issue-forms.test.ts` holds the rule and language dropdowns to the
+  registry and the readers.
+- **The README follows the fleet's front door**: the demo, what it does,
+  install, the agent and command-line sections with their recordings, then
+  the rest. The CLI and MCP demos were re-recorded.
 - The gates run on vitest 5 and Biome 2.6. Neither needed a change to the
   tests or the rules.
 - The GitHub Action and the pre-commit hook pin 1.1.0.

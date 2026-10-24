@@ -78,10 +78,10 @@ export function isNewerJev(value: string, than: string): boolean {
  * documents one for this spelling. `known` is the bare versioned id the alias
  * points to today.
  *
- * - `jev-latest` -> `jev-1.13.0`: TypeSafe and Eden AI write the bare id.
- * - `~typesafe/jev-latest` -> `typesafe/jev-1.13`: OpenRouter drops the tilde
+ * - `jev-latest` -> `jev-1.14.0`: TypeSafe and Eden AI write the bare id.
+ * - `~typesafe/jev-latest` -> `typesafe/jev-1.14`: OpenRouter drops the tilde
  *   and writes two numbers. https://openrouter.ai/docs/guides/community/jev,
- *   read 2026-10-14.
+ *   read 2026-10-14 and again 2026-10-24, when it listed `typesafe/jev-1.14`.
  */
 export function pinnedSpelling(
 	value: string,

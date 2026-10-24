@@ -623,6 +623,11 @@ is a copy again.
   `lint/limits.ts`, is what `jev-latest` points to and what the DEC001 fix
   writes. The second is what the cutoffs were set on. They differ from a Jev
   release until the checks are calibrated again, so no test holds them equal.
+  They have differed since 2026-10-24, when Jev 1.14.0 moved the aliases:
+  the fix pins to 1.14.0 and `DEC013` then says the request is newer than
+  the measured version, which `lint.test.ts` holds in either state. Moving
+  `KNOWN_VERSION` re-reads the limits too, so `VERIFIED_ON` moves with it.
+  Issue #65 is the measurement that moves `MEASURED_ON`.
 - **A user ahead of the measured version is told, offline and in a check.**
   `DEC013` fires on a versioned id above `MEASURED_ON`, and a check asked of
   any model and route not in `MEASURED` in `ask/cutoffs.ts` ends its findings

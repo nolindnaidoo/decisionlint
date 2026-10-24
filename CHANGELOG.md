@@ -18,6 +18,14 @@ none of them was tuned against. The tables are in
 - **`DEC011 description-repeats-name` and `DEC012 terse-instructions` hold.**
   278 questions were labelled for them by hand on 2026-10-23, before either
   ran. Right on every firing: 3 of 3 and 21 of 29 caught.
+- **OpenAI's Go SDK had its run over public Go code.** 637 files from 447
+  repositories that name the SDK, the model or the endpoint, 184 questions,
+  every finding read. Twelve were wrong, from three things the project's own
+  type does not say, all fixed: a positional literal such as
+  `[]ChoiceOption{{"billing", "Charges"}}` is a struct, not a list; a struct
+  with `levels` and no `instructions` is not a question; a `model` in the
+  project's own type is a request's only beside `questions`, `input` or
+  `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
 - **A lost sample can be rebuilt.** `scripts/refetch-public-sample.ts`
   fetches a sample's files again and keeps each question whose instructions
   still hash to a label. The scorer counts the rest as missing instead of

@@ -369,6 +369,8 @@ family's files, copied unchanged from `regex-le`.
 - **Run a rule change over public code before trusting it.** Three rounds of
   that found more wrong with these rules than every test in the repo. The
   corpus cannot do this job, because its author wrote the rules.
+  `scripts/fetch-public-code.ts` draws the files for a run from code search,
+  at most three per repository, into a directory outside this repo.
 - **Helper calls are read only for names imported from the SDK**, never for a
   method call or a declaration. 40 of 46 false findings on public code came
   from breaking one of these four: this, foreign field names, the `boolean`
@@ -401,8 +403,16 @@ family's files, copied unchanged from `regex-le`.
   and each question of a list as a one-member `OfPredicate`, `OfChoice` or
   `OfScore` union, which `requests.ts` unwraps. `Predicate` in a type's name
   is the yes/no type. A literal made only of an option's or level's fields
-  is not a project's own shape. Added on 2026-10-14 from the vendor's guide,
-  with the run over public Go code still to do.
+  is not a project's own shape. Added on 2026-10-14 from the vendor's guide
+  and run over 637 public Go files on 2026-10-24, which added three more
+  things the project's own type does not say, each a false finding first: a
+  positional literal of the project's type,
+  `[]ChoiceOption{{"billing", "Charges"}}`, is a struct whose field names
+  are not written, not a list; a struct of the project's type with `levels`
+  or `choices` and no `instructions` is not a question, since an answer
+  carries levels too; and a `model` in the project's type is a request's
+  only beside `questions`, `input` or `state`, since a pricing table names
+  every alias.
 - **A name means a question type only when it holds exactly one of the four
   words** (`typeInName`: `noul`, `choice`, `score`, and OpenAI's `predicate`
   for the first), and a typed struct is a question only when it has an

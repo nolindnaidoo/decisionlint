@@ -1006,9 +1006,12 @@ questions across 1,850 files, so it matters for Rust and Go and hardly at all
 elsewhere.
 
 **Not read.** In Go, a constructor such as `jev.Noul("...")`, because
-projects disagree on what the first argument is. In Rust, maps built with
-`insert` calls or a `hashmap!` macro. In both, JSON in a string that has
-escapes.
+projects disagree on what the first argument is, and a positional literal of
+the project's own type, `[]ChoiceOption{{"billing", "Charges"}}`, whose field
+names are not written. In Rust, maps built with `insert` calls or a
+`hashmap!` macro. In both, JSON in a string that has escapes, and a `model`
+in the project's own type with no `questions`, `input` or `state` beside it,
+since a pricing table names every alias.
 
 ## Values built at runtime
 
@@ -1322,10 +1325,10 @@ Score in the Decisions shape, which `validate-defects.ts` sends and
 
 ## Every provider
 
-Status: built on 2026-10-14 as 0.9.0, all four phases. One thing is
-outstanding: the reading of OpenAI's Go SDK was added from the vendor's
-guide and has not yet had the run over public Go code that every other
-reader change had, issue #45. The research behind it is
+Status: built on 2026-10-14 as 0.9.0, all four phases. The reading of
+OpenAI's Go SDK, added from the vendor's guide, had its run over public Go
+code on 2026-10-24, under "What public Go code showed" below. The research
+behind it is
 `docs/research/reports/Decision model API providers.md`, with the notes
 beside it, and every claim below that is not already in the code comes from
 there.
@@ -1423,8 +1426,8 @@ that an aliased import is not followed; and `*.decisionModel('<id>')` as a
 model reference, with the factory naming the platform. Python: the
 `langchain_typesafe` module beside `typesafe_sdk` for `Noul`, `Choice`,
 `Score` and `NoulCriteria`, after the run over public code the invariant
-asks for. Go: `openai.DecisionNewParams{...}`, once the SDK's struct fields
-are read from its source. Rust: `typesafe-rs` and `kunobi-jev`, the same.
+asks for. Go: `openai.DecisionNewParams{...}`, read since 0.9.0 and run over
+public Go code on 2026-10-24. Rust: `typesafe-rs` and `kunobi-jev`, the same.
 
 **D6. Messages name the platform.** "The API accepts at most 255" becomes
 "TypeSafe's API accepts at most 255", or the target's name when one is
@@ -1441,8 +1444,64 @@ version is finished in one pull request with its changelog dated.
 |---|---|---|
 | P1 | `lint/targets.ts`, `lint/models.ts`, limits keyed by target, `DEC001` and `DEC013` over every spelling, `target` in the settings | A gateway id is pinned in its own spelling, a Vercel-targeted Luna request with 11 levels gets `DEC003`, an unknown target changes nothing |
 | P2 | `ask/provider.ts` from the target table, `decisionlint.ask.endpoint` and `--ask-endpoint`, `--ask-shape`, per-target key variables | A check runs against a local llama.cpp with no key, and a gateway id with no endpoint sends nothing |
-| P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go is still to do |
+| P3 | The calls in D5: the AI SDK's `decisionModel` factory, LangChain's module and `NoulCriteria`, OpenAI's Go SDK unions. Rust's community crates were not added: only their constructors are documented | Each call is read as a request in its language's reader test. The public-code run for Go was made on 2026-10-24, below |
 | P4 | A URL in the file resolves the target, over the model id and under the setting; the readmes, the rule pages, `CHANGELOG.md` 0.9.0 | Release gates |
+
+### What public Go code showed
+
+The reading of OpenAI's Go SDK shipped in 0.9.0 from the vendor's guide and
+had the run every other reader change had on 2026-10-24. Code search for the
+SDK's request struct, its `Decisions.New` call, its `OfPredicate`, `OfChoice`
+and `OfScore` members, the model id and the `/v1/decisions` path found 809
+Go files in 447 repositories, and `scripts/fetch-public-code.ts` took at most
+three per repository. Every finding was read by hand.
+
+| | At 1.1.0 | After the fixes |
+|---|---|---|
+| Files, repositories | 637, 447 | the same |
+| Files holding a question | 42 | 41 |
+| Questions read | 199 | 184 |
+| With a part built at runtime | 58 | 57 |
+| Crashes | 0 | 0 |
+| Findings | 209 | 197 |
+| Wrong | 12 | 0 |
+
+Few of the files are callers. Most name the model or the path in a gateway, a
+proxy or a server that imitates the API, and the questions sit in their test
+suites, planted malformed on purpose: the 82 `DEC012` firings are all on
+fixtures whose instructions are "?", "i", "valid" or "Choose", and every
+`DEC005`, `DEC006`, `DEC008` and `DEC009` on a wire shape is on a fixture.
+Of the 20 files that write `openai.DecisionNewParams`, 15 hold a question,
+and 13 of those build the questions from the project's own type in a loop,
+so each reads as built at runtime, which is right. The 8 SDK questions
+written out whole were read in OpenAI's shape with nothing wrong about them.
+Telnyx's Go SDK, which writes TypeSafe's shape through `OfNoul`, `OfChoice`
+and `OfScore` members, was read the same way, 2 of 3 whole.
+
+The 12 wrong findings had three causes, all in the project's own types and
+all removed:
+
+- **A positional literal read as a list.** `[]ChoiceOption{{"billing",
+  "money"}}` drew `DEC006`, "each entry must be an object, not an array", on
+  nine questions in one test file. A positional literal of a type the project
+  defines is a struct whose field names are not written, and is now
+  unreadable.
+- **An answer read as a question.** `inference.DecisionAnswer{Kind:
+  DecisionAnswerScore, Levels: levels, ...}` drew `DEC000`. In the project's
+  own type, `levels` or `choices` alone no longer make a question: only
+  `instructions` does. The same change stopped 14 fields of a settings
+  screen, `{Kind: configureFieldChoice, Choices: []string{...}}`, counting as
+  questions.
+- **A pricing table read as requests.** `{Provider: "typesafe", Model:
+  "jev-latest", InputPerMillion: 0.042}` drew `DEC001`, and its neighbour
+  `DEC013`. A `model` in the project's own type is a request's only beside
+  `questions`, `input` or `state`.
+
+One thing is counted right and left for issue #69: a choice whose `value` is
+a boolean or a number, `{"value": false}`, is literal but reads as built at
+runtime, five times in one test file. The criteria map is keyed by string,
+and `"true"` beside `true` would collide and draw a duplicate-option finding,
+so the tree needs a typed key first.
 
 ### Not built, and why
 

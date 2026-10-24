@@ -30,6 +30,11 @@ none of them was tuned against. The tables are in
   fetches a sample's files again and keeps each question whose instructions
   still hash to a label. The scorer counts the rest as missing instead of
   stopping.
+- **Every release is recorded on GitHub.** The `Release` workflow creates a
+  GitHub Release for the version on every run, with its changelog section as
+  the notes and the VSIX attached, and the tag when none exists, whether or
+  not a registry was opted in. The eleven earlier tags have none;
+  `scripts/backfill-releases.sh` makes them from the changelog by hand.
 - The gates run on vitest 5 and Biome 2.6. Neither needed a change to the
   tests or the rules.
 - The GitHub Action and the pre-commit hook pin 1.1.0.

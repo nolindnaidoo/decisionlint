@@ -795,7 +795,7 @@ difference matters when the family changes one.
 | `.github/workflows/codeql.yml`, `.github/codeql-config.yml`, `.github/workflows/dependabot-auto-merge.yml`, `.gitattributes`, `.editorconfig`, `tsconfig.it.json` | Copies |
 | `biome.json` | A copy but for the `$schema` line, which names Biome 2.6.3 until the family takes 2.6 (`regex-le` #57) |
 | `.github/workflows/ci.yml` | Cut down: no second extension toolchain, no generated README check, no bundle gate. Adds `test:cli` |
-| `.github/workflows/release.yml` | Changed: publishes `npm/` with the `NPM_TOKEN` secret where the family uses trusted publishing. The MCP registry step is the family's, in a job of its own that first waits for npm to serve the version, so a listing that fails is re-run alone |
+| `.github/workflows/release.yml` | Changed: publishes `npm/` with the `NPM_TOKEN` secret where the family uses trusted publishing. The MCP registry step is the family's, in a job of its own that first waits for npm to serve the version, so a listing that fails is re-run alone. Adds a `github` job that records every run as a GitHub Release, the version's changelog section as notes through `scripts/changelog-section.sh` and the VSIX attached, whatever the opt-ins; the family makes its Releases by hand. `scripts/backfill-releases.sh` is the one-off for the tags released before it |
 | `.github/dependabot.yml` | Cut down: no `cargo` entry |
 | `.github/workflows/jev-release.yml`, `scripts/check-jev-release.ts` | This repo's own. The family declares no vendor's model version |
 | `.github/workflows/release-shim.yml`, `shim/`, `scripts/e2e-shims.js` | This repo's own: the bridges to the names 1.0.0 left behind |

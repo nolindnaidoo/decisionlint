@@ -1230,7 +1230,13 @@ a tool that differs from the other sixteen.
 Released from the `Release` workflow since 0.1.0 on 2026-10-04, each
 surface its own opt-in: the VS Code Marketplace, Open VSX and npm. The
 current version is the top heading of [CHANGELOG.md](CHANGELOG.md). The
-repository is public.
+repository is public. Since 1.1.0 every run of the workflow also records the
+version as a GitHub Release, its changelog section as the notes and the VSIX
+the registries were given attached, whether or not anything was published,
+and makes the tag when none exists. The eleven tags before it have no
+Release; `scripts/backfill-releases.sh` makes them from the changelog, by
+hand and without a VSIX, and two changelog versions, 0.8.1 and 1.0.0, were
+never tagged.
 
 On Open VSX it is published under the `nolindnaidoo` namespace, which is the
 manifest's publisher. The rest of the family is under `OffensiveEdge` there

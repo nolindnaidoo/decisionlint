@@ -135,7 +135,13 @@ The full text with its reasons is in
 copied here because a copy drifts.
 
 `biome.json`, `tsconfig.json`, `vitest.config.ts` and `.editorconfig` are the
-family's files, copied unchanged from `regex-le`.
+family's files, copied from `regex-le`. Two differ, on purpose:
+`vitest.config.ts` keeps the coverage floors at 75, 80, 60 and 75 where the
+family lowered its own to 70, 70, 60 and 70 on 2026-10-07, since this repo's
+coverage sits near 95 and the floors are a backstop; and `biome.json` names
+the 2.6.3 schema since 2026-10-24, because this repo took Biome 2.6 ahead of
+the family, raised as `regex-le` issue #57. When the family moves, the copy
+is a copy again.
 
 ## Invariants
 
@@ -786,7 +792,8 @@ difference matters when the family changes one.
 |---|---|
 | `.githooks/commit-msg`, `scripts/commit-lint.js`, `scripts/install-hooks.js` | Copies |
 | `.cursorrules`, `.windsurfrules`, `.clinerules`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/project.mdc`, `scripts/check-agent-files.py`, `src/agent-files.test.ts` | Copies. The six instruction files are one document, and the test fails if they differ |
-| `.github/workflows/codeql.yml`, `.github/codeql-config.yml`, `.github/workflows/dependabot-auto-merge.yml`, `.gitattributes`, `.editorconfig`, `biome.json`, `tsconfig.it.json` | Copies |
+| `.github/workflows/codeql.yml`, `.github/codeql-config.yml`, `.github/workflows/dependabot-auto-merge.yml`, `.gitattributes`, `.editorconfig`, `tsconfig.it.json` | Copies |
+| `biome.json` | A copy but for the `$schema` line, which names Biome 2.6.3 until the family takes 2.6 (`regex-le` #57) |
 | `.github/workflows/ci.yml` | Cut down: no second extension toolchain, no generated README check, no bundle gate. Adds `test:cli` |
 | `.github/workflows/release.yml` | Changed: publishes `npm/` with the `NPM_TOKEN` secret where the family uses trusted publishing. The MCP registry step is the family's, in a job of its own that first waits for npm to serve the version, so a listing that fails is re-run alone |
 | `.github/dependabot.yml` | Cut down: no `cargo` entry |

@@ -30,6 +30,8 @@ none of them was tuned against. The tables are in
   fetches a sample's files again and keeps each question whose instructions
   still hash to a label. The scorer counts the rest as missing instead of
   stopping.
+- The gates run on vitest 5 and Biome 2.6. Neither needed a change to the
+  tests or the rules.
 - The GitHub Action and the pre-commit hook pin 1.1.0.
 
 ## 1.0.1 — 2026-10-16

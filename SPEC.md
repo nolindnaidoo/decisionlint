@@ -1189,7 +1189,7 @@ the answer held at "damaged" through every variant with confidence between
 
 ## Roadmap
 
-Status: refreshed 2026-10-23, at 1.0.1. Done since this list was written:
+Status: refreshed 2026-10-24, at 1.1.0. Done since this list was written:
 the site listing, the command line and its npm package, the MCP server and
 its registry listing, OpenAI's Decisions API and every provider, each under
 its own heading in this document. Decided against: a Rust port of the

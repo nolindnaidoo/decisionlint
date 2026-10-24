@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LintOptions, ReportedFinding } from '../types';
 import { fixText } from './fixAll';
-import { MEASURED_ON } from './limits';
+import { KNOWN_VERSION, MEASURED_ON } from './limits';
 import { DEFAULT_OPTIONS, lintText, syntaxFor, syntaxForPath } from './lint';
 
 function codes(
@@ -162,8 +162,8 @@ describe("a model id in another platform's spelling", () => {
 	it("fires DEC001 on OpenRouter's alias and pins it as OpenRouter writes a pinned id", () => {
 		const text = request(CLEAN_NOUL, '~typesafe/jev-latest');
 		const pin = finding(text, 'DEC001');
-		expect(pin.fix?.title).toContain("Pin to 'typesafe/jev-1.13'");
-		expect(apply(text, pin)).toContain('"model": "typesafe/jev-1.13"');
+		expect(pin.fix?.title).toContain("Pin to 'typesafe/jev-1.14'");
+		expect(apply(text, pin)).toContain('"model": "typesafe/jev-1.14"');
 	});
 
 	it('fires DEC001 with no fix on an alias whose pinned spelling no platform documents', () => {
@@ -196,7 +196,7 @@ describe("a model named through the AI SDK's factory", () => {
 		const text = decide(`typeSafeAi.decisionModel('jev-latest')`, CLEAN_NOUL);
 		const pin = finding(text, 'DEC001');
 		expect(text.slice(pin.span.start, pin.span.end)).toBe(`'jev-latest'`);
-		expect(apply(text, pin)).toContain(`decisionModel('jev-1.13.0')`);
+		expect(apply(text, pin)).toContain(`decisionModel('${KNOWN_VERSION}')`);
 	});
 
 	it("holds the request to the platform the factory's id names", () => {
@@ -725,7 +725,11 @@ describe('mechanical fixes', () => {
 		expect(pin.fix?.title).toMatch(
 			/^Pin to 'jev-\d+\.\d+\.\d+', the version current on \d{4}-\d{2}-\d{2}$/,
 		);
-		expect(codes(apply(text, pin))).toEqual([]);
+		// Pinned to the current release, which DEC013 reports as newer than the
+		// measured one until the checks are measured on it again.
+		expect(codes(apply(text, pin))).toEqual(
+			(KNOWN_VERSION as string) === MEASURED_ON ? [] : ['DEC013'],
+		);
 	});
 
 	it('turns a Score map into an array, keeping every description', () => {

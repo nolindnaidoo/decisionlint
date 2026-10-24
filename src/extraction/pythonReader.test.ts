@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { KNOWN_VERSION } from '../lint/limits';
 import { DEFAULT_OPTIONS, lintText, readQuestions } from '../lint/lint';
 import type { Fix } from '../types';
 
@@ -298,7 +299,7 @@ describe('fixes on Python', () => {
 	it('pins a model written with a prefix', () => {
 		const text = `${SDK}client.system_one(ticket, {"a": Noul(instructions="Is it so?")}, model=r'jev-latest')`;
 		expect(apply(text, finding(text, 'DEC001').fix)).toContain(
-			'model="jev-1.13.0")',
+			`model="${KNOWN_VERSION}")`,
 		);
 	});
 });

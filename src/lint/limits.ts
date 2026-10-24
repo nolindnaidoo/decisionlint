@@ -3,7 +3,7 @@
  * when. Rules import from here and hold no vendor number of their own, so a
  * Jev release that moves a limit is a one-file change.
  */
-export const VERIFIED_ON = '2026-10-04';
+export const VERIFIED_ON = '2026-10-24';
 
 export const LIMITS = Object.freeze({
 	/** https://docs.typesafe.ai/api#choice: "a maximum of 255 options per Choice". */
@@ -13,8 +13,12 @@ export const LIMITS = Object.freeze({
 	scoreMaxLevels: 10,
 });
 
-/** https://docs.typesafe.ai/models: the versioned id both aliases pointed to on `VERIFIED_ON`. */
-export const KNOWN_VERSION = 'jev-1.13.0';
+/**
+ * https://docs.typesafe.ai/models: the versioned id both aliases pointed to on
+ * `VERIFIED_ON`. Jev 1.14 is "available from October 14, 2026" and moved
+ * both aliases; the weekly check caught it on 2026-10-24.
+ */
+export const KNOWN_VERSION = 'jev-1.14.0';
 
 /**
  * The version the wording rules' costs and the Jev checks' cutoffs were

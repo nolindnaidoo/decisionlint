@@ -26,6 +26,22 @@ none of them was tuned against. The tables are in
   with `levels` and no `instructions` is not a question; a `model` in the
   project's own type is a request's only beside `questions`, `input` or
   `state`. `scripts/fetch-public-code.ts` draws the files for such a run.
+- **Luna and Liquid's `d1` have cutoffs of their own.** The calibration
+  set was grown to the size fixed for it first, at least 16 examples with
+  each defect and 40 without per check, then run through Luna, `d1` and Jev
+  through OpenRouter on 2026-10-24, 556 calls each. A cutoff is fit by one
+  rule, written down before fitting: a hundredth that flags none of the
+  good examples and catches at least six in ten of the bad ones, halfway
+  between the highest good example and the lowest bad one above it. Luna
+  gets seven cutoffs and `d1` ten. Where none fits, the check is not asked
+  of that model, and `docs/cutoffs.md` names the good example in the way:
+  `DEC301`, `DEC303`, `DEC304`, `DEC306` and `DEC311` on Luna, `DEC301`
+  and `DEC312` on `d1`. Findings from Luna at OpenAI, Luna through Vercel
+  AI Gateway, which answers identically, and `d1` at Liquid AI no longer
+  say the cutoff was set on Jev. Jev's cutoffs are unchanged. One corpus
+  label moved: `good-c3`, a Choice of slow, medium and fast lanes, is the
+  ordered-options defect by `DEC307`'s own definition and all three models
+  said so, so it is `jev307-17` now and `good-c21` takes its place.
 - **Public sample 4 measures `DEC012`.** 300 questions drawn on 2026-10-24
   from 3,000 public files, with OpenAI's Decisions API callers in the pool
   for the first time, 86 of the 300, labelled by hand before any rule ran.

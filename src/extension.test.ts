@@ -668,9 +668,8 @@ describe('check with Jev', () => {
 		expect(url).toBe('https://api.openai.com/v1/decisions');
 		expect(init.headers.Authorization).toBe('Bearer sk-test');
 		const found = diagnostics(FROM_JEV)[0];
-		expect(found?.message).toContain(
-			'(Luna put this at 0.91.) The cutoff was set on jev-1.13.0, not on Luna.',
-		);
+		expect(found?.message).toContain('(Luna put this at 0.91.)');
+		expect(found?.message).not.toContain('The cutoff was set on');
 		expect(_state.messages.at(-1)).toBe(
 			'DecisionLint: Luna answered 1 request and flagged 1, 200 input tokens on gpt-6-luna.',
 		);
@@ -934,7 +933,7 @@ describe('check with Jev', () => {
 		expect(init.headers).not.toHaveProperty('Authorization');
 		expect(_state.messages.at(-1)).toContain('The model answered 1 request');
 		expect(diagnostics(FROM_JEV)[0]?.message).toContain(
-			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on the model.',
+			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on ggml-org/OpenJev-GGUF.',
 		);
 	});
 

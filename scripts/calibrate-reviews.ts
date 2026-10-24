@@ -1,10 +1,11 @@
 /**
- * Finds the cutoff for each check Jev makes.
+ * Finds the cutoff for each check a model makes.
  *
  * Every corpus question and request is sent with the checks that apply to it,
  * and the probability each returned is saved. A cutoff is then read off the
  * saved numbers, so choosing or changing one costs nothing after the first
- * run. Only checks with no saved number are sent, so adding a check costs one
+ * run: the report prints what `fitCutoff` fits beside what `ask/cutoffs.ts`
+ * holds, and `reviews.test.ts` fails until the two agree for any model but Jev. Only checks with no saved number are sent, so adding a check costs one
  * pass over the entries it applies to and not a rerun of everything.
  *
  * A development tool: it costs money, needs a key, and no test runs it.
@@ -27,7 +28,8 @@ import { ask, type Fetch, isFailure } from '../src/ask/client';
 import type { QuestionLiteral } from '../src/ask/literal';
 import { type Provider, providerFor, providerForTarget } from '../src/ask/provider';
 import { DEFAULT_MODEL } from '../src/ask/review';
-import { CHECKS, calibrationFile, cutoffOf, readingsOf } from '../src/docs/calibration';
+import { cutoffsFor, familyOf } from '../src/ask/cutoffs';
+import { CHECKS, calibrationFile, fitCutoff, readingsOf } from '../src/docs/calibration';
 import { TARGET_IDS, targetById } from '../src/lint/targets';
 import {
 	buildRequest,
@@ -152,20 +154,28 @@ async function collect(key: string, list: Job[]): Promise<void> {
 
 function show(code: string, bad: Reading[], good: Reading[]): void {
 	const by = (list: Reading[]) => [...list].sort((a, b) => a.p - b.p);
-	const top = by(good).slice(-1)[0]?.p ?? 0;
-	const floor = Math.min(0.99, Math.ceil((top + 0.005) * 100) / 100);
+	const found = fitCutoff({ bad, good });
 	console.log(`\n${code}  bad ${bad.length}  good ${good.length}`);
 	console.log(`  bad:      ${by(bad).map((x) => x.p.toFixed(2)).join(' ')}`);
 	console.log(`  top good: ${by(good).slice(-5).map((x) => `${x.p.toFixed(2)} ${x.id}`).join(' | ')}`);
-	console.log(`  lowest cutoff flagging no good one: ${floor.toFixed(2)} -> catches ${bad.filter((x) => x.p >= floor).length} of ${bad.length}`);
+	if (found.cutoff !== undefined) {
+		console.log(`  fit: ${found.cutoff.toFixed(2)} -> catches ${found.caught} of ${bad.length}`);
+		return;
+	}
+	const lowest = found.lowest > 0.99 ? 'no cutoff sits above the good examples' : `the lowest cutoff above the good examples, ${found.lowest.toFixed(2)}, catches ${found.caught} of ${bad.length} and ${found.needed} are needed`;
+	console.log(`  no fit: ${lowest}`);
 }
 
+// The fits beside the cutoffs in code for this model's family. Jev's were set by hand and may differ.
 function report(): void {
+	const cutoffs = cutoffsFor(MODEL);
 	for (const code of CHECKS) {
 		const { bad, good } = readingsOf(code, saved, corpus, requests);
 		show(code, [...bad], [...good]);
 	}
-	console.log(`\ncutoffs in code: ${CHECKS.map((code) => `${code} ${cutoffOf(code)}`).join(', ')}`);
+	console.log(
+		`\ncutoffs in code for ${familyOf(MODEL) || 'no family, so Jev'}: ${CHECKS.map((code) => `${code} ${cutoffs[code as keyof typeof cutoffs] ?? 'not asked'}`).join(', ')}`,
+	);
 }
 
 async function main(): Promise<void> {

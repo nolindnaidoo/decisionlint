@@ -79,7 +79,8 @@ lint/
   lint.ts                lintText(text, options): the pure entry point
 ask/
   literal.ts             a question as plain data, or nothing if any part is runtime
-  reviews.ts             the checks Jev makes: what is asked, the cutoff, the message
+  reviews.ts             the checks Jev makes: what is asked and the message
+  cutoffs.ts             each model's cutoff per check, and the runs they were set on
   review.ts              what a check of one text would send, and the sending of it.
                          The editor and the command line both run this
   client.ts              one request to the API, with a bounded retry
@@ -623,10 +624,11 @@ is a copy again.
   writes. The second is what the cutoffs were set on. They differ from a Jev
   release until the checks are calibrated again, so no test holds them equal.
 - **A user ahead of the measured version is told, offline and in a check.**
-  `DEC013` fires on a versioned id above `MEASURED_ON`, and a Jev check asked
-  of any model but `MEASURED_ON` ends its findings with where the cutoff was
-  set. Both compare with the measured version and not `KNOWN_VERSION`: moving
-  `KNOWN_VERSION` alone measures nothing, so it must not quiet either.
+  `DEC013` fires on a versioned id above `MEASURED_ON`, and a check asked of
+  any model and route not in `MEASURED` in `ask/cutoffs.ts` ends its findings
+  with where the cutoff was set. Both compare with the measured version and
+  not `KNOWN_VERSION`: moving `KNOWN_VERSION` alone measures nothing, so it
+  must not quiet either.
   The `Jev release` workflow runs `bun run check:jev-release` weekly and fails
   when `jev-latest` has moved off `KNOWN_VERSION`, or when the models page no
   longer says where it points.
@@ -636,13 +638,26 @@ is a copy again.
   left four scripts, the weekly release check among them, importing a
   directory that was gone, with every gate green. `src/script-imports.test.ts`
   resolves each import the way the runtime would.
-- **A Jev check's cutoff is read from `fixtures/validation/calibration.json`,**
-  never guessed. `reviews.test.ts` fails if a cutoff would flag a good corpus
-  question. Rerun `scripts/calibrate-reviews.ts` when the model changes.
-  Another platform or model is run with `--platform` or `--model` and saved
-  beside it as `calibration-<platform>-<model>.json`. A route joins
-  `MEASURED_ROUTES` in `ask/provider.ts` only from such a file that answers
-  as `MEASURED_ON` does, and never by its spelling.
+- **A check's cutoff is read from a saved run, never guessed, and a model
+  has its own or is judged by Jev's.** `ask/cutoffs.ts` holds a table per
+  model family. Jev's was set by hand on
+  `fixtures/validation/calibration.json`, and `reviews.test.ts` fails if a
+  cutoff would flag a good corpus question there. Luna's and d1's are what
+  `fitCutoff` in `docs/calibration.ts` fits on their own runs, exactly, and
+  the same test fails when the table and the fit differ, so a changed example
+  or a rerun moves the table in the open. The rule is in
+  `fixtures/corpus/README.md`: a hundredth that flags no good example and
+  catches six in ten of the bad ones, halfway across the gap. A check with
+  no cutoff on a model is not asked of it, and `enabledReviews` in
+  `ask/review.ts` is where that happens. Rerun `scripts/calibrate-reviews.ts`
+  when a model changes; another platform or model is run with `--platform`
+  or `--model` and saved beside as `calibration-<platform>-<model>.json`. A
+  run joins `MEASURED` in `ask/cutoffs.ts` only from such a file: the
+  platform a model's cutoffs were fit on, or a route whose file answers as
+  that run does, never by its spelling. A cutoff is fit on at least 16
+  examples with the defect and 40 without, per check and per model, a size
+  fixed on 2026-10-24 before the set was grown to it; the corpus README says
+  why.
 - **A dry run of a paid script proves nothing about its sending.** It stops
   before the first call. The provider refactor left `calibrate-reviews.ts`
   calling `ask()` with no provider while `--dry-run` kept passing.

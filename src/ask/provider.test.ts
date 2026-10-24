@@ -237,7 +237,7 @@ describe('where a model id is sent', () => {
 		expect(providerFor('jev-1.13.0', { endpoint })).toBe(reason);
 	});
 
-	it('counts only the version the cutoffs were set on as calibrated', () => {
+	it("counts only the version Jev's cutoffs were set on as calibrated", () => {
 		expect(isCalibrated(MEASURED_ON)).toBe(true);
 		expect(isCalibrated('jev-99.0.0')).toBe(false);
 		expect(isCalibrated('jev-latest')).toBe(false);
@@ -253,7 +253,19 @@ describe('where a model id is sent', () => {
 		expect(isCalibrated('typesafe/jev-latest', { slot: 'openrouter' })).toBe(
 			false,
 		);
-		expect(isCalibrated('gpt-6-luna', { slot: 'openai' })).toBe(false);
+	});
+
+	it('counts a model with cutoffs of its own as calibrated at the platform they were fit on, under the id sent there', () => {
+		expect(isCalibrated('gpt-6-luna', { slot: 'openai' })).toBe(true);
+		expect(isCalibrated('gpt-6-luna-decisions', { slot: 'openai' })).toBe(
+			false,
+		);
+		expect(isCalibrated('gpt-6-luna', { slot: 'llmgateway' })).toBe(false);
+		expect(
+			isCalibrated('openai/gpt-6-luna-decisions', { slot: 'vercel' }),
+		).toBe(true);
+		expect(isCalibrated('d1', { slot: 'liquid' })).toBe(true);
+		expect(isCalibrated('d1:free', { slot: 'liquid' })).toBe(false);
 	});
 
 	it('does not count the calibrated version as calibrated when it is asked in the Decisions shape', () => {

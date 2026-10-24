@@ -2,6 +2,7 @@ import { MEASURED_ON } from '../lint/limits';
 import { readQuestions } from '../lint/lint';
 import { RULES } from '../lint/rules';
 import { suppressor } from '../lint/suppress';
+import { targetById } from '../lint/targets';
 import type {
 	Extraction,
 	Finding,
@@ -14,6 +15,7 @@ import type {
 	Syntax,
 } from '../types';
 import { ask, type Failure, type Fetch, isFailure, type Reply } from './client';
+import { type Cutoffs, cutoffsFor, setOn } from './cutoffs';
 import { type QuestionLiteral, toLiteral, toPlain } from './literal';
 import {
 	asSubject,
@@ -135,10 +137,18 @@ export function estimateTokens(
 	return chars / ratio;
 }
 
-function enabledReviews(lint: LintOptions): ReadonlySet<string> {
+// The checks a run asks: the ones not switched off, that have a cutoff on
+// the model asked. A check with none there could not tell the examples with
+// the defect from those without, so asking it would only spend tokens.
+function enabledReviews(
+	lint: LintOptions,
+	cutoffs: Cutoffs,
+): ReadonlySet<string> {
 	return new Set(
 		REVIEW_CODES.filter(
-			(code) => (lint.rules[code] ?? RULES[code].severity) !== 'off',
+			(code) =>
+				(lint.rules[code] ?? RULES[code].severity) !== 'off' &&
+				cutoffs[code as keyof Cutoffs] !== undefined,
 		),
 	);
 }
@@ -166,23 +176,24 @@ function rated(
 ): string {
 	const number = `(${asSubject(provider.model)} put this at ${probability.toFixed(2)}.)`;
 	if (isCalibrated(request.model, provider)) return number;
+	const on = setOn(request.model);
 	// The same id by another route differs only in how it was reached.
-	if (request.model === DEFAULT_MODEL)
-		return `${number} The cutoff was set on ${DEFAULT_MODEL} at TypeSafe, not through ${provider.vendor}.`;
-	// Another Jev is still Jev by name, so only its version tells the two apart.
-	const asked = provider.model === 'Jev' ? request.model : provider.model;
-	return `${number} The cutoff was set on ${DEFAULT_MODEL}, not on ${asked}.`;
+	if (request.model === on.model)
+		return `${number} The cutoff was set on ${on.model} at ${targetById(on.slot)?.name}, not through ${provider.vendor}.`;
+	// Another Jev is still Jev by name, so only its id tells the two apart.
+	return `${number} The cutoff was set on ${on.model}, not on ${request.model}.`;
 }
 
 function questionJob(
 	question: Question,
 	request: ReviewRequest,
 	provider: Provider,
+	cutoffs: Cutoffs,
 ): Job {
 	return {
 		request,
 		read: (reply, report) => {
-			for (const found of readAnswers(reply.answers)) {
+			for (const found of readAnswers(reply.answers, cutoffs)) {
 				const places = found.culprits.flatMap(
 					(index) => entryOf(question, index) ?? [],
 				);
@@ -206,13 +217,14 @@ function mapJob(
 	ids: ReadonlyArray<string>,
 	request: ReviewRequest,
 	provider: Provider,
+	cutoffs: Cutoffs,
 ): Job {
 	const spanOf = (id: string) =>
 		map.entries.find((entry) => entry.id === id)?.idSpan;
 	return {
 		request,
 		read: (reply, report) => {
-			for (const found of readRequestAnswers(ids, reply.answers)) {
+			for (const found of readRequestAnswers(ids, reply.answers, cutoffs)) {
 				const pair = found.code === 'DEC310';
 				const span = pair
 					? spanOf(found.second)
@@ -246,8 +258,9 @@ function prepare(
 	syntax: Syntax,
 ): Prepared {
 	const extraction: Extraction = readQuestions(text, syntax);
-	const enabled = enabledReviews(settings.lint);
 	const { model, provider } = settings;
+	const cutoffs = cutoffsFor(model);
+	const enabled = enabledReviews(settings.lint, cutoffs);
 	const stateOf = (map: QuestionMap | undefined): unknown =>
 		settings.sendState && map?.state ? toPlain(map.state) : undefined;
 	const jobs: Job[] = [];
@@ -269,7 +282,7 @@ function prepare(
 		const request = buildRequest(literal, model, enabled, { siblings, state });
 		if (!request) continue;
 		sendsState ||= 'state' in request.state;
-		jobs.push(questionJob(question, request, provider));
+		jobs.push(questionJob(question, request, provider, cutoffs));
 	}
 
 	for (const [index, map] of extraction.maps.entries()) {
@@ -281,7 +294,7 @@ function prepare(
 		const request = buildRequestReview(literals, model, enabled, stateOf(map));
 		if (!request) continue;
 		sendsState ||= 'state' in request.state;
-		jobs.push(mapJob(map, Object.keys(literals), request, provider));
+		jobs.push(mapJob(map, Object.keys(literals), request, provider, cutoffs));
 	}
 
 	const limit = settings.maxCalls;

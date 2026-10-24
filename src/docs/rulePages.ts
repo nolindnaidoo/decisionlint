@@ -1,6 +1,6 @@
 import given from '../../fixtures/rule-examples.json';
-import { DEFAULT_MODEL } from '../ask/review';
-import { REQUEST_REVIEWS, REVIEWS } from '../ask/reviews';
+import { type CheckCode, CUTOFFS, MEASURED } from '../ask/cutoffs';
+import { REVIEWS } from '../ask/reviews';
 import { lintText } from '../lint/lint';
 import { RULE_CODES, RULES } from '../lint/rules';
 import type { LintOptions, RuleCode, Syntax } from '../types';
@@ -95,13 +95,26 @@ function examples(code: RuleCode, example: RuleExample | undefined): string {
 	].join('\n');
 }
 
+// "a", "a and b", "a, b and c".
+const listed = (items: ReadonlyArray<string>): string =>
+	items.length < 2
+		? (items[0] ?? '')
+		: `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
 // What a Jev-backed check puts to Jev, since no example of one can be checked offline.
 function asked(code: RuleCode): string {
 	const review = REVIEWS.find((candidate) => candidate.code === code);
-	const whole = (
-		REQUEST_REVIEWS as Readonly<Record<string, { cutoff: number }>>
-	)[code];
-	const cutoff = review?.cutoff ?? whole?.cutoff;
+	// The first run of each measured family, and the check's cutoff there.
+	const runs = MEASURED.filter(
+		(run, index) =>
+			MEASURED.findIndex((each) => each.family === run.family) === index,
+	).map((run) => ({ run, cutoff: CUTOFFS[run.family]?.[code as CheckCode] }));
+	const on = runs
+		.filter((each) => each.cutoff !== undefined)
+		.map((each) => `${each.cutoff} on \`${each.run.model}\``);
+	const off = runs
+		.filter((each) => each.cutoff === undefined)
+		.map((each) => `\`${each.run.model}\``);
 	const lines = ['## What Jev is asked', ''];
 	if (review) lines.push(`> ${review.instructions}`, '');
 	if (!review)
@@ -110,7 +123,7 @@ function asked(code: RuleCode): string {
 			'',
 		);
 	lines.push(
-		`It is reported when Jev puts the probability of yes at ${cutoff} or more. That cutoff was set from a small number of examples on \`${DEFAULT_MODEL}\`, so treat a finding as an argument with a number attached, not a verdict. How it holds up on each model and platform it was run on is in [the cutoffs page](../cutoffs.md).`,
+		`It is reported when the model puts the probability of yes at or above its cutoff: ${listed(on)}.${off.length ? ` It is not asked of ${listed(off)}, where no cutoff told the examples with the defect from the examples without.` : ''} Each cutoff was fit on examples the project wrote, so treat a finding as an argument with a number attached, not a verdict. How it holds up on each model and platform it was run on is in [the cutoffs page](../cutoffs.md).`,
 		'',
 	);
 	return lines.join('\n');

@@ -1897,7 +1897,7 @@ describe('checking with Jev', () => {
 		expect(result.out).toBe('');
 	});
 
-	it("asks OpenAI with the OpenAI key when the model is gpt-6-luna, and says the cutoff is Jev's", async () => {
+	it("asks OpenAI with the OpenAI key when the model is gpt-6-luna, and judges it by Luna's own cutoffs", async () => {
 		const lunaSays = vi.fn(async () => ({
 			ok: true,
 			status: 200,
@@ -1932,9 +1932,8 @@ describe('checking with Jev', () => {
 		expect(url).toBe('https://api.openai.com/v1/decisions');
 		expect(init.headers.Authorization).toBe('Bearer sk-test');
 		expect(JSON.parse(init.body).questions[0].type).toBe('predicate');
-		expect(result.out).toContain(
-			'(Luna put this at 0.91.) The cutoff was set on jev-1.13.0, not on Luna.',
-		);
+		expect(result.out).toContain('(Luna put this at 0.91.)');
+		expect(result.out).not.toContain('The cutoff was set on');
 		expect(result.out).toContain(
 			'Luna answered 1 of 1 request on gpt-6-luna, 200 input tokens.',
 		);
@@ -2371,7 +2370,7 @@ describe('where --ask sends', () => {
 			/Sending 1 request to localhost:8080 on ggml-org\/OpenJev-GGUF/,
 		);
 		expect(result.out).toContain(
-			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on the model.',
+			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on ggml-org/OpenJev-GGUF.',
 		);
 		expect(result.out).toContain('The model answered 1 of 1 request on');
 	});
@@ -2540,14 +2539,32 @@ describe('where --ask-platform sends', () => {
 		expect(measured.out).toContain('(Jev put this at 0.91.)');
 		expect(measured.out).not.toContain('The cutoff was set on');
 
-		const unmeasured = await cli(
+		// d1 has cutoffs of its own, fit on `d1` at Liquid AI; its free tier is another id.
+		const own = await cli(
 			['--ask', '--ask-platform', 'liquid', '--format', 'compact', 'q.ts'],
 			{ 'q.ts': VAGUE },
 			'',
 			world(jevSays({ DEC302: { noul: 0.91 } }), { LIQUID_API_KEY: 'lq-key' }),
 		);
+		expect(own.out).toContain('(The model put this at 0.91.)');
+		expect(own.out).not.toContain('The cutoff was set on');
+		const unmeasured = await cli(
+			[
+				'--ask',
+				'--ask-platform',
+				'liquid',
+				'--ask-model',
+				'd1:free',
+				'--format',
+				'compact',
+				'q.ts',
+			],
+			{ 'q.ts': VAGUE },
+			'',
+			world(jevSays({ DEC302: { noul: 0.91 } }), { LIQUID_API_KEY: 'lq-key' }),
+		);
 		expect(unmeasured.out).toContain(
-			'The cutoff was set on jev-1.13.0, not on',
+			'The cutoff was set on d1, not on d1:free.',
 		);
 
 		// The calibrated id, asked in the Decisions shape, which moves Jev's answers.

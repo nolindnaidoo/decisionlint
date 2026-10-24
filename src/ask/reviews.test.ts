@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { CHECKS, fitCutoff, readingsOf } from '../docs/calibration';
 import { readQuestions } from '../lint/lint';
 import { RULES } from '../lint/rules';
 import { ask, type Fetch, isFailure } from './client';
+import { CUTOFFS, type Cutoffs } from './cutoffs';
 import { toLiteral } from './literal';
 import { providerFor } from './provider';
 import {
@@ -148,13 +150,36 @@ describe('what is put to Jev', () => {
 	});
 
 	it('reports a check only at or above its cutoff', () => {
-		const cutoff =
-			REVIEWS.find((review) => review.code === 'DEC302')?.cutoff ?? 0;
+		const cutoff = CUTOFFS.jev?.DEC302 ?? 0;
 		expect(readAnswers({ DEC302: { noul: cutoff - 0.01 } })).toEqual([]);
 		expect(
 			readAnswers({ DEC302: { noul: cutoff } }).map((f) => f.code),
 		).toEqual(['DEC302']);
 		expect(readAnswers({})).toEqual([]);
+	});
+
+	it("judges an answer by the model's own cutoffs, and reports nothing for a check it has none for", () => {
+		const luna = CUTOFFS.luna as Cutoffs;
+		expect(luna.DEC301).toBeUndefined();
+		expect(
+			readAnswers({ DEC301: { noul: 1 }, DEC302: { noul: 0.72 } }, luna).map(
+				(f) => f.code,
+			),
+		).toEqual(['DEC302']);
+		expect(
+			readRequestAnswers(
+				['a', 'b'],
+				{ 'DEC310.0.1': { noul: 0.02 }, DEC312: { noul: 0.96 } },
+				luna,
+			),
+		).toEqual([{ code: 'DEC310', first: 'a', second: 'b', probability: 0.02 }]);
+		expect(
+			readRequestAnswers(
+				['a', 'b'],
+				{ 'DEC310.0.1': { noul: 0.9 }, DEC312: { noul: 1 } },
+				CUTOFFS.d1 as Cutoffs,
+			),
+		).toEqual([{ code: 'DEC310', first: 'a', second: 'b', probability: 0.9 }]);
 	});
 
 	it('asks about each option in the same request, to find the ones at fault', () => {
@@ -256,50 +281,48 @@ describe('what is put to Jev', () => {
 	});
 });
 
-// The probabilities Jev returned for every corpus question, saved by
-// scripts/calibrate-reviews.ts. Reading them costs nothing, so the cutoffs are
-// held to them here: a check may not flag a question the corpus calls good.
+// The probabilities each model returned for every corpus question and
+// request, saved by scripts/calibrate-reviews.ts. Reading them costs nothing,
+// so the cutoffs are held to them here.
 describe('cutoffs against the saved calibration', () => {
-	const saved: { probabilities: Record<string, Record<string, number>> } =
+	const read = (path: string) =>
 		JSON.parse(
-			readFileSync(
-				new URL('../../fixtures/validation/calibration.json', import.meta.url),
-				'utf8',
-			),
+			readFileSync(new URL(`../../fixtures/${path}`, import.meta.url), 'utf8'),
 		);
-	const corpus: { id: string; defects: string[] }[] = JSON.parse(
-		readFileSync(
-			new URL('../../fixtures/corpus/questions.json', import.meta.url),
-			'utf8',
-		),
-	);
-	const LABEL: Record<string, string> = {
-		DEC301: 'DEC102',
-		DEC302: 'DEC112',
-		DEC303: 'DEC303',
-		DEC304: 'DEC304',
-	};
+	const corpus = read('corpus/questions.json');
+	const requests = read('corpus/requests.json');
+	const readings = (file: string, code: string) =>
+		readingsOf(code, read(`validation/${file}`), corpus, requests);
 
-	it.each(REVIEWS)(
-		'$code flags no good corpus question and catches most bad ones',
-		(review) => {
-			const at = (id: string) => saved.probabilities[id]?.[review.code];
-			const flagged = (ids: string[]) =>
-				ids.filter((id) => (at(id) ?? 0) >= review.cutoff);
-			const good = corpus
-				.filter((entry) => !entry.defects.length)
-				.map((entry) => entry.id);
-			const bad = corpus
-				.filter((entry) =>
-					entry.defects.includes(LABEL[review.code] ?? review.code),
-				)
-				.map((entry) => entry.id);
-			expect(flagged(good)).toEqual([]);
-			expect(flagged(bad).length).toBeGreaterThanOrEqual(
-				Math.ceil(bad.length * 0.6),
-			);
+	// Jev's were set by hand at TypeSafe: a check may not flag an example the
+	// corpus calls good, and must catch most of the bad ones it was sent. The
+	// cutoffs page counts the examples added since that run as unsent.
+	it.each(CHECKS)(
+		"Jev's %s flags no good example at TypeSafe and catches most bad ones",
+		(code) => {
+			const cutoff = CUTOFFS.jev?.[code as keyof Cutoffs] ?? 0;
+			const { bad, good } = readings('calibration.json', code);
+			expect(good.filter((each) => each.p >= cutoff)).toEqual([]);
+			expect(
+				bad.filter((each) => each.p >= cutoff).length,
+			).toBeGreaterThanOrEqual(Math.ceil(bad.length * 0.6));
 		},
 	);
+
+	// Luna's and d1's are what the rule fits on their runs, exactly, so a
+	// changed example or a rerun moves the table or fails here.
+	it.each([
+		['luna', 'calibration-openai-gpt-6-luna.json'],
+		['d1', 'calibration-liquid-d1.json'],
+	])("%s's cutoffs are what the rule fits on its run", (family, file) => {
+		const fitted = Object.fromEntries(
+			CHECKS.flatMap((code) => {
+				const { cutoff } = fitCutoff(readings(file, code));
+				return cutoff === undefined ? [] : [[code, cutoff]];
+			}),
+		);
+		expect(CUTOFFS[family]).toEqual(fitted);
+	});
 });
 
 describe('the client', () => {

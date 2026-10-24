@@ -258,12 +258,14 @@ covers, exactly:
   reshape fix is Jev-only.
 - **Asking Luna.** Run **Ask Luna About This File**, or pass
   `--ask-platform openai`, with an OpenAI key. The next section says how.
-- **Calibrated on Jev, measured on Luna.** Every default in these rules was
-  set by measuring what the defect costs `jev-1.13.0`. The checks were run
-  on Luna through the live API on 2026-10-16. Jev's cutoffs catch most
-  defects there but miss more, so Luna keeps them, and every finding from
-  asking Luna says its cutoff was set on Jev. What the wording rules cost
-  Luna is not measured yet.
+- **Calibrated on Jev, with cutoffs of its own on Luna.** Every default in
+  the wording rules was set by measuring what the defect costs `jev-1.13.0`.
+  The model-backed checks were run on Luna over the whole calibration set on
+  2026-10-24 and each got a cutoff fit on Luna's own answers, where one
+  could be: seven of the twelve. The other five are not asked of Luna,
+  because no cutoff told the examples with the defect from the examples
+  without, and [docs/cutoffs.md](docs/cutoffs.md) names the example in the
+  way of each. What the wording rules cost Luna is not measured yet.
 
 ## Every platform
 
@@ -315,24 +317,28 @@ serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 Every platform below was sent real requests through its live API, and the
 model-backed checks were run over the whole calibration set on each:
 
-- TypeSafe, `jev-1.13.0`, where the cutoffs were set.
+- TypeSafe, `jev-1.13.0`, where Jev's cutoffs were set.
 - OpenRouter, `typesafe/jev-1.13`. It answers as TypeSafe does, so its
   findings are treated as calibrated.
 - LLM Gateway, `jev-1.13.0`, and Vercel AI Gateway, `typesafe-ai/jev`. Both
   are sent OpenAI's shape, which moves Jev's answers a little, so their
   findings say the cutoff was set at TypeSafe.
-- OpenAI, `gpt-6-luna`, and Vercel AI Gateway, `openai/gpt-6-luna-decisions`,
-  which answers as OpenAI does.
-- Liquid AI, `d1`.
+- OpenAI, `gpt-6-luna`, where Luna's cutoffs were fit, and Vercel AI
+  Gateway, `openai/gpt-6-luna-decisions`, which answers as OpenAI does.
+- Liquid AI, `d1`, where d1's cutoffs were fit.
 
-Luna and d1 keep Jev's cutoffs. They catch most defects on both, miss more
-than on Jev, and every finding from them says where its cutoff was set.
+Luna and d1 have cutoffs of their own since 1.1.0, each fit on that model's
+run over the whole calibration set: a cutoff flags none of the good examples
+and catches at least six in ten of the bad ones. Where no cutoff can, the
+check is not asked of that model: five checks on Luna and two on d1. Any
+other model, or one of these under another id or through another route, is
+judged by its family's cutoffs, or Jev's, and every finding from it says so.
 [docs/cutoffs.md](docs/cutoffs.md) has each cutoff, how many known
-defects it caught and how many good questions it flagged on each model, and
-how far each platform's answers sit from the same model elsewhere. It is
-written from the saved runs, so its numbers are the runs' own. The samples
-are small, so treat them as rough evidence. LiteLLM, Eden AI and llama.cpp
-have not been run yet.
+defects it caught and how many good questions it flagged on each model, why
+each check that is not asked is not, and how far each platform's answers sit
+from the same model elsewhere. It is written from the saved runs, so its
+numbers are the runs' own. LiteLLM, Eden AI and llama.cpp have not been run
+yet.
 
 ## Ask a model about a file
 

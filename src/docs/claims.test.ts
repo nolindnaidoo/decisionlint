@@ -24,7 +24,7 @@ const COUNT = [
 /** The lines of a document from `heading` up to the next heading. */
 function section(text: string, heading: string): string {
 	const lines = text.split('\n');
-	const start = lines.findIndex((line) => line === heading);
+	const start = lines.indexOf(heading);
 	if (start === -1) throw new Error(`no heading ${heading}`);
 	const rest = lines.slice(start + 1);
 	const end = rest.findIndex((line) => line.startsWith('#'));

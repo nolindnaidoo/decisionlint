@@ -810,6 +810,13 @@ difference matters when the family changes one.
   deliberately lacks or changes. Joining it means adopting those, which was
   decided against. When a copied file changes in the family, copy it here by
   hand.
+- **`main` takes pull requests only.** Branch protection, set on 2026-10-24
+  by `gh api` after three commits for #46 reached it directly: a pull request
+  is required with no approvals, force-pushes and deletions are blocked, and
+  the rule binds administrators, so the owner's own token cannot push past
+  it. No status check is required, because the check names move and CI runs
+  on every pull request regardless. Dependabot's auto-merge squashes through
+  the same gate.
 - **CI pins Bun to the version that wrote `bun.lock`**, 1.3.14. Upgrading is
   one change: upgrade locally, regenerate the lockfile, and move the pin in
   `ci.yml`, the two in `release.yml` and the one in `jev-release.yml`.

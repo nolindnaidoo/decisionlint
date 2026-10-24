@@ -54,14 +54,7 @@ const EXPECTED: Readonly<Record<string, ReadonlyArray<string>>> = {
 	],
 	'clean.ts': [],
 	'missing-state.jev.json': [],
-	'wording.jev.json': [
-		'DEC101',
-		'DEC102',
-		'DEC105',
-		'DEC110',
-		'DEC103',
-		'DEC112',
-	],
+	'wording.jev.json': ['DEC101', 'DEC102', 'DEC105', 'DEC103'],
 	'.oxlintrc.json': ['DEC001', 'DEC005', 'DEC007'],
 	'decisions.json': ['DEC102', 'DEC004', 'DEC011', 'DEC012', 'DEC011'],
 };

@@ -1,0 +1,48 @@
+name: A language to read
+description: A language that public code writes decision-model questions in and the reader does not read yet.
+title: "Language: "
+labels: ["enhancement", "area:reader"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A new language is a new reader and nothing else: rules never ask which language a file is in. The roadmap in SPEC.md weighs a language by the share of public files that call the API in it, so the count comes first.
+  - type: input
+    id: language
+    attributes:
+      label: Language
+    validations:
+      required: true
+  - type: textarea
+    id: count
+    attributes:
+      label: How many public files call the API in it, and how you counted
+      description: A GitHub code search such as `"api.typesafe.ai/v1/systemone" language:Kotlin`, with the number and the date.
+    validations:
+      required: true
+  - type: dropdown
+    id: reader
+    attributes:
+      label: Which reader it would be a dialect of
+      description: Rust and Go share the brace reader, which reads a literal written as a type and a brace. JavaScript, TypeScript and JSON share one, Python has its own.
+      options:
+        - The brace reader (a typed literal, like Rust and Go)
+        - The JavaScript reader (object literals, like TypeScript and JSON)
+        - The Python reader (dicts and keyword calls)
+        - None of these, a new reader
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: A question as that language writes it
+      description: In your own words, not copied from another project. The SDK call or the raw request body, whichever is common.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: sdk
+    attributes:
+      label: The SDK, if there is one
+      description: Package name and the page that documents how a question is built.

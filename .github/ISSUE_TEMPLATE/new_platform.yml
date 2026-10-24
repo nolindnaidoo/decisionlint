@@ -1,0 +1,50 @@
+name: A platform to send checks to
+description: A host that serves TypeSafe's or OpenAI's shape and is not in the table yet.
+title: "Platform: "
+labels: ["enhancement", "area:ask"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A platform is a row in `src/lint/targets.ts`: its shapes, host, limits and key variable, each with the page it was read from and the date. Every number enters that table from the platform's own documentation and nowhere else. A figure from a survey, a comparison site or an aggregator stays out until the platform states it, so each answer below asks for the platform's own page.
+  - type: input
+    id: name
+    attributes:
+      label: Platform
+      description: Its name, and the id you would expect to pass as `--ask-platform`.
+    validations:
+      required: true
+  - type: input
+    id: shape
+    attributes:
+      label: Which shape it takes, and the page that shows the request body
+      description: TypeSafe's (`/systemone`), OpenAI's (`/decisions`), or both.
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: The endpoint URL, and the page that publishes it
+    validations:
+      required: true
+  - type: input
+    id: key
+    attributes:
+      label: The environment variable its own SDK or docs read the key from, and the page
+    validations:
+      required: true
+  - type: textarea
+    id: limits
+    attributes:
+      label: Limits it publishes, with a page for each
+      description: Options per Choice, levels per Score, questions per request, body size. Leave one out rather than guess it, and say if the platform publishes none.
+  - type: input
+    id: models
+    attributes:
+      label: How it spells the model ids
+      description: For example `typesafe/jev-1.13` or `openai/gpt-6-luna-decisions`, with the page that lists them.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Pricing page, whether a free tier exists, and whether you can run the calibration set through it.

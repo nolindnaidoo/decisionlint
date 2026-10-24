@@ -667,8 +667,9 @@ is a copy again.
 - **The file types read are listed once, in `EXTENSIONS`.** The editor's
   `include` default is built from it and the command line searches by it. A
   new language adds its extension there, a reader in `LANGUAGES` in
-  `lint/lint.ts`, an `onLanguage` activation event and an entry in the
-  linter service's `LANGUAGES`.
+  `lint/lint.ts`, an `onLanguage` activation event, an entry in the
+  linter service's `LANGUAGES`, and its name in the issue forms' language
+  dropdowns, which `src/issue-forms.test.ts` holds to `EXTENSIONS`.
 - **Two npm packages, one source.** `decisionlint` is the command line, the
   library and the server behind `--mcp`. `decisionlint-mcp` is the server
   alone, from `cli/mcpMain.ts`, with no flag, so a client that installs by
@@ -818,6 +819,7 @@ difference matters when the family changes one.
 | `.github/dependabot.yml` | Cut down: no `cargo` entry |
 | `.github/workflows/jev-release.yml`, `scripts/check-jev-release.ts` | This repo's own. The family declares no vendor's model version |
 | `.github/workflows/release-shim.yml`, `shim/`, `scripts/e2e-shims.js` | This repo's own: the bridges to the names 1.0.0 left behind |
+| `.github/ISSUE_TEMPLATE/*.yml`, `.github/PULL_REQUEST_TEMPLATE.md` | This repo's own: the family has none. The two finding forms ask for the question as written, its language and the rule code; `src/issue-forms.test.ts` holds the rule dropdown to `RULE_CODES`, the language dropdowns to `EXTENSIONS`, and every label a form applies to the ones the repository has, since GitHub applies a label it lacks silently |
 
 - **`letools-site`'s fleet check names this repo and does not compare it.** It
   is listed in `OUTSIDE_FLEET` in `letools-site/scripts/check-fleet.ts`. The

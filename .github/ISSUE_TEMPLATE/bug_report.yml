@@ -1,0 +1,49 @@
+name: Something else is wrong
+description: A crash, a wrong fix, a setting that does nothing, or anything a finding report does not cover.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where it happened
+      options:
+        - VS Code extension
+        - Command line (decisionlint)
+        - MCP server (decisionlint-mcp or --mcp)
+        - GitHub Action
+        - pre-commit hook
+        - Library (the npm package's exports)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: DecisionLint version
+      description: From the extension's details page, `npx decisionlint --version`, or the server's `version` field.
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to see it
+      description: The file or text it happened on and the command or action that ran. A file that shows it is worth more than a description of one.
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output or logs
+      description: The command's output, or the extension's Output panel under DecisionLint. Remove any key before pasting.
+      render: text

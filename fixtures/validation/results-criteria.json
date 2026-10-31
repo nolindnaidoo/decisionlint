@@ -1,6 +1,6 @@
 {
-  "ranOn": "2026-10-04",
-  "model": "jev-1.13.0",
+  "ranOn": "2026-10-31",
+  "model": "jev-1.14.0",
   "calls": 40,
   "inputTokens": 13030,
   "results": [
@@ -8,15 +8,15 @@
       "rule": "DEC305",
       "name": "option names that contradict their descriptions against names that agree",
       "bad": "9 of 10",
-      "badSureness": "0.24",
+      "badSureness": "0.28",
       "good": "10 of 10",
-      "goodSureness": "0.95"
+      "goodSureness": "0.88"
     },
     {
       "rule": "DEC306",
       "name": "criteria about something the question never asked against criteria that match",
       "bad": "10 of 10",
-      "badSureness": "0.86",
+      "badSureness": "0.83",
       "good": "10 of 10",
       "goodSureness": "0.98"
     }

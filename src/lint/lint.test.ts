@@ -11,7 +11,7 @@ function codes(
 	return lintText(text, options).findings.map((finding) => finding.code);
 }
 
-function request(questions: string, model = 'jev-1.13.0'): string {
+function request(questions: string, model = 'jev-1.14.0'): string {
 	return `{ "state": "s", "model": "${model}", "questions": { ${questions} } }`;
 }
 
@@ -103,7 +103,7 @@ describe('DEC001 unpinned-model', () => {
 	});
 
 	it('does not fire on a versioned id', () => {
-		expect(codes(request(CLEAN_NOUL, 'jev-1.13.0'))).toEqual([]);
+		expect(codes(request(CLEAN_NOUL, 'jev-1.14.0'))).toEqual([]);
 	});
 
 	it('does not fire when the model is a runtime value', () => {
@@ -122,7 +122,7 @@ describe('DEC001 unpinned-model', () => {
 });
 
 describe('DEC013 newer-model', () => {
-	it.each(['jev-1.13.1', 'jev-1.14.0', 'jev-2.0.0', 'jev-1.100.0'])(
+	it.each(['jev-1.14.1', 'jev-1.15.0', 'jev-2.0.0', 'jev-1.100.0'])(
 		'fires on %s, a version above the measured one',
 		(model) => {
 			expect(codes(request(CLEAN_NOUL, model))).toEqual(['DEC013']);

@@ -177,16 +177,16 @@ the mistakes that can be read from the text.
 | DEC005 | duplicate | error | A question id, option or level appears twice. In an object the later one silently replaces the earlier |
 | DEC006 | criteria-shape | error | A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false` |
 | DEC007 | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
-| DEC008 | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
+| DEC008 | numeric-levels | info | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
 | DEC009 | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
 | DEC010 | unused-disable | warning | A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later |
 | DEC011 | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
-| DEC012 | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
+| DEC012 | terse-instructions | warning | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
 | DEC013 | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
 | DEC014 | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
 | DEC101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | DEC102 | arithmetic | warning | The question asks Jev to count or compare numbers |
-| DEC103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
+| DEC103 | date-comparison | warning | The question asks Jev to order two times or measure the gap between them |
 | DEC104 | compound | off | A Noul joins two judgments with 'and' |
 | DEC105 | generation | warning | The question asks for a value or for text to be written |
 | DEC107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
@@ -259,7 +259,7 @@ covers, exactly:
 - **Asking Luna.** Run **Ask Luna About This File**, or pass
   `--ask-platform openai`, with an OpenAI key. The next section says how.
 - **Calibrated on Jev, with cutoffs of its own on Luna.** Every default in
-  the wording rules was set by measuring what the defect costs `jev-1.13.0`.
+  the wording rules was set by measuring what the defect costs `jev-1.14.0`.
   The model-backed checks were run on Luna over the whole calibration set on
   2026-10-24 and each got a cutoff fit on Luna's own answers, where one
   could be: seven of the twelve. The other five are not asked of Luna,
@@ -280,9 +280,9 @@ read from:
 
 | Platform | Reached as | Key variable | Limits it publishes |
 |---|---|---|---|
-| TypeSafe | `jev-1.13.0`, `jev-latest` | `TYPESAFE_API_KEY` | 255 options, 10 levels |
+| TypeSafe | `jev-1.14.0`, `jev-latest` | `TYPESAFE_API_KEY` | 255 options, 10 levels |
 | OpenAI | `gpt-6-luna` | `OPENAI_API_KEY` | none |
-| OpenRouter | `~typesafe/jev-latest`, `typesafe/jev-1.13` | `OPENROUTER_API_KEY` | none |
+| OpenRouter | `~typesafe/jev-latest`, `typesafe/jev-1.14` | `OPENROUTER_API_KEY` | none |
 | Vercel AI Gateway | `typesafe-ai/jev`, `openai/gpt-6-luna-decisions` | `AI_GATEWAY_API_KEY` | 255 choices, 10 levels |
 | LLM Gateway | `gpt-6-luna-decisions`, `microsoft-decision-1` | `LLM_GATEWAY_API_KEY` | none |
 | Liquid AI | `d1`, `d1:free` | `LIQUID_API_KEY` | none |
@@ -300,8 +300,8 @@ Three things follow from the table:
   where a request goes: a TypeSafe-shaped question keeps TypeSafe's limits,
   and any other shape keeps none.
 - **A floating alias is caught in every spelling**, and pinned in the
-  spelling the platform documents: `jev-latest` to `jev-1.13.0`,
-  `~typesafe/jev-latest` to `typesafe/jev-1.13`.
+  spelling the platform documents: `jev-latest` to `jev-1.14.0`,
+  `~typesafe/jev-latest` to `typesafe/jev-1.14`.
 - **A check with the model goes to the platform the id names**, with the key
   in that platform's variable. A spelling that names no host, such as
   `openai/gpt-6-luna-decisions`, which every gateway writes, is refused
@@ -317,10 +317,10 @@ serves is `ggml-org/OpenJev-GGUF`. Each is reached as an endpoint you set.
 Every platform below was sent real requests through its live API, and the
 model-backed checks were run over the whole calibration set on each:
 
-- TypeSafe, `jev-1.13.0`, where Jev's cutoffs were set.
-- OpenRouter, `typesafe/jev-1.13`. It answers as TypeSafe does, so its
+- TypeSafe, `jev-1.14.0`, where Jev's cutoffs were set.
+- OpenRouter, `typesafe/jev-1.14`. It answers as TypeSafe does, so its
   findings are treated as calibrated.
-- LLM Gateway, `jev-1.13.0`, and Vercel AI Gateway, `typesafe-ai/jev`. Both
+- LLM Gateway, `jev-1.14.0`, and Vercel AI Gateway, `typesafe-ai/jev`. Both
   are sent OpenAI's shape, which moves Jev's answers a little, so their
   findings say the cutoff was set at TypeSafe.
 - OpenAI, `gpt-6-luna`, where Luna's cutoffs were fit, and Vercel AI
@@ -354,11 +354,11 @@ There is one command per platform, and each has its own key:
 
 | Command | Sends to | Model by default | Key |
 |---|---|---|---|
-| **Ask Jev About This File** | TypeSafe | `jev-1.13.0` | **Set TypeSafe API Key**, or `TYPESAFE_API_KEY` |
+| **Ask Jev About This File** | TypeSafe | `jev-1.14.0` | **Set TypeSafe API Key**, or `TYPESAFE_API_KEY` |
 | **Ask Luna About This File** | OpenAI | `gpt-6-luna` | **Set OpenAI API Key**, or `OPENAI_API_KEY` |
-| **Ask via OpenRouter About This File** | OpenRouter | `typesafe/jev-1.13` | **Set OpenRouter API Key**, or `OPENROUTER_API_KEY` |
+| **Ask via OpenRouter About This File** | OpenRouter | `typesafe/jev-1.14` | **Set OpenRouter API Key**, or `OPENROUTER_API_KEY` |
 | **Ask via Vercel AI Gateway About This File** | Vercel AI Gateway | `typesafe-ai/jev` | **Set Vercel AI Gateway API Key**, or `AI_GATEWAY_API_KEY` |
-| **Ask via LLM Gateway About This File** | LLM Gateway | `jev-1.13.0` | **Set LLM Gateway API Key**, or `LLM_GATEWAY_API_KEY` |
+| **Ask via LLM Gateway About This File** | LLM Gateway | `jev-1.14.0` | **Set LLM Gateway API Key**, or `LLM_GATEWAY_API_KEY` |
 | **Ask Liquid d1 About This File** | Liquid AI | `d1` | **Set Liquid AI API Key**, or `LIQUID_API_KEY` |
 | **Ask the Model at My Endpoint About This File** | `decisionlint.ask.endpoint` | `decisionlint.ask.endpointModel` | **Set Endpoint API Key**, or none |
 
@@ -373,7 +373,7 @@ There is one command per platform, and each has its own key:
 The model each command sends is `decisionlint.ask.models`, by platform.
 The TypeSafe default is the version the checks' cutoffs were set on, and a
 finding from any other model, Luna included, says so. OpenRouter's
-`typesafe/jev-1.13` was measured to answer as that version does, so its
+`typesafe/jev-1.14` was measured to answer as that version does, so its
 findings do not. The probe asks Jev at TypeSafe, with the TypeSafe
 key and model.
 
@@ -473,7 +473,7 @@ so there a finding is silenced with `ignore`.
   on only while it is right on at least 9 of 10 of its findings on public
   code it was not tuned against. Four that describe failure modes in
   TypeSafe's docs, `DEC104`, `DEC107`, `DEC108` and `DEC111`, did not fail on
-  `jev-1.13.0` and are off. `DEC110` and `DEC112` cost answers but fell under
+  `jev-1.14.0` and are off. `DEC110` and `DEC112` cost answers but fell under
   9 of 10 on the second public sample, at 8 of 9 and 2 of 3, and are off
   since 1.1.0. Switch any of them on in `decisionlint.rules`. Two more were
   removed in 0.4.0 for being wrong every time they fired.
@@ -586,7 +586,7 @@ read. Errors always fail a run. Warnings fail it only past `--max-warnings`.
 | `--ask` | Also ask the model about each question. Sends them to the platform the model id names: TypeSafe with `TYPESAFE_API_KEY` by default, OpenAI with `OPENAI_API_KEY` under `--ask-model gpt-6-luna`, OpenRouter, Vercel AI Gateway, LLM Gateway or Liquid AI under their spellings, or wherever `--ask-endpoint` says |
 | `--ask-plan` | Say what `--ask` would send, and send nothing |
 | `--ask-platform <id>` | Where `--ask` sends, named outright: `typesafe`, `openai`, `openrouter`, `vercel`, `llmgateway` or `liquid`, each with its own key variable and a default model in its own spelling. Without it a model id goes where its spelling says |
-| `--ask-model <id>` | The model `--ask` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.13.0` |
+| `--ask-model <id>` | The model `--ask` asks: a Jev version, `gpt-6-luna` for OpenAI's Decisions API, or a model id in another platform's spelling. Default `jev-1.14.0` |
 | `--ask-endpoint <url>` | The full URL `--ask` posts to, for a platform you host or a gateway spelling of the model that names no host. Also read from `DECISIONLINT_ASK_ENDPOINT`. A host the tool does not know is sent the key of the shape, or none |
 | `--ask-shape <shape>` | The shape sent to `--ask-endpoint` where its path does not end in `/systemone` or `/decisions`: `typesafe` or `openai`. Also read from `DECISIONLINT_ASK_SHAPE` |
 | `--ask-max-calls <n>` | The most requests `--ask` may send in the run. Default 25 |
@@ -605,7 +605,7 @@ Jev, and it never uses the network, unless you pass `--ask`.
 On GitHub, the action annotates a pull request:
 
 ```yaml
-- uses: nolindnaidoo/decisionlint@v1.1.0
+- uses: nolindnaidoo/decisionlint@v1.1.1
   with:
     paths: src
 ```
@@ -627,7 +627,7 @@ With [pre-commit](https://pre-commit.com):
 
 ```yaml
 - repo: https://github.com/nolindnaidoo/decisionlint
-  rev: v1.1.0
+  rev: v1.1.1
   hooks:
     - id: decisionlint
 ```
@@ -714,7 +714,7 @@ them you will not press by accident.
 | `decisionlint.fallbackOptions` | `other`, `none`, `unknown`, `unclear`, `uncertain`, `unsure`, `ambiguous`, `undetermined`, `neither`, `not stated`, `not applicable`, `insufficient evidence`, `cannot tell`, `n/a`, and "other" in five other languages | Words that make an option a fallback for `DEC004`. An option counts when one of them is a word in its name, so `none_implied` and `other_or_unclear` count |
 | `decisionlint.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `decisionlint.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `decisionlint.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `decisionlint.ask.models` | `jev-1.14.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
 | `decisionlint.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
 | `decisionlint.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
 | `decisionlint.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |

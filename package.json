@@ -4,7 +4,7 @@
   "displayName": "DecisionLint: Jev/Luna Lint",
   "description": "Lint Jev and Luna decision-model questions. TypeSafe's Jev, OpenAI's Decisions API (gpt-6-luna), OpenRouter, Vercel AI Gateway, LiteLLM, LLM Gateway, Eden AI, Liquid AI, llama.cpp. Works offline with no API key, and one command asks the model itself to check a file.",
   "icon": "src/assets/images/icon.png",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "license": "MIT",
   "author": {
@@ -202,7 +202,7 @@
         },
         "decisionlint.ask.models": {
           "type": "object",
-          "default": {"typesafe": "jev-1.13.0", "openai": "gpt-6-luna", "openrouter": "typesafe/jev-1.13", "vercel": "typesafe-ai/jev", "llmgateway": "jev-1.13.0", "liquid": "d1"},
+          "default": {"typesafe": "jev-1.14.0", "openai": "gpt-6-luna", "openrouter": "typesafe/jev-1.14", "vercel": "typesafe-ai/jev", "llmgateway": "jev-1.14.0", "liquid": "d1"},
           "additionalProperties": { "type": "string" },
           "markdownDescription": "The model id each Ask command sends, by platform: `typesafe` for **Ask Jev**, `openai` for **Ask Luna**, `openrouter`, `vercel`, `llmgateway` and `liquid` for the others, each in that platform's own spelling. The TypeSafe default is the version the checks were calibrated on, and a finding from any other model says where its cutoff was set. An alias such as `jev-latest` will move those cutoffs under you."
         },

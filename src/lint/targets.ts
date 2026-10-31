@@ -136,13 +136,13 @@ const OPENROUTER: Target = Object.freeze<Target>({
 	// reads: https://openrouter.ai/docs/guides/community/typesafe-sdk.md.
 	endpoints: { typesafe: 'https://openrouter.ai/api/v1/systemone' },
 	envKey: 'OPENROUTER_API_KEY',
-	// "**Model ID:** `typesafe/jev-1.13`", the pinned spelling.
-	defaultModel: 'typesafe/jev-1.13',
+	// "**Model ID:** `typesafe/jev-1.14`", the pinned spelling.
+	defaultModel: 'typesafe/jev-1.14',
 	price: undefined,
 	// The guide states the context length and no limit on options, levels or questions.
 	limits: {},
 	docs: 'https://openrouter.ai/docs/guides/community/jev',
-	verifiedOn: '2026-10-14',
+	verifiedOn: '2026-10-31',
 });
 
 const LLM_GATEWAY: Target = Object.freeze<Target>({
@@ -155,7 +155,7 @@ const LLM_GATEWAY: Target = Object.freeze<Target>({
 	endpoints: { openai: 'https://api.llmgateway.io/v1/decisions' },
 	envKey: 'LLM_GATEWAY_API_KEY',
 	// Its ids carry no prefix: "Text-only models such as `jev-1.13.0`".
-	defaultModel: 'jev-1.13.0',
+	defaultModel: 'jev-1.14.0',
 	price: undefined,
 	limits: {},
 	docs: 'https://docs.llmgateway.io/features/decisions',

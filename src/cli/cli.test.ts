@@ -8,15 +8,15 @@ import { FLAG_NAMES, helpText, parseArgs } from './args';
 import type { Files } from './files';
 import { EXIT, type Io, run } from './run';
 
-const BAD = `{ "model": "jev-1.13.0", "questions": { "team": { "type": "choice", "instructions": "Which team takes it?", "criteria": { "billing": "Charges", "technical": "Faults" } }, "mood": { "type": "score", "instructions": "How upset are they?", "criteria": { "low": "Calm" } } } }`;
-const CLEAN = `{ "model": "jev-1.13.0", "questions": { "late": { "type": "noul", "instructions": "Did the parcel arrive after the promised day?" } } }`;
+const BAD = `{ "model": "jev-1.14.0", "questions": { "team": { "type": "choice", "instructions": "Which team takes it?", "criteria": { "billing": "Charges", "technical": "Faults" } }, "mood": { "type": "score", "instructions": "How upset are they?", "criteria": { "low": "Calm" } } } }`;
+const CLEAN = `{ "model": "jev-1.14.0", "questions": { "late": { "type": "noul", "instructions": "Did the parcel arrive after the promised day?" } } }`;
 const PYTHON = `from typesafe_sdk import Noul\nq = {"questions": {"a": Noul(instructions=f"Is {name} late?")}}\n`;
 
 // What a check with Jev is given and answered with, for the command line and the server alike.
 const VAGUE = `const r = { questions: { big: { type: 'noul', instructions: 'Is the order large?' } } };`;
 const HEAVY = `const r = { questions: { heavy: { type: 'noul', instructions: 'Is the parcel heavy?' } } };`;
 const RUNTIME = `const r = { questions: { a: { type: 'noul', instructions: build() } } };`;
-const STATED = `{ "state": { "note": "Wheel wobbles." }, "model": "jev-1.13.0", "questions": { "a": { "type": "noul", "instructions": "Is there one?" }, "b": { "type": "noul", "instructions": "Are there two?" } } }`;
+const STATED = `{ "state": { "note": "Wheel wobbles." }, "model": "jev-1.14.0", "questions": { "a": { "type": "noul", "instructions": "Is there one?" }, "b": { "type": "noul", "instructions": "Are there two?" } } }`;
 const KEY = { TYPESAFE_API_KEY: 'apikey_secret_value' };
 
 // One answer per question asked, as TypeSafe answers; the given ones override a no.
@@ -35,7 +35,7 @@ const jevSays = (
 		ok: status === 200,
 		status,
 		json: async () => ({
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			answers: { ...answerAll(init.body), ...answers },
 			usage: { input_tokens: 310 },
 		}),
@@ -221,7 +221,7 @@ describe('a run', () => {
 	});
 
 	it('passes on warnings until there are more than --max-warnings', async () => {
-		const tree = { 'a.json': CLEAN.replace('jev-1.13.0', 'jev-latest') };
+		const tree = { 'a.json': CLEAN.replace('jev-1.14.0', 'jev-latest') };
 		expect((await cli(['a.json'], tree)).status).toBe(EXIT.passed);
 		expect((await cli(['a.json', '--max-warnings', '1'], tree)).status).toBe(
 			EXIT.passed,
@@ -1261,7 +1261,7 @@ describe('the MCP server', () => {
 
 	it('leaves a fix that is not safe to the author, even when it is the only one', async () => {
 		const [reply] = await talk([
-			call(1, 'fix_text', { text: CLEAN.replace('jev-1.13.0', 'jev-latest') }),
+			call(1, 'fix_text', { text: CLEAN.replace('jev-1.14.0', 'jev-latest') }),
 		]);
 		const fixed = reply.result.structuredContent;
 		expect(fixed.fixed).toBe(0);
@@ -1330,7 +1330,7 @@ describe('the MCP server', () => {
 			answered: 0,
 			runtime: 1,
 			overLimit: 1,
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			state: false,
 		});
 		expect(reply.result.structuredContent.totals.files).toBe(3);
@@ -1501,7 +1501,7 @@ describe('the MCP server', () => {
 		expect(fetch).toHaveBeenCalledTimes(3);
 		expect(probed).toMatchObject({
 			questionId: 'a',
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			requests: 3,
 			moved: [],
 			keySource: 'the environment',
@@ -1874,12 +1874,12 @@ describe('checking with Jev', () => {
 			answered: 0,
 			runtime: 1,
 			overLimit: 0,
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			state: false,
 		});
 		const text = await cli(['--ask-plan', '.'], { 'a.ts': VAGUE });
 		expect(text.out).toMatch(
-			/--ask would send 1 request to TypeSafe on jev-1\.13\.0, roughly [\d,]+ input tokens\./,
+			/--ask would send 1 request to TypeSafe on jev-1\.14\.0, roughly [\d,]+ input tokens\./,
 		);
 	});
 
@@ -1956,10 +1956,10 @@ describe('checking with Jev', () => {
 		);
 		expect(result.out).toContain('(Jev put this at 0.91.)');
 		expect(result.out).toContain(
-			'Jev answered 1 of 1 request on jev-1.13.0, 310 input tokens.',
+			'Jev answered 1 of 1 request on jev-1.14.0, 310 input tokens.',
 		);
 		expect(result.err).toMatch(
-			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.13\.0, roughly [\d,]+ input tokens\. State is not sent\.\n$/,
+			/^decisionlint: Sending 1 request to TypeSafe on jev-1\.14\.0, roughly [\d,]+ input tokens\. State is not sent\.\n$/,
 		);
 	});
 
@@ -1971,7 +1971,7 @@ describe('checking with Jev', () => {
 			world(jevSays({ DEC302: { noul: 0.91 } })),
 		);
 		expect(result.out).toContain(
-			'(Jev put this at 0.91.) The cutoff was set on jev-1.13.0, not on jev-99.0.0.',
+			'(Jev put this at 0.91.) The cutoff was set on jev-1.14.0, not on jev-99.0.0.',
 		);
 
 		const pinned = await cli(
@@ -2118,7 +2118,7 @@ describe('checking with Jev', () => {
 				ok: true,
 				status: 200,
 				json: async () => ({
-					model: 'jev-1.13.0',
+					model: 'jev-1.14.0',
 					answers: answerAll(init.body),
 					usage: { input_tokens: 310 },
 				}),
@@ -2370,7 +2370,7 @@ describe('where --ask sends', () => {
 			/Sending 1 request to localhost:8080 on ggml-org\/OpenJev-GGUF/,
 		);
 		expect(result.out).toContain(
-			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on ggml-org/OpenJev-GGUF.',
+			'(The model put this at 0.91.) The cutoff was set on jev-1.14.0, not on ggml-org/OpenJev-GGUF.',
 		);
 		expect(result.out).toContain('The model answered 1 of 1 request on');
 	});
@@ -2521,9 +2521,9 @@ describe('where --ask-platform sends', () => {
 		const [url] = fetch.mock.calls[0] as unknown as [string];
 		expect(url).toBe('https://openrouter.ai/api/v1/systemone');
 		expect(calls(fetch)[0]?.headers.Authorization).toBe('Bearer or-key');
-		expect(calls(fetch)[0]?.body.model).toBe('typesafe/jev-1.13');
+		expect(calls(fetch)[0]?.body.model).toBe('typesafe/jev-1.14');
 		expect(result.err).toMatch(
-			/Sending 1 request to OpenRouter on typesafe\/jev-1\.13/,
+			/Sending 1 request to OpenRouter on typesafe\/jev-1\.14/,
 		);
 	});
 
@@ -2577,7 +2577,7 @@ describe('where --ask-platform sends', () => {
 					ok: true,
 					status: 200,
 					json: async () => ({
-						model: 'typesafe/jev-1.13.0',
+						model: 'typesafe/jev-1.14.0',
 						answers: [{ type: 'predicate', name: 'DEC302', probability: 0.91 }],
 						usage: { input_tokens: 10 },
 					}),
@@ -2587,7 +2587,7 @@ describe('where --ask-platform sends', () => {
 			),
 		);
 		expect(reshaped.out).toContain(
-			'The cutoff was set on jev-1.13.0 at TypeSafe, not through LLM Gateway.',
+			'The cutoff was set on jev-1.14.0 at TypeSafe, not through LLM Gateway.',
 		);
 	});
 

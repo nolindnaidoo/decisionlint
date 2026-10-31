@@ -5,7 +5,7 @@
  * and the probability each returned is saved. A cutoff is then read off the
  * saved numbers, so choosing or changing one costs nothing after the first
  * run: the report prints what `fitCutoff` fits beside what `ask/cutoffs.ts`
- * holds, and `reviews.test.ts` fails until the two agree for any model but Jev. Only checks with no saved number are sent, so adding a check costs one
+ * holds, and `reviews.test.ts` fails until the two agree. Only checks with no saved number are sent, so adding a check costs one
  * pass over the entries it applies to and not a rerun of everything.
  *
  * A development tool: it costs money, needs a key, and no test runs it.
@@ -127,16 +127,24 @@ function jobs(): Job[] {
 
 async function collect(key: string, list: Job[]): Promise<void> {
 	let calls = 0;
+	// Saved before stopping, so a run stopped part way keeps what it paid for.
+	const keep = () => {
+		saved.calls += calls;
+		saved.ranOn = new Date().toISOString().slice(0, 10);
+		writeFileSync(out, `${JSON.stringify(saved, null, 1)}\n`);
+	};
 	for (const job of list) {
-		if (calls >= MAX_CALLS) throw new Error(`stopped at ${MAX_CALLS} calls`);
+		if (calls >= MAX_CALLS) {
+			keep();
+			throw new Error(`stopped at ${MAX_CALLS} calls, run again to send the rest`);
+		}
 		calls += 1;
 		const reply = await ask(
 			{ fetch: fetch as unknown as Fetch, key, provider, wait: (ms) => new Promise((r) => setTimeout(r, ms)) },
 			job.request,
 		);
-		// Saved before failing, so a run stopped part way keeps what it paid for.
 		if (isFailure(reply)) {
-			writeFileSync(out, `${JSON.stringify(saved, null, 1)}\n`);
+			keep();
 			throw new Error(`${job.id}: ${reply.kind} ${reply.detail}`);
 		}
 		saved.model = reply.model;
@@ -146,9 +154,7 @@ async function collect(key: string, list: Job[]): Promise<void> {
 			...Object.fromEntries(Object.entries(reply.answers).map(([code, answer]) => [code, answer.noul ?? 0])),
 		};
 	}
-	saved.calls += calls;
-	saved.ranOn = new Date().toISOString().slice(0, 10);
-	writeFileSync(out, `${JSON.stringify(saved, null, 1)}\n`);
+	keep();
 	console.log(`${calls} calls this run, ${saved.calls} in all, answered by ${saved.model}.`);
 }
 

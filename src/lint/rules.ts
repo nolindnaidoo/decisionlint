@@ -89,7 +89,9 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		name: 'numeric-levels',
 		meaning:
 			'Score levels are bare numbers. Jev matches the state against each description and never sees its position',
-		severity: 'warning',
+		// Measured on 1.14.0: 5 of 6 at 0.83 sure against 6 of 6 at 0.97. It was
+		// 3 of 6 on 1.13.0. One answer and 0.14 less sure is advisory.
+		severity: 'info',
 		docs: DOCS.scoreLevels,
 	},
 	DEC009: {
@@ -127,11 +129,11 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		name: 'terse-instructions',
 		meaning:
 			'The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id',
-		// Measured 2026-10-08: "Refund?" right 9 of 12 at 0.70 sure, against 10 of
-		// 12 at 0.85 for the question written out. Advisory by the rule the other
-		// wording rules are held to. 23 clear cases in public sample 3, the most
-		// common defect there.
-		severity: 'info',
+		// Measured on 1.14.0: "Refund?" right 9 of 12 at 0.70 sure, against 12 of 12
+		// at 0.87 for the question written out. Three answers lost is proven by the
+		// rule the other wording rules are held to. 23 clear cases in public sample
+		// 3, the most common defect there.
+		severity: 'warning',
 		docs: DOCS.primitives,
 	},
 	DEC013: {
@@ -156,7 +158,7 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		name: 'double-negative',
 		meaning:
 			'A question negates twice in one clause, or a negation sits directly on another',
-		// Measured: right 14 of 15 against 15 of 15, but less sure (0.73 against 0.87).
+		// Measured on 1.14.0: right 14 of 15 against 15 of 15, but less sure (0.74 against 0.86).
 		severity: 'info',
 		docs: `${DOCS.jaggedness}#indirection`,
 	},
@@ -164,8 +166,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		code: 'DEC102',
 		name: 'arithmetic',
 		meaning: 'The question asks Jev to count or compare numbers',
-		// Measured: counting 20 to 40 items, 8 of 12 at 0.58 sure. Adding three to five
-		// numbers against a limit, 5 of 12 at 0.52. No better than a guess.
+		// Measured on 1.14.0: counting 20 to 40 items, 10 of 12 at 0.57 sure. Adding
+		// three to five numbers against a limit, 6 of 12 at 0.53. No better than a guess.
 		severity: 'warning',
 		docs: `${DOCS.jaggedness}#math-and-numbers`,
 	},
@@ -174,9 +176,9 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		name: 'date-comparison',
 		meaning:
 			'The question asks Jev to order two times or measure the gap between them',
-		// Measured: ordering two dates, 12 of 12. A window counted in days, 11 of 12 at
-		// 0.75 sure, where code is certain. Advisory.
-		severity: 'info',
+		// Measured on 1.14.0: two close dates, 11 of 12. A window counted in days, 10 of
+		// 12 at 0.76 sure, where code is certain. Two answers lost is proven.
+		severity: 'warning',
 		docs: `${DOCS.jaggedness}#date-and-time-comparison`,
 	},
 	DEC104: {
@@ -206,7 +208,8 @@ export const RULES: Readonly<Record<RuleCode, Rule>> = Object.freeze({
 		code: 'DEC108',
 		name: 'inverted-criteria',
 		meaning: "A Noul's 'true' criterion describes the negative case",
-		// Measured: 14 of 14 right either way. Jev follows the question and ignores the criteria.
+		// Measured on 1.14.0: 14 of 14 right either way, 0.14 less sure, which reads as
+		// advisory. Off until a public sample it was not tuned against says it is right.
 		severity: 'off',
 		docs: `${DOCS.jaggedness}#contradictory-instructions-and-criteria`,
 	},

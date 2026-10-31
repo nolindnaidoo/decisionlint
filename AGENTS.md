@@ -180,7 +180,7 @@ is a copy again.
   spelling into its parts. `DEC001` fires on any floating Jev alias and its
   fix pins in the spelling the platform documents, or offers none: a bare
   alias becomes `KNOWN_VERSION`, `~typesafe/jev-latest` becomes
-  `typesafe/jev-1.13` as OpenRouter writes it, and `typesafe/jev-latest` gets
+  `typesafe/jev-1.14` as OpenRouter writes it, and `typesafe/jev-latest` gets
   no fix because no page says what its pinned form is. `DEC013` compares the
   version out of any spelling. A Hugging Face repo id, an Ollama tag or a
   deployment name is no family this reads, so neither rule touches it.
@@ -623,11 +623,8 @@ is a copy again.
   `lint/limits.ts`, is what `jev-latest` points to and what the DEC001 fix
   writes. The second is what the cutoffs were set on. They differ from a Jev
   release until the checks are calibrated again, so no test holds them equal.
-  They have differed since 2026-10-24, when Jev 1.14.0 moved the aliases:
-  the fix pins to 1.14.0 and `DEC013` then says the request is newer than
-  the measured version, which `lint.test.ts` holds in either state. Moving
+  `lint.test.ts` holds the fix and `DEC013` in either state. Moving
   `KNOWN_VERSION` re-reads the limits too, so `VERIFIED_ON` moves with it.
-  Issue #65 is the measurement that moves `MEASURED_ON`.
 - **A user ahead of the measured version is told, offline and in a check.**
   `DEC013` fires on a versioned id above `MEASURED_ON`, and a check asked of
   any model and route not in `MEASURED` in `ask/cutoffs.ts` ends its findings
@@ -645,11 +642,9 @@ is a copy again.
   resolves each import the way the runtime would.
 - **A check's cutoff is read from a saved run, never guessed, and a model
   has its own or is judged by Jev's.** `ask/cutoffs.ts` holds a table per
-  model family. Jev's was set by hand on
-  `fixtures/validation/calibration.json`, and `reviews.test.ts` fails if a
-  cutoff would flag a good corpus question there. Luna's and d1's are what
-  `fitCutoff` in `docs/calibration.ts` fits on their own runs, exactly, and
-  the same test fails when the table and the fit differ, so a changed example
+  model family, each exactly what `fitCutoff` in `docs/calibration.ts` fits
+  on that model's run, Jev's on `fixtures/validation/calibration.json`, and
+  `reviews.test.ts` fails when a table and its fit differ, so a changed example
   or a rerun moves the table in the open. The rule is in
   `fixtures/corpus/README.md`: a hundredth that flags no good example and
   catches six in ten of the bad ones, halfway across the gap. A check with
@@ -659,7 +654,7 @@ is a copy again.
   or `--model` and saved beside as `calibration-<platform>-<model>.json`. A
   run joins `MEASURED` in `ask/cutoffs.ts` only from such a file: the
   platform a model's cutoffs were fit on, or a route whose file answers as
-  that run does, never by its spelling. A cutoff is fit on at least 16
+  that run does, never by its spelling. A superseded run is replaced, and git holds it. A cutoff is fit on at least 16
   examples with the defect and 40 without, per check and per model, a size
   fixed on 2026-10-24 before the set was grown to it; the corpus README says
   why.
@@ -804,6 +799,8 @@ bun run validate -- --dry-run   # what would be sent to Jev, no key needed
 - In Python, `dict(type='noul', ...)`, a question class called through a
   variable, and a questions dict passed under a name that does not end in
   `questions` are not read.
+- Jev 1.14's Box question, `type: 'box'`, is not read as a question, so it is
+  not counted or checked.
 - Suppression directives are matched as text, so the phrase inside a string
   also counts.
 

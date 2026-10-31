@@ -91,7 +91,7 @@ const hundredths = (p: number) => Math.round(p * 100) / 100;
 
 /**
  * The cutoff a run fits for one check, by the rule fixed on 2026-10-24 for
- * any model but Jev, whose cutoffs were set by hand before it. A cutoff is a
+ * every model. A cutoff is a
  * hundredth from 0.01 to 0.99 that flags none of the good examples and
  * catches at least six in ten of the bad ones. Where one exists it sits
  * halfway between the highest good example and the lowest bad one above it,

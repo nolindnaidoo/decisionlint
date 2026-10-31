@@ -48,11 +48,12 @@ state. The set reached the size the same day: 16 with each defect, 17 for
 
 ## How a cutoff is fit
 
-Fixed on 2026-10-24, with the runs in hand, for any model but Jev, whose
-cutoffs were set by hand before it: `fitCutoff` in `src/docs/calibration.ts`.
+Fixed on 2026-10-24, with the runs in hand: `fitCutoff` in
+`src/docs/calibration.ts`. Jev's cutoffs were set by hand until 2026-10-31,
+when the run on `jev-1.14.0` was fit by the same rule.
 A cutoff is a hundredth from 0.01 to 0.99 that flags none of the good
 examples and catches at least six in ten of the bad ones, the floor Jev's
-have been held to since the first run. It sits halfway between the highest
+were held to from the first run. It sits halfway between the highest
 good example and the lowest bad one above it, so an example on either side
 has to cross half the gap to move it, unless that midpoint catches too few,
 when it is the lowest hundredth above the good examples. Where no hundredth

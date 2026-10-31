@@ -22,8 +22,8 @@ export type Measured = Readonly<{
 
 export const MEASURED: ReadonlyArray<Measured> = Object.freeze([
 	{ slot: 'typesafe', model: MEASURED_ON, family: 'jev' },
-	// 0.009 from TypeSafe on average over 1114 pairs on 2026-10-16.
-	{ slot: 'openrouter', model: 'typesafe/jev-1.13', family: 'jev' },
+	// 0.012 from TypeSafe on average over 2587 pairs on 2026-10-31.
+	{ slot: 'openrouter', model: 'typesafe/jev-1.14', family: 'jev' },
 	{ slot: 'openai', model: 'gpt-6-luna', family: 'luna' },
 	// The same numbers as OpenAI over 1415 pairs on 2026-10-16.
 	{ slot: 'vercel', model: 'openai/gpt-6-luna-decisions', family: 'luna' },
@@ -33,12 +33,10 @@ export const MEASURED: ReadonlyArray<Measured> = Object.freeze([
 /**
  * At or above this probability of yes, the defect is reported.
  *
- * Jev's were set by hand on `fixtures/validation/calibration.json`, the run
- * at TypeSafe, and `reviews.test.ts` holds each to it: none flags a good
- * corpus example, and each catches six in ten of the bad ones it was sent.
- * Luna's and d1's were fit by `fit` in `docs/calibration.ts` on their own
- * runs over the whole set on 2026-10-24, and the same test holds each to
- * exactly what the rule fits now. A check missing from a model's table is one
+ * Each is what `fitCutoff` in `docs/calibration.ts` fits on that model's run
+ * over the whole set, Jev's on `fixtures/validation/calibration.json` on
+ * 2026-10-31, Luna's and d1's on 2026-10-24, and `reviews.test.ts` holds each
+ * table to exactly what the rule fits now. A check missing from a model's table is one
  * no cutoff could fit there: at every cutoff that flags none of the good
  * examples, fewer than six in ten of the bad ones are caught. It is not
  * asked of that model, and `docs/cutoffs.md` names the example in the way.
@@ -46,17 +44,15 @@ export const MEASURED: ReadonlyArray<Measured> = Object.freeze([
 export const CUTOFFS: Readonly<Record<string, Cutoffs>> = Object.freeze({
 	jev: Object.freeze({
 		DEC301: 0.96,
-		DEC302: 0.7,
-		DEC303: 0.75,
-		DEC304: 0.6,
-		DEC305: 0.7,
-		DEC306: 0.7,
-		DEC307: 0.8,
-		DEC308: 0.6,
-		DEC309: 0.8,
-		DEC310: 0.15,
-		DEC311: 0.85,
-		DEC312: 0.95,
+		DEC302: 0.84,
+		DEC304: 0.29,
+		DEC305: 0.66,
+		DEC306: 0.52,
+		DEC307: 0.64,
+		DEC308: 0.5,
+		DEC309: 0.75,
+		DEC310: 0.12,
+		DEC312: 0.93,
 	}),
 	luna: Object.freeze({
 		DEC302: 0.72,

@@ -92,4 +92,4 @@ body:
     attributes:
       label: DecisionLint version
       description: From the extension's details page, `npx decisionlint --version`, or the server's `version` field.
-      placeholder: "1.1.0"
+      placeholder: "1.1.1"

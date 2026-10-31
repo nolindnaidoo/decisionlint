@@ -12,16 +12,16 @@ One page per rule: what it catches, an example the linter is run on, how to fix 
 | [DEC005](DEC005.md) | duplicate | error | A question id, option or level appears twice. In an object the later one silently replaces the earlier |
 | [DEC006](DEC006.md) | criteria-shape | error | A Choice needs a map of options, a Score needs an array of levels, and a Noul takes `true` and `false` |
 | [DEC007](DEC007.md) | invalid-question | error | The type is missing or unknown, or the instructions are an empty string |
-| [DEC008](DEC008.md) | numeric-levels | warning | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
+| [DEC008](DEC008.md) | numeric-levels | info | Score levels are bare numbers. Jev matches the state against each description and never sees its position |
 | [DEC009](DEC009.md) | too-few-options | info | A Choice with one option or a Score with one level gives every input the same answer |
 | [DEC010](DEC010.md) | unused-disable | warning | A `decisionlint-disable` comment silences nothing, so it can only hide a finding added later |
 | [DEC011](DEC011.md) | description-repeats-name | info | An option's description only repeats its name, or a Noul's criteria say yes and no. Jev matches the state against the description, and this one says nothing |
-| [DEC012](DEC012.md) | terse-instructions | info | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
+| [DEC012](DEC012.md) | terse-instructions | warning | The instructions are one or two words, so the question leans on its id. Jev is sent the instructions and never the id |
 | [DEC013](DEC013.md) | newer-model | info | `model` names a Jev version newer than the one these rules were measured on, so a finding may cost nothing there and a weakness new to it is not looked for |
 | [DEC014](DEC014.md) | question-limit | error | A request has more questions than the platform it goes to takes in one call. The platform rejects it |
 | [DEC101](DEC101.md) | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | [DEC102](DEC102.md) | arithmetic | warning | The question asks Jev to count or compare numbers |
-| [DEC103](DEC103.md) | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
+| [DEC103](DEC103.md) | date-comparison | warning | The question asks Jev to order two times or measure the gap between them |
 | [DEC104](DEC104.md) | compound | off | A Noul joins two judgments with 'and' |
 | [DEC105](DEC105.md) | generation | warning | The question asks for a value or for text to be written |
 | [DEC107](DEC107.md) | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |

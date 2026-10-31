@@ -1,6 +1,6 @@
 {
-  "ranOn": "2026-10-04",
-  "model": "jev-1.13.0",
+  "ranOn": "2026-10-31",
+  "model": "jev-1.14.0",
   "calls": 40,
   "inputTokens": 13450,
   "results": [
@@ -8,7 +8,7 @@
       "rule": "DEC303",
       "name": "two options that cover the same cases against one",
       "bad": "10 of 10",
-      "badSureness": "0.86",
+      "badSureness": "0.84",
       "good": "10 of 10",
       "goodSureness": "1.00"
     },
@@ -16,9 +16,9 @@
       "rule": "DEC304",
       "name": "two levels that describe the same situation against three distinct ones",
       "bad": "6 of 10",
-      "badSureness": "0.58",
+      "badSureness": "0.54",
       "good": "9 of 10",
-      "goodSureness": "0.91"
+      "goodSureness": "0.90"
     }
   ]
 }

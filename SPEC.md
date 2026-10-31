@@ -122,11 +122,11 @@ what the text says. `DEC004` is the exception in spirit and is explained below.
 | DEC005 | duplicate | error | A question id, a Choice option or a Score level is repeated |
 | DEC006 | criteria-shape | error | In a request, a Choice has no map of options or a Score has no array of levels, or a Noul has criteria keys other than `true` and `false` |
 | DEC007 | invalid-question | error | The `type` is missing or unknown, or the instructions are an empty string |
-| DEC008 | numeric-levels | warning | Every level of a Score is a bare number |
+| DEC008 | numeric-levels | info | Every level of a Score is a bare number |
 | DEC009 | too-few-options | info | A Choice has fewer than two options, or a Score fewer than two levels |
 | DEC010 | unused-disable | warning | A `decisionlint-disable` comment silenced no finding. Not reported for a comment that names only Jev-backed rules, which linting never runs |
 | DEC011 | description-repeats-name | info | A Choice option's description is its name again, allowing for case, underscores and a full stop, or a Noul's `true` or `false` criterion is yes, no, true, false, y or n |
-| DEC012 | terse-instructions | info | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
+| DEC012 | terse-instructions | warning | The instructions are one or two words of English, in a question that does not carry another dialect's fields |
 | DEC013 | newer-model | info | `model` is a versioned Jev id in any platform's spelling, numbers and nothing after them, above the version the rules were measured on |
 | DEC014 | question-limit | error | A `questions` map or list has more entries than its target takes in one request. Only a target in `lint/targets.ts` that publishes the number is checked |
 
@@ -229,7 +229,7 @@ Scores sent with no levels.
 | `decisionlint.fallbackOptions` | the list above | Option names that satisfy `DEC004` |
 | `decisionlint.ignore` | `[]` | `CODE:questionId` entries to drop |
 | `decisionlint.target` | `""` | The platform every request goes to, for its limits. Empty reads it from each model id |
-| `decisionlint.ask.models` | `jev-1.13.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
+| `decisionlint.ask.models` | `jev-1.14.0` for `typesafe`, each platform's own default for the rest | The model id each Ask command sends, by platform. The TypeSafe default is the version the checks were calibrated on |
 | `decisionlint.ask.keys` | empty | An API key per platform, and `endpoint` for a host you name, if you would rather type them here than use the keychain. User settings only, not synced |
 | `decisionlint.ask.endpoint` | `""` | The URL **Ask the Model at My Endpoint** posts to, for a platform you host. User settings only |
 | `decisionlint.ask.endpointShape` | `""` | The shape sent to that endpoint, `typesafe` or `openai`, where its path does not say |
@@ -265,7 +265,7 @@ or its primitives guide.
 |---|---|---|---|
 | DEC101 | double-negative | info | A question negates twice in one clause, or a negation sits directly on another |
 | DEC102 | arithmetic | warning | The question asks Jev to count or compare numbers |
-| DEC103 | date-comparison | info | The question asks Jev to order two times or measure the gap between them |
+| DEC103 | date-comparison | warning | The question asks Jev to order two times or measure the gap between them |
 | DEC104 | compound | off | A Noul joins two judgments with 'and' |
 | DEC105 | generation | warning | The question asks for a value or for text to be written |
 | DEC107 | negated-noul | off | A Noul with no criteria is phrased so that yes means something is absent |
@@ -407,9 +407,20 @@ quarter of the certainty that code has, which by the rule above is advisory,
 so `DEC103` is back on at `info`. Ordering two dates stays cost-free. What
 costs is arithmetic on dates.
 
+**Rerun on `jev-1.14.0` on 2026-10-31, all seven sets.** The rule above moved
+three defaults. `DEC012` went from 10 of 12 to 12 of 12 for the question
+written out, against 9 of 12, so three answers lost makes it proven and a
+warning. `DEC103` lost two on a window counted in days, 10 of 12 where code
+is certain, and is a warning. `DEC008` went from 3 of 6 to 5 of 6 at 0.83
+sure against 6 of 6 at 0.97, which is advisory, and it is `info`. `DEC108`
+stays off though it now reads as advisory, 0.14 less sure on the hard set,
+because turning a rule on needs a public sample it was not tuned against.
+The results files hold the new numbers and the tables here are the 1.13.0
+run, kept as the first measurement.
+
 **What is and is not proven.** Measured to cost answers here: `DEC004`,
-`DEC008`, `DEC102`, `DEC110`, `DEC112`. Measured to cost confidence: `DEC101`,
-`DEC012`. Measured to cost nothing on sensible names, and kept as `info` for
+`DEC012`, `DEC102`, `DEC103`, `DEC110`, `DEC112`. Measured to cost confidence:
+`DEC008`, `DEC101`. Measured to cost nothing on sensible names, and kept as `info` for
 the names that say nothing: `DEC011`. Everything else on by default is an
 exact rule about what the API accepts, plus `DEC105`. `DEC110` and `DEC112`
 are proven to cost and off all the same since 1.1.0: they fell under the
@@ -428,7 +439,7 @@ question and the type of answer, the way a type checker does, and needs no
 measurement to be true.
 
 The rules that are `off` still describe what TypeSafe documents as failure
-modes. On `jev-1.13.0`, with up to fifteen cases each written by one person,
+modes. On `jev-1.13.0` and `jev-1.14.0`, with up to fifteen cases each written by one person,
 they did not fail. A different model version or harder cases could change
 that, and the experiments are there to be rerun.
 
@@ -709,7 +720,7 @@ platform billed for the calibration set.
 **After an edit** the findings are removed. They were about text that has
 changed.
 
-**The model is pinned** to `jev-1.13.0` in `decisionlint.ask.models`, because the
+**The model is pinned** to `jev-1.14.0` in `decisionlint.ask.models`, because the
 cutoffs below were set on that version.
 
 ### How the cutoffs were set
@@ -1359,7 +1370,7 @@ under TypeSafe's id. Luna through Vercel answered as Luna at OpenAI did. The pro
 built and read in Jev's shape, and Luna's reply for a Choice or a Score is
 not read yet.
 
-**Not measured.** The wording rules' costs are measurements of `jev-1.13.0`.
+**Not measured.** The wording rules' costs are measurements of `jev-1.14.0`.
 Whether Luna fails the same way is unknown, and the rule pages say "measured
 on Jev". A labelled sample of public Decisions requests and a bad-against-good
 run on Luna are the next two measurements. The second waits on Choice and
@@ -1439,8 +1450,8 @@ limit, the rule is silent.
 **D3. A model id is parsed, never matched.** `lint/models.ts` reads an id
 into its family, its version, whether it floats, and the spelling it was
 written in. `DEC001` fires on every floating spelling, and its fix pins in
-the same spelling: `~typesafe/jev-latest` becomes `typesafe/jev-1.13`, as
-OpenRouter writes it, and `jev-latest` becomes `jev-1.13.0`. `DEC013`
+the same spelling: `~typesafe/jev-latest` becomes `typesafe/jev-1.14`, as
+OpenRouter writes it, and `jev-latest` becomes `jev-1.14.0`. `DEC013`
 compares the version out of any spelling. A Hugging Face repo id, an Ollama
 tag or a deployment name is not a Jev id, so neither rule reads it.
 

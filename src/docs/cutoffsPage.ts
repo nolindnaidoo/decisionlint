@@ -26,8 +26,8 @@ export type Route = Readonly<{ slot: string; model: string }>;
  */
 export const ROUTES: ReadonlyArray<Route> = [
 	{ slot: 'typesafe', model: DEFAULT_MODEL },
-	{ slot: 'openrouter', model: 'typesafe/jev-1.13' },
-	{ slot: 'llmgateway', model: 'jev-1.13.0' },
+	{ slot: 'openrouter', model: 'typesafe/jev-1.14' },
+	{ slot: 'llmgateway', model: 'jev-1.14.0' },
 	{ slot: 'vercel', model: 'typesafe-ai/jev' },
 	{ slot: 'openai', model: 'gpt-6-luna' },
 	{ slot: 'vercel', model: 'openai/gpt-6-luna-decisions' },
@@ -43,7 +43,7 @@ const COLUMNS: ReadonlyArray<Readonly<{ route: Route; heading: string }>> = [
 		heading: 'Jev at TypeSafe',
 	},
 	{
-		route: { slot: 'openrouter', model: 'typesafe/jev-1.13' },
+		route: { slot: 'openrouter', model: 'typesafe/jev-1.14' },
 		heading: 'Jev through OpenRouter',
 	},
 	{ route: { slot: 'openai', model: 'gpt-6-luna' }, heading: 'Luna' },
@@ -222,9 +222,9 @@ export function renderCutoffsPage(data: CalibrationData): string {
 		'',
 		'# Cutoffs and where they were measured',
 		'',
-		"A model-backed check asks the model a yes-or-no question about one of your questions and reports when the probability of yes reaches a cutoff. Jev's cutoffs were set by hand on `" +
+		"A model-backed check asks the model a yes-or-no question about one of your questions and reports when the probability of yes reaches a cutoff. Jev's cutoffs were fit on `" +
 			DEFAULT_MODEL +
-			"` at TypeSafe, and a route measured to answer as that run does uses them. Luna's and Liquid d1's were fit on their own runs over the whole set on 2026-10-24, by one rule: a cutoff is a hundredth that flags none of the good examples and catches at least six in ten of the bad ones, and it sits halfway between the highest good example and the lowest bad one above it. Where no such cutoff exists the check is not asked of that model, and the notes name the example in the way. Every other model and route is judged by its family's cutoffs, or Jev's, and its findings say so.",
+			"` at TypeSafe on 2026-10-31, and a route measured to answer as that run does uses them. Luna's and Liquid d1's were fit on their own runs over the whole set on 2026-10-24. All follow one rule: a cutoff is a hundredth that flags none of the good examples and catches at least six in ten of the bad ones, and it sits halfway between the highest good example and the lowest bad one above it. Where no such cutoff exists the check is not asked of that model, and the notes name the example in the way. Every other model and route is judged by its family's cutoffs, or Jev's, and its findings say so.",
 		'',
 		'A cutoff is fit on at least 16 examples with the defect and 40 without, per check and per model, a size fixed on 2026-10-24 before the set was grown to it: none of 40 flagged bounds the false-flag rate at about 1 in 14 with 95% confidence, and 16 place the catch count in steps of about 6 points. Where a cell has fewer, read the counts as rough evidence rather than accuracy rates. A different model version can answer differently, so these numbers are true of the versions named here.',
 		'',

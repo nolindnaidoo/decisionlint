@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.1.1 — 2026-10-31
+
+Measured on `jev-1.14.0`. The version the Ask commands send, the cutoffs and
+the wording rules' costs all moved from `jev-1.13.0`, so a request on the
+current Jev no longer gets `DEC013` or the "cutoff was set on" caveat.
+
+- **Ask Jev and Ask via LLM Gateway default to `jev-1.14.0`, and Ask via
+  OpenRouter to `typesafe/jev-1.14`.** A pinned setting keeps what it says and gets the
+  caveat.
+- **Jev's cutoffs are fit by the rule Luna's and `d1`'s are.** 556 calls at
+  TypeSafe and 556 each through OpenRouter, LLM Gateway and Vercel on
+  2026-10-31. OpenRouter answered within 0.012 of TypeSafe on average, and
+  1.14.0 moved 0.030 from 1.13.0. Nine cutoffs moved and `DEC301` stayed.
+  `DEC304` dropped furthest, from 0.60 to 0.29, so it reports more, and
+  `DEC302` rose from 0.70 to 0.84, so it reports less.
+- **`DEC303` and `DEC311` are no longer asked of Jev.** At every cutoff that
+  flags none of the good examples they caught 9 of 16 and 11 of 22, under the
+  six in ten a cutoff has to reach. `docs/cutoffs.md` names the examples in
+  the way.
+- **Three defaults moved with the rerun.** `DEC012 terse-instructions` and
+  `DEC103 date-comparison` are warnings, at three and two answers lost.
+  `DEC008 numeric-levels` is `info`, at one answer lost and 0.14 less sure.
+  A run with `--max-warnings` can count more warnings than it did.
+- **`calibrate-reviews.ts` keeps what it paid for at its call limit.** It
+  threw at 400 calls without saving, which would have lost a run this size.
+
 ## 1.1.0 — 2026-10-24
 
 Measured, and two rules go off for it. The second public sample, unspent

@@ -579,7 +579,7 @@ describe('check with Jev', () => {
 			ok: status === 200,
 			status,
 			json: async () => ({
-				model: 'jev-1.13.0',
+				model: 'jev-1.14.0',
 				answers: { ...answerAll(init.body), ...answers },
 				usage: { input_tokens: 310 },
 			}),
@@ -633,7 +633,7 @@ describe('check with Jev', () => {
 		expect(found).toHaveLength(1);
 		expect(found[0]?.message).toContain('Jev put this at 0.91');
 		expect(_state.messages.at(-1)).toBe(
-			'DecisionLint: Jev answered 1 request and flagged 1, 310 input tokens on jev-1.13.0.',
+			'DecisionLint: Jev answered 1 request and flagged 1, 310 input tokens on jev-1.14.0.',
 		);
 	});
 
@@ -689,10 +689,11 @@ describe('check with Jev', () => {
 			}),
 		);
 		start(doc(overlapping));
-		_state.secrets.set('decisionlint.key.typesafe', 'k');
-		await run(ASK_COMMANDS.ask.typesafe);
+		// DEC303 is not asked of Jev, so d1 carries the pointing.
+		_state.secrets.set('decisionlint.key.liquid', 'k');
+		await run(ASK_COMMANDS.ask.liquid);
 		const found = diagnostics(FROM_JEV)[0];
-		expect(found?.message).toContain("Jev points at 'pet' and 'dog'.");
+		expect(found?.message).toContain("points at 'pet' and 'dog'.");
 		expect(found?.range.start.character).toBe(overlapping.indexOf('pet:'));
 	});
 
@@ -746,7 +747,7 @@ describe('check with Jev', () => {
 		vi.stubGlobal('fetch', fetch);
 		_state.config = {
 			'ask.confirm': true,
-			'ask.models': { typesafe: 'jev-1.13.0' },
+			'ask.models': { typesafe: 'jev-1.14.0' },
 		};
 		start(doc(VAGUE));
 		_state.secrets.set('decisionlint.key.typesafe', 'k');
@@ -766,7 +767,7 @@ describe('check with Jev', () => {
 			{ body: string; headers: Record<string, string> },
 		];
 		expect(url).toContain('api.typesafe.ai');
-		expect(JSON.parse(init.body).model).toBe('jev-1.13.0');
+		expect(JSON.parse(init.body).model).toBe('jev-1.14.0');
 		expect(init.headers.Authorization).toBe('Bearer k');
 	});
 
@@ -811,7 +812,7 @@ describe('check with Jev', () => {
 			];
 			expect(url).toBe('https://openrouter.ai/api/v1/systemone');
 			expect(init.headers.Authorization).toBe('Bearer or-key');
-			expect(JSON.parse(init.body).model).toBe('typesafe/jev-1.13');
+			expect(JSON.parse(init.body).model).toBe('typesafe/jev-1.14');
 			expect(_state.messages.at(-1)).toContain('Jev answered 1 request');
 		});
 
@@ -933,7 +934,7 @@ describe('check with Jev', () => {
 		expect(init.headers).not.toHaveProperty('Authorization');
 		expect(_state.messages.at(-1)).toContain('The model answered 1 request');
 		expect(diagnostics(FROM_JEV)[0]?.message).toContain(
-			'(The model put this at 0.91.) The cutoff was set on jev-1.13.0, not on ggml-org/OpenJev-GGUF.',
+			'(The model put this at 0.91.) The cutoff was set on jev-1.14.0, not on ggml-org/OpenJev-GGUF.',
 		);
 	});
 
@@ -993,7 +994,7 @@ describe('check with Jev', () => {
 		expect(_state.messages.join(' ')).not.toContain('wrong');
 	});
 
-	const TWO = `{ "state": { "note": "Wheel wobbles." }, "model": "jev-1.13.0", "questions": { "a": { "type": "noul", "instructions": "Is there one?" }, "b": { "type": "noul", "instructions": "Are there two?" } } }`;
+	const TWO = `{ "state": { "note": "Wheel wobbles." }, "model": "jev-1.14.0", "questions": { "a": { "type": "noul", "instructions": "Is there one?" }, "b": { "type": "noul", "instructions": "Are there two?" } } }`;
 	const bodies = (fetch: ReturnType<typeof jevSays>) =>
 		fetch.mock.calls.map((call) =>
 			JSON.parse((call as unknown as [string, { body: string }])[1].body),
@@ -1051,7 +1052,9 @@ describe('check with Jev', () => {
 		start(doc(TWO, 'file:///a.ts', 'json'));
 		_state.secrets.set('decisionlint.key.typesafe', 'k');
 		await run(ASK_COMMANDS.ask.typesafe);
-		expect(bodies(fetch)[0].state.state).toEqual({ note: 'Wheel wobbles.' });
+		expect(bodies(fetch).find((body) => body.state.state)?.state.state).toEqual(
+			{ note: 'Wheel wobbles.' },
+		);
 		expect(jevCode('DEC312')?.range.start.character).toBe(
 			TWO.indexOf('"state"'),
 		);
@@ -1126,7 +1129,7 @@ describe('check with Jev', () => {
 });
 
 describe('probe a question', () => {
-	const REQUEST = `{ "state": { "note": "Cracked lid, three days late." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
+	const REQUEST = `{ "state": { "note": "Cracked lid, three days late." }, "model": "jev-1.14.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
 	const cursorIn = (document: Doc, text: string) => {
 		_state.activeTextEditor = {
 			document,
@@ -1141,7 +1144,7 @@ describe('probe a question', () => {
 			ok: true,
 			status: 200,
 			json: async () => ({
-				model: 'jev-1.13.0',
+				model: 'jev-1.14.0',
 				answers: {
 					q: { type: 'choice', choice: queue.shift(), confidence: 0.6 },
 				},
@@ -1254,7 +1257,7 @@ describe('probe a question', () => {
 		vi.stubGlobal('fetch', fetch);
 		_state.config = {
 			'ask.confirm': true,
-			'ask.models': { typesafe: 'jev-1.13.0' },
+			'ask.models': { typesafe: 'jev-1.14.0' },
 		};
 		const document = doc(REQUEST, 'file:///a.ts', 'json');
 		start(document);
@@ -1273,7 +1276,7 @@ describe('probe a question', () => {
 			{ body: string },
 		][]) {
 			expect(sent[0]).toContain('api.typesafe.ai');
-			expect(JSON.parse(sent[1].body).model).toBe('jev-1.13.0');
+			expect(JSON.parse(sent[1].body).model).toBe('jev-1.14.0');
 		}
 	});
 
@@ -1287,7 +1290,7 @@ describe('probe a question', () => {
 							ok: true,
 							status: 200,
 							json: async () => ({
-								model: 'jev-1.13.0',
+								model: 'jev-1.14.0',
 								answers: {
 									q: { type: 'choice', choice: 'damaged', confidence: 0.6 },
 								},
@@ -1345,7 +1348,7 @@ describe('probe a question', () => {
 });
 
 describe('a command whose body throws', () => {
-	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
+	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.14.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
 
 	it.each([
 		[COMMANDS.lintFile, 'Linting this file'],
@@ -1379,7 +1382,7 @@ describe('how much it says', () => {
 				ok: true,
 				status: 200,
 				json: async () => ({
-					model: 'jev-1.13.0',
+					model: 'jev-1.14.0',
 					answers: answerAll(init.body),
 					usage: { input_tokens: 1 },
 				}),
@@ -1489,12 +1492,12 @@ describe('the editor context menu', () => {
 
 describe('when the editor fails', () => {
 	const TWO = `const r = { questions: { a: { type: 'noul', instructions: 'Is the order large?' }, b: { type: 'noul', instructions: 'Is the parcel heavy?' } } };`;
-	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.13.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
+	const REQUEST = `{ "state": { "note": "Cracked lid." }, "model": "jev-1.14.0", "questions": { "what": { "type": "choice", "instructions": "What went wrong?", "criteria": { "late": "Arrived late", "damaged": "Arrived damaged", "other": "Something else" } } } }`;
 	const reply = (init: Init, answers: Record<string, unknown>) => ({
 		ok: true,
 		status: 200,
 		json: async () => ({
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			answers: { ...answerAll(init.body), ...answers },
 			usage: { input_tokens: 300 },
 		}),

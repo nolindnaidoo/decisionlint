@@ -1,6 +1,6 @@
 {
-  "ranOn": "2026-10-04",
-  "model": "jev-1.13.0",
+  "ranOn": "2026-10-31",
+  "model": "jev-1.14.0",
   "calls": 24,
   "inputTokens": 7018,
   "results": [
@@ -8,7 +8,7 @@
       "rule": "DEC111",
       "name": "a colour given as hex against the same colour named",
       "bad": "12 of 12",
-      "badSureness": "0.94",
+      "badSureness": "0.93",
       "good": "12 of 12",
       "goodSureness": "0.97"
     }

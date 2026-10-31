@@ -1,6 +1,6 @@
 {
-  "ranOn": "2026-10-04",
-  "model": "jev-1.13.0",
+  "ranOn": "2026-10-31",
+  "model": "jev-1.14.0",
   "calls": 174,
   "inputTokens": 62849,
   "results": [
@@ -8,23 +8,23 @@
       "rule": "DEC101",
       "name": "double negative, states that take reading",
       "bad": "14 of 15",
-      "badSureness": "0.73",
+      "badSureness": "0.74",
       "good": "15 of 15",
-      "goodSureness": "0.87"
+      "goodSureness": "0.86"
     },
     {
       "rule": "DEC102",
       "name": "counting 20 to 40 items, one either side of the line",
-      "bad": "8 of 12",
-      "badSureness": "0.58",
-      "good": "9 of 12",
+      "bad": "10 of 12",
+      "badSureness": "0.57",
+      "good": "11 of 12",
       "goodSureness": "n/a"
     },
     {
       "rule": "DEC103",
       "name": "two dates a day or two apart, in mixed formats",
-      "bad": "12 of 12",
-      "badSureness": "0.90",
+      "bad": "11 of 12",
+      "badSureness": "0.89",
       "good": "done in code",
       "goodSureness": "n/a"
     },
@@ -32,33 +32,33 @@
       "rule": "DEC104",
       "name": "compound, where only one half holds",
       "bad": "14 of 14",
-      "badSureness": "0.87",
+      "badSureness": "0.88",
       "good": "14 of 14",
-      "goodSureness": "0.92"
+      "goodSureness": "0.93"
     },
     {
       "rule": "DEC107",
       "name": "absence against presence, personal data that is easy to overlook",
       "bad": "14 of 14",
-      "badSureness": "0.86",
+      "badSureness": "0.89",
       "good": "14 of 14",
-      "goodSureness": "0.88"
+      "goodSureness": "0.90"
     },
     {
       "rule": "DEC108",
       "name": "inverted criteria, personal data that is easy to overlook",
       "bad": "14 of 14",
-      "badSureness": "0.86",
+      "badSureness": "0.82",
       "good": "14 of 14",
-      "goodSureness": "0.95"
+      "goodSureness": "0.96"
     },
     {
       "rule": "DEC110",
       "name": "degree words, reports that sit between levels",
-      "bad": "11 of 12",
-      "badSureness": "0.90",
+      "bad": "9 of 12",
+      "badSureness": "0.88",
       "good": "11 of 12",
-      "goodSureness": "0.95"
+      "goodSureness": "0.96"
     }
   ]
 }

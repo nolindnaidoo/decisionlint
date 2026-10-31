@@ -92,10 +92,10 @@ describe('the rule pages', () => {
 	it("tells a Jev-backed rule apart: what is asked, and each model's cutoff or that it is not asked", () => {
 		expect(pages['DEC303.md']).toContain('## What Jev is asked');
 		expect(pages['DEC303.md']).toContain(
-			'its cutoff: 0.75 on `jev-1.13.0` and 0.59 on `d1`. It is not asked of `gpt-6-luna`',
+			'its cutoff: 0.59 on `d1`. It is not asked of `jev-1.14.0` and `gpt-6-luna`',
 		);
 		expect(pages['DEC310.md']).toContain(
-			'0.15 on `jev-1.13.0`, 0.01 on `gpt-6-luna` and 0.03 on `d1`.',
+			'0.12 on `jev-1.14.0`, 0.01 on `gpt-6-luna` and 0.03 on `d1`.',
 		);
 		expect(pages['DEC310.md']).not.toContain('It is not asked of');
 		expect(pages['DEC303.md']).not.toContain('## Flagged');

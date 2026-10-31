@@ -16,7 +16,7 @@ import {
 } from './reviews';
 
 const ALL = new Set(REVIEWS.map((review) => review.code));
-const MODEL = 'jev-1.13.0';
+const MODEL = 'jev-1.14.0';
 
 function literalOf(text: string) {
 	const question = readQuestions(text).questions[0];
@@ -203,18 +203,24 @@ describe('what is put to Jev', () => {
 	});
 
 	it('names the two entries Jev rates highest, and none when it rates none', () => {
-		const pointed = readAnswers({
-			DEC303: { noul: 0.9 },
-			'DEC303.0': { noul: 0.2 },
-			'DEC303.1': { noul: 0.7 },
-			'DEC303.2': { noul: 0.6 },
-		});
+		const pointed = readAnswers(
+			{
+				DEC303: { noul: 0.9 },
+				'DEC303.0': { noul: 0.2 },
+				'DEC303.1': { noul: 0.7 },
+				'DEC303.2': { noul: 0.6 },
+			},
+			CUTOFFS.d1,
+		);
 		expect(pointed[0]?.culprits).toEqual([1, 2]);
-		const vague = readAnswers({
-			DEC303: { noul: 0.9 },
-			'DEC303.0': { noul: 0.3 },
-			'DEC303.1': { noul: 0.2 },
-		});
+		const vague = readAnswers(
+			{
+				DEC303: { noul: 0.9 },
+				'DEC303.0': { noul: 0.3 },
+				'DEC303.1': { noul: 0.2 },
+			},
+			CUTOFFS.d1,
+		);
 		expect(vague[0]?.culprits).toEqual([]);
 	});
 
@@ -294,24 +300,10 @@ describe('cutoffs against the saved calibration', () => {
 	const readings = (file: string, code: string) =>
 		readingsOf(code, read(`validation/${file}`), corpus, requests);
 
-	// Jev's were set by hand at TypeSafe: a check may not flag an example the
-	// corpus calls good, and must catch most of the bad ones it was sent. The
-	// cutoffs page counts the examples added since that run as unsent.
-	it.each(CHECKS)(
-		"Jev's %s flags no good example at TypeSafe and catches most bad ones",
-		(code) => {
-			const cutoff = CUTOFFS.jev?.[code as keyof Cutoffs] ?? 0;
-			const { bad, good } = readings('calibration.json', code);
-			expect(good.filter((each) => each.p >= cutoff)).toEqual([]);
-			expect(
-				bad.filter((each) => each.p >= cutoff).length,
-			).toBeGreaterThanOrEqual(Math.ceil(bad.length * 0.6));
-		},
-	);
-
-	// Luna's and d1's are what the rule fits on their runs, exactly, so a
+	// Every model's are what the rule fits on their runs, exactly, so a
 	// changed example or a rerun moves the table or fails here.
 	it.each([
+		['jev', 'calibration.json'],
 		['luna', 'calibration-openai-gpt-6-luna.json'],
 		['d1', 'calibration-liquid-d1.json'],
 	])("%s's cutoffs are what the rule fits on its run", (family, file) => {

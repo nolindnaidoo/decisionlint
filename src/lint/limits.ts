@@ -25,7 +25,7 @@ export const KNOWN_VERSION = 'jev-1.14.0';
  * measured on. Behind `KNOWN_VERSION` from a Jev release until both are
  * measured again.
  */
-export const MEASURED_ON = 'jev-1.13.0';
+export const MEASURED_ON = 'jev-1.14.0';
 
 /**
  * https://docs.typesafe.ai/models#aliases: an alias "moves when a new release

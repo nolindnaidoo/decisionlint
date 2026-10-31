@@ -81,8 +81,8 @@ describe('the token estimate', () => {
 	it.each([
 		['openai', 'calibration-openai-gpt-6-luna.json'],
 		['liquid', 'calibration-liquid-d1.json'],
-		['openrouter', 'calibration-openrouter-typesafe_jev-1.13.json'],
-		['llmgateway', 'calibration-llmgateway-jev-1.13.0.json'],
+		['openrouter', 'calibration-openrouter-typesafe_jev-1.14.json'],
+		['llmgateway', 'calibration-llmgateway-jev-1.14.0.json'],
 	])('is no lower than what %s billed for the calibration set', (id, file) => {
 		const target = targetById(id);
 		if (!target?.defaultModel) throw new Error(`no default model for ${id}`);

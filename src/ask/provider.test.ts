@@ -43,13 +43,13 @@ const must = (provider: Provider | string): Provider => {
 	if (typeof provider === 'string') throw new Error(provider);
 	return provider;
 };
-const JEV = must(providerFor('jev-1.13.0'));
+const JEV = must(providerFor('jev-1.14.0'));
 const LUNA = must(providerFor('gpt-6-luna'));
 
 describe('where a model id is sent', () => {
 	it.each([
 		[
-			'jev-1.13.0',
+			'jev-1.14.0',
 			'TypeSafe',
 			'typesafe',
 			'https://api.typesafe.ai/v1/systemone',
@@ -234,7 +234,7 @@ describe('where a model id is sent', () => {
 			"'ftp://host/v1/systemone' is not an http or https URL.",
 		],
 	])('refuses %s as an endpoint', (endpoint, reason) => {
-		expect(providerFor('jev-1.13.0', { endpoint })).toBe(reason);
+		expect(providerFor('jev-1.14.0', { endpoint })).toBe(reason);
 	});
 
 	it("counts only the version Jev's cutoffs were set on as calibrated", () => {
@@ -245,11 +245,11 @@ describe('where a model id is sent', () => {
 	});
 
 	it('counts a route measured to answer as the calibrated version, and only on that route', () => {
-		expect(isCalibrated('typesafe/jev-1.13', { slot: 'openrouter' })).toBe(
+		expect(isCalibrated('typesafe/jev-1.14', { slot: 'openrouter' })).toBe(
 			true,
 		);
-		expect(isCalibrated('typesafe/jev-1.13')).toBe(false);
-		expect(isCalibrated('typesafe/jev-1.13', { slot: 'vercel' })).toBe(false);
+		expect(isCalibrated('typesafe/jev-1.14')).toBe(false);
+		expect(isCalibrated('typesafe/jev-1.14', { slot: 'vercel' })).toBe(false);
 		expect(isCalibrated('typesafe/jev-latest', { slot: 'openrouter' })).toBe(
 			false,
 		);
@@ -296,11 +296,11 @@ describe('where a model id is sent', () => {
 });
 
 describe('a review sent to TypeSafe', () => {
-	const request = buildRequest(question, 'jev-1.13.0', ALL);
+	const request = buildRequest(question, 'jev-1.14.0', ALL);
 	if (!request) throw new Error('no request');
 	const asked = Object.keys(request.questions);
 	const answered = (over: Record<string, unknown> = {}) => ({
-		model: 'jev-1.13.0',
+		model: 'jev-1.14.0',
 		answers: {
 			...Object.fromEntries(
 				asked.map((id) => [id, { type: 'noul', noul: 0.1 }]),
@@ -325,7 +325,7 @@ describe('a review sent to TypeSafe', () => {
 			answered({ DEC303: { type: 'noul', noul: 0.8 } }),
 		);
 		if (isFailure(result)) throw new Error(result.detail);
-		expect(result.model).toBe('jev-1.13.0');
+		expect(result.model).toBe('jev-1.14.0');
 		expect(result.inputTokens).toBe(296);
 		expect(Object.keys(result.answers).sort()).toEqual([...asked].sort());
 		expect(result.answers.DEC303).toEqual({ type: 'noul', noul: 0.8 });
@@ -335,7 +335,7 @@ describe('a review sent to TypeSafe', () => {
 	// Jev: the reference returns one answer per question under the same ids.
 	it('calls a reply with no answers garbled, naming the first question it lacks', async () => {
 		const result = await askJev({
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			answers: {},
 			usage: {},
 		});
@@ -366,7 +366,7 @@ describe('a review sent to TypeSafe', () => {
 	it('reads a choice and a score answer by the field their type requires', async () => {
 		const probe = {
 			state: { note: 'Cracked lid.' },
-			model: 'jev-1.13.0',
+			model: 'jev-1.14.0',
 			questions: {
 				q: {
 					type: 'choice',
@@ -514,7 +514,7 @@ describe("a review sent to OpenAI's Decisions API", () => {
 
 	it('still sends a Jev request to TypeSafe unchanged', async () => {
 		const sent: Sent[] = [];
-		const jev = buildRequest(question, 'jev-1.13.0', ALL);
+		const jev = buildRequest(question, 'jev-1.14.0', ALL);
 		if (!jev) throw new Error('no request');
 		await ask(
 			{

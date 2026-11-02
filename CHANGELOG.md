@@ -14,11 +14,17 @@ current Jev no longer gets `DEC013` or the "cutoff was set on" caveat.
   2026-10-31. OpenRouter answered within 0.012 of TypeSafe on average, and
   1.14.0 moved 0.030 from 1.13.0. Nine cutoffs moved and `DEC301` stayed.
   `DEC304` dropped furthest, from 0.60 to 0.29, so it reports more, and
-  `DEC302` rose from 0.70 to 0.84, so it reports less.
-- **`DEC303` and `DEC311` are no longer asked of Jev.** At every cutoff that
-  flags none of the good examples they caught 9 of 16 and 11 of 22, under the
-  six in ten a cutoff has to reach. `docs/cutoffs.md` names the examples in
-  the way.
+  `DEC302` rose from 0.70 to 0.84, so it reports less. On the full examples
+  the ten checks Jev keeps catch 155 of 161 defects with no good question
+  flagged, where the hand-set cutoffs caught 145 and flagged 2.
+- **`DEC303` and `DEC311` are no longer asked of Jev, because the test got
+  harder, not because Jev got worse.** On the examples 1.13.0 was measured on,
+  1.14.0 catches the same 8 of 8 and 3 of 3 with no good question flagged.
+  This is Jev's first run on the full examples and the fit rule. There, at
+  every cutoff that flags none of the good examples, they caught 9 of 16 and
+  11 of 22, under the six in ten a cutoff has to reach. The old cutoffs caught
+  13 and 21 but flagged 1 of 40 and 3 of 72 good questions. `docs/cutoffs.md`
+  names the examples in the way.
 - **Three defaults moved with the rerun.** `DEC012 terse-instructions` and
   `DEC103 date-comparison` are warnings, at three and two answers lost.
   `DEC008 numeric-levels` is `info`, at one answer lost and 0.14 less sure.
